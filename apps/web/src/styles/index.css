@@ -6,8 +6,8 @@
 @layer base {
   html {
     font-size: 16px;
-    background-color: var(--color-canvas);
-    color: var(--color-text-primary);
+    background-color: var(--dark-canvas);
+    color: var(--dark-text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -15,20 +15,145 @@
   body {
     margin: 0;
     min-height: 100vh;
-    background-color: var(--color-canvas);
-    color: var(--color-text-primary);
+    background-color: var(--dark-canvas);
+    color: var(--dark-text-primary);
     font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     line-height: var(--line-height-normal);
   }
 
-  /* Accessible focus indicators */
   :focus-visible {
-    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline: var(--focus-ring-width) solid var(--dark-accent);
     outline-offset: var(--focus-ring-offset);
   }
 
-  /* Tabular numbers for all telemetry measurements */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.12) transparent;
+  }
+  *::-webkit-scrollbar { width: 6px; height: 6px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+  *::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+}
+
+/* ═══════════════════════════════════
+   SHIMMER BUTTON
+═══════════════════════════════════ */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    110deg,
+    #ffffff 0%, #ffffff 35%,
+    #c8a96e 50%,
+    #ffffff 65%, #ffffff 100%
+  );
+  background-size: 250% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: background-position 0.5s ease;
+}
+.btn-shimmer:hover {
+  background-position: 0% 0;
+}
+
+/* ═══════════════════════════════════
+   GLASS CARD
+═══════════════════════════════════ */
+.glass-card {
+  background: var(--dark-surface-glass);
+  border: 1px solid var(--dark-border);
+  border-radius: 12px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.glass-card-strong {
+  background: var(--dark-surface);
+  border: 1px solid var(--dark-border-strong);
+  border-radius: 12px;
+}
+
+/* ═══════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════ */
+@keyframes pulseBeacon {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmerSweep {
+  0% { transform: translateX(-100%) skewX(-12deg); }
+  100% { transform: translateX(200%) skewX(-12deg); }
+}
+
+@keyframes borderGlow {
+  0%, 100% { border-color: rgba(200, 169, 110, 0.2); }
+  50% { border-color: rgba(200, 169, 110, 0.5); }
+}
+
+@keyframes scanLine {
+  0% { top: 0%; opacity: 0.6; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.animate-pulse-beacon {
+  animation: pulseBeacon 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════
+   METRIC NUMBER GLOW
+═══════════════════════════════════ */
+.metric-glow {
+  text-shadow: 0 0 20px rgba(200, 169, 110, 0.4);
+}
+
+/* ═══════════════════════════════════
+   NAV ACTIVE UNDERLINE
+═══════════════════════════════════ */
+.nav-active {
+  position: relative;
+}
+.nav-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--dark-accent), transparent);
+  border-radius: 1px;
+}
+
+/* ═══════════════════════════════════
+   TABLE ROW HOVER
+═══════════════════════════════════ */
+.dark-table tbody tr:hover {
+  background: rgba(200, 169, 110, 0.04);
+}
+
+/* ═══════════════════════════════════
+   LIGHT RAYS CONTAINER
+═══════════════════════════════════ */
+.light-rays-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: inherit;
 }

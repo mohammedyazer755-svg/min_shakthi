@@ -21,17 +21,22 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
   return (
     <div
       role="alert"
-      className={`p-4 bg-rose-50 border border-rose-200 rounded-control flex items-start space-x-3 text-status-critical ${className}`}
+      className={`p-4 rounded-lg flex items-start gap-3 ${className}`}
+      style={{
+        background: 'rgba(245, 101, 101, 0.08)',
+        border: '1px solid rgba(245, 101, 101, 0.28)',
+        color: '#f87171',
+      }}
     >
       <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" aria-hidden="true" />
       <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-semibold">{title}</h4>
-        <p className="text-sm mt-0.5 text-text-primary/90">{message}</p>
+        <h4 className="text-sm font-bold tracking-tight text-white">{title}</h4>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--dark-text-muted, #8a8a96)' }}>{message}</p>
         {actionText && onAction && (
           <button
             type="button"
             onClick={onAction}
-            className="mt-2 text-xs font-semibold underline hover:no-underline text-status-critical focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-status-critical"
+            className="mt-2 text-xs font-semibold underline hover:no-underline text-red-400"
           >
             {actionText}
           </button>
@@ -41,7 +46,7 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
         <button
           type="button"
           onClick={onDismiss}
-          className="text-text-secondary hover:text-text-primary p-1 rounded focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand-gold"
+          className="p-1 rounded text-neutral-400 hover:text-white"
           aria-label="Dismiss error banner"
         >
           <X className="w-4 h-4" aria-hidden="true" />

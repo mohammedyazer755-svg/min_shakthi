@@ -68,3 +68,25 @@
     --transition-duration: 0ms;
   }
 }
+
+/* =====================================================
+   DARK PREMIUM TOKENS — appended, never overwrite above
+   ===================================================== */
+:root {
+  --dark-canvas: #050507;
+  --dark-surface: #0d0d10;
+  --dark-surface-raised: #141418;
+  --dark-surface-glass: rgba(14, 14, 18, 0.85);
+  --dark-border: rgba(255, 255, 255, 0.08);
+  --dark-border-strong: rgba(255, 255, 255, 0.22);
+  --dark-border-accent: rgba(255, 255, 255, 0.4);
+  --dark-text-primary: #f0f0f5;
+  --dark-text-muted: #8a8a96;
+  --dark-text-dim: #55555f;
+  --dark-accent: #c8a96e;
+  --dark-accent-dim: rgba(200, 169, 110, 0.18);
+  --dark-status-ok: #22d47c;
+  --dark-status-warn: #f59e0b;
+  --dark-status-critical: #f56565;
+  --dark-glow: rgba(200, 169, 110, 0.12);
+}

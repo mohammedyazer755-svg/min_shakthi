@@ -37,7 +37,6 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
     return series.map((s) => {
       let data = s.data;
       if (data.length > maxPoints) {
-        // Min/max preserving step downsampling
         const step = Math.ceil(data.length / maxPoints);
         data = data.filter((_, idx) => idx % step === 0);
       }
@@ -75,14 +74,12 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
       return { minVal: 0, maxVal: 100, minTime: Date.now() - 3600000, maxTime: Date.now(), hasData: false };
     }
 
-    // Always include zero baseline if positive, or buffer by 5%
     minV = minV > 0 ? 0 : minV * 1.05;
     maxV = maxV === 0 ? 10 : maxV * 1.08;
 
     return { minVal: minV, maxVal: maxV, minTime: minT, maxTime: maxT, hasData: true };
   }, [processedSeries]);
 
-  // ViewBox dimensions
   const svgWidth = 800;
   const svgHeight = height;
   const padding = { top: 20, right: 24, bottom: 36, left: 56 };
@@ -95,7 +92,7 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
   const getX = (tMs: number) => padding.left + ((tMs - minTime) / timeRange) * plotWidth;
   const getY = (v: number) => padding.top + plotHeight - ((v - minVal) / valRange) * plotHeight;
 
-  // 3. Build SVG Path segments with breaks for gaps (R18, PRD: real trends with breaks for gaps)
+  // 3. Build SVG Path segments with breaks for gaps
   const paths = useMemo(() => {
     return processedSeries.map((s) => {
       const segments: string[] = [];
@@ -105,8 +102,6 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
       for (let i = 0; i < s.data.length; i++) {
         const p = s.data[i]!;
         const t = new Date(p.timestamp).getTime();
-
-        // Gap detection: missing value OR timestamp jump > 30s (6x default interval)
         const isGap = p.value === null || (lastTime !== null && t - lastTime > 30000);
 
         if (isGap) {
@@ -115,7 +110,6 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
             currentSegment = [];
           }
           if (p.value !== null) {
-            // Start new segment after gap
             const x = getX(t);
             const y = getY(p.value);
             currentSegment.push(`M ${x.toFixed(1)} ${y.toFixed(1)}`);
@@ -146,7 +140,6 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
     });
   }, [processedSeries, minTime, timeRange, minVal, valRange, plotWidth, plotHeight]);
 
-  // Horizontal grid lines
   const gridTicks = useMemo(() => {
     const ticks = [];
     const count = 4;
@@ -158,7 +151,6 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
     return ticks;
   }, [minVal, valRange, plotHeight]);
 
-  // Time ticks
   const timeTicks = useMemo(() => {
     const ticks = [];
     const count = 5;
@@ -172,15 +164,23 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
   }, [minTime, timeRange, plotWidth]);
 
   return (
-    <div className={`relative bg-surface rounded-card border border-border p-4 md:p-6 ${className}`}>
+    <div
+      className={`relative rounded-xl p-4 md:p-6 ${className}`}
+      style={{
+        background: 'var(--dark-surface, #0d0d10)',
+        border: '1px solid var(--dark-border, rgba(255,255,255,0.08))',
+      }}
+    >
       {/* Header & Legend */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-        <h3 className="text-sm font-semibold text-text-primary tracking-tight">{title}</h3>
+        <h3 className="text-sm font-bold tracking-tight" style={{ color: 'var(--dark-text-primary, #f0f0f5)' }}>
+          {title}
+        </h3>
         <div className="flex flex-wrap items-center gap-4 text-xs">
           {processedSeries.map((s) => (
             <div key={s.id} className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: s.color }} />
-              <span className="text-text-secondary font-medium">{s.name}</span>
+              <span className="w-2.5 h-2.5 rounded-xs" style={{ backgroundColor: s.color }} />
+              <span className="font-medium" style={{ color: 'var(--dark-text-muted, #8a8a96)' }}>{s.name}</span>
             </div>
           ))}
         </div>
@@ -188,11 +188,17 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
 
       {!hasData ? (
         <div
-          className="flex flex-col items-center justify-center text-xs text-text-secondary border border-dashed border-border rounded-control"
-          style={{ height: `${height}px` }}
+          className="flex flex-col items-center justify-center text-xs rounded-lg"
+          style={{
+            height: `${height}px`,
+            border: '1px dashed var(--dark-border, rgba(255,255,255,0.12))',
+            color: 'var(--dark-text-muted, #8a8a96)',
+          }}
         >
           <span>Awaiting historical telemetry samples...</span>
-          <span className="text-text-secondary/70 mt-1">Gaps and intervals will render when data arrives.</span>
+          <span className="mt-1" style={{ color: 'var(--dark-text-dim, #55555f)' }}>
+            Gaps and intervals will render when data arrives.
+          </span>
         </div>
       ) : (
         <div className="relative w-full overflow-hidden">
@@ -215,8 +221,8 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
                   y1={t.y}
                   x2={svgWidth - padding.right}
                   y2={t.y}
-                  stroke="#DDDCD5"
-                  strokeDasharray="2 3"
+                  stroke="rgba(255, 255, 255, 0.07)"
+                  strokeDasharray="3 3"
                   strokeWidth="1"
                 />
                 <text
@@ -224,8 +230,8 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
                   y={t.y + 4}
                   textAnchor="end"
                   fontSize="11"
-                  fill="#5D625D"
-                  fontFamily="system-ui, -apple-system, sans-serif"
+                  fill="var(--dark-text-muted, #8a8a96)"
+                  fontFamily="monospace"
                 >
                   {t.val >= 1000 ? `${(t.val / 1000).toFixed(1)}k` : t.val.toFixed(1)}
                 </text>
@@ -240,8 +246,8 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
                 y={svgHeight - 10}
                 textAnchor="middle"
                 fontSize="11"
-                fill="#5D625D"
-                fontFamily="system-ui, -apple-system, sans-serif"
+                fill="var(--dark-text-muted, #8a8a96)"
+                fontFamily="monospace"
               >
                 {t.label}
               </text>
@@ -254,7 +260,7 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
                 d={p.d}
                 fill="none"
                 stroke={p.color}
-                strokeWidth="2"
+                strokeWidth="2.2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />

@@ -25,9 +25,15 @@ export const MainApp: React.FC = () => {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-canvas flex flex-col items-center justify-center text-text-secondary text-sm">
-        <div className="w-8 h-8 rounded-full border-2 border-brand-gold border-t-transparent animate-spin mb-3" />
-        <span>Authenticating session...</span>
+      <div
+        className="min-h-screen flex flex-col items-center justify-center text-sm"
+        style={{ background: 'var(--dark-canvas)', color: 'var(--dark-text-muted)' }}
+      >
+        <div
+          className="w-8 h-8 rounded-full border-2 animate-spin mb-3"
+          style={{ borderColor: 'var(--dark-accent)', borderTopColor: 'transparent' }}
+        />
+        <span style={{ fontFamily: 'monospace', fontSize: 12 }}>Authenticating session...</span>
       </div>
     );
   }

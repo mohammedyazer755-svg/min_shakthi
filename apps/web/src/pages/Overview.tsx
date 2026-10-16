@@ -1,12 +1,34 @@
 import React, { useMemo } from 'react';
 import { Activity, Cpu } from 'lucide-react';
 import type { useLiveTelemetry } from '../live/useLiveTelemetry';
-import { Card, MetricCard, FreshnessLabel, MeasurementChart } from '../components';
+import { FreshnessLabel, MeasurementChart } from '../components';
 
 export interface OverviewProps {
   telemetry: ReturnType<typeof useLiveTelemetry>;
   selectedDevice: string;
 }
+
+const sectionLabel: React.CSSProperties = {
+  fontSize: 10,
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.15em',
+  color: 'var(--dark-text-muted)',
+};
+
+const metricValue: React.CSSProperties = {
+  color: 'var(--dark-text-primary)',
+  fontSize: '1.75rem',
+  fontWeight: 800,
+  fontVariantNumeric: 'tabular-nums',
+  lineHeight: 1.1,
+};
+
+const metricSubtext: React.CSSProperties = {
+  color: 'var(--dark-text-muted)',
+  fontSize: 11,
+  marginTop: 4,
+};
 
 export const Overview: React.FC<OverviewProps> = ({
   telemetry,
@@ -96,147 +118,225 @@ export const Overview: React.FC<OverviewProps> = ({
       }));
   }, [channels, powerHistory]);
 
+  const metrics = [
+    {
+      label: 'Active Power Total',
+      value: activeCount > 0 ? totalPower.toFixed(1) : '—',
+      unit: activeCount > 0 ? ' W' : '',
+      subtext: coverage
+        ? `${coverage.reportingSlots}/${coverage.configuredSlots} reporting${coverage.partial ? ' · Partial' : ' · Full'}`
+        : 'Awaiting readings',
+    },
+    {
+      label: 'Supply Voltage',
+      value: voltageRange,
+      unit: '',
+      subtext: 'Configured channel range',
+    },
+    {
+      label: 'Active Current',
+      value: totalCurrent,
+      unit: '',
+      subtext: 'Sum across reporting loads',
+    },
+    {
+      label: 'Grid Frequency',
+      value: freqRange,
+      unit: '',
+      subtext: 'Monitored range',
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* Top Status & Metrics Row */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-surface p-3 md:p-4 rounded-card border border-border">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-text-primary">
-            <Cpu className="w-4 h-4 text-brand-gold-text" aria-hidden="true" />
-            <span>Device: <strong className="font-mono text-brand-gold-text">{selectedDevice}</strong></span>
+      {/* Top Status Bar */}
+      <div
+        style={{
+          background: 'var(--dark-surface)',
+          border: '1px solid var(--dark-border)',
+          borderRadius: 12,
+          padding: '12px 16px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'var(--dark-text-primary)' }}>
+            <Cpu style={{ width: 14, height: 14, color: 'var(--dark-accent)' }} aria-hidden="true" />
+            <span>Device: <strong style={{ fontFamily: 'monospace', color: 'var(--dark-accent)' }}>{selectedDevice}</strong></span>
           </div>
-          <span className="text-border">|</span>
-          <div className="flex items-center gap-1.5 text-xs">
+          <span style={{ color: 'var(--dark-border-strong)' }}>|</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
             <span
-              className={`w-2 h-2 rounded-full ${
-                connectionState === 'connected' ? 'bg-status-positive' : 'bg-status-critical'
-              }`}
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                display: 'inline-block',
+                background: connectionState === 'connected' ? 'var(--dark-status-ok, #22c55e)' : 'var(--dark-status-critical, #ef4444)',
+              }}
             />
-            <span className="text-text-secondary capitalize">{`Socket ${connectionState}`}</span>
+            <span style={{ color: 'var(--dark-text-muted)', textTransform: 'capitalize' }}>{`Socket ${connectionState}`}</span>
           </div>
-          <span className="text-border hidden sm:inline">|</span>
-          <div className="hidden sm:flex items-center gap-1.5 text-xs text-text-secondary">
-            <span>Broker: <strong className="text-text-primary font-medium">{health?.broker ?? 'unknown'}</strong></span>
+          <span style={{ color: 'var(--dark-border-strong)' }}>|</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--dark-text-muted)' }}>
+            <span>Broker: <strong style={{ color: 'var(--dark-text-primary)', fontWeight: 500 }}>{health?.broker ?? 'unknown'}</strong></span>
           </div>
         </div>
 
         {/* Display ACK latency */}
         {lastDisplayLatencyMs !== null && (
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-canvas rounded border border-border text-xs text-text-secondary font-mono">
-            <Activity className="w-3.5 h-3.5 text-brand-gold-text" aria-hidden="true" />
-            <span>Display ACK: <strong>{`${lastDisplayLatencyMs}ms`}</strong></span>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '4px 10px',
+              background: 'var(--dark-canvas, #050507)',
+              borderRadius: 6,
+              border: '1px solid var(--dark-border)',
+              fontSize: 12,
+              color: 'var(--dark-text-muted)',
+              fontFamily: 'monospace',
+            }}
+          >
+            <Activity style={{ width: 13, height: 13, color: 'var(--dark-accent)' }} aria-hidden="true" />
+            <span>Display ACK: <strong style={{ color: 'var(--dark-text-primary)' }}>{`${lastDisplayLatencyMs}ms`}</strong></span>
           </div>
         )}
       </div>
 
       {/* 4 KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
-          label="Active Power Total"
-          value={activeCount > 0 ? totalPower.toFixed(1) : '—'}
-          unit={activeCount > 0 ? 'W' : ''}
-          subtext={
-            coverage
-              ? `${coverage.reportingSlots}/${coverage.configuredSlots} reporting${
-                  coverage.partial ? ' · Partial' : ' · Full'
-                }`
-              : 'Awaiting readings'
-          }
-        />
-
-        <MetricCard
-          label="Supply Voltage"
-          value={voltageRange}
-          subtext="Configured channel range"
-        />
-
-        <MetricCard
-          label="Active Current"
-          value={totalCurrent}
-          subtext="Sum across reporting loads"
-        />
-
-        <MetricCard
-          label="Grid Frequency"
-          value={freqRange}
-          subtext="Monitored range"
-        />
+        {metrics.map((m) => (
+          <div
+            key={m.label}
+            style={{
+              background: 'var(--dark-surface)',
+              border: '1px solid var(--dark-border)',
+              borderRadius: 12,
+              padding: '20px 24px',
+              borderTop: '2px solid var(--dark-accent)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+            }}
+          >
+            <span style={sectionLabel}>{m.label}</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+              <span style={metricValue}>{m.value}</span>
+              {m.unit && (
+                <span style={{ color: 'var(--dark-text-muted)', fontSize: 13, fontWeight: 600 }}>{m.unit}</span>
+              )}
+            </div>
+            <span style={metricSubtext}>{m.subtext}</span>
+          </div>
+        ))}
       </div>
 
       {/* Primary Chart: Real Active Power Trends */}
-      <MeasurementChart
-        title="Active Power Trend (Receipt-Time with Gaps)"
-        series={chartSeries}
-        height={300}
-        ariaDescription="Real-time and recent active power samples with breaks during communication gaps"
-      />
+      <div
+        style={{
+          background: 'var(--dark-surface)',
+          border: '1px solid var(--dark-border)',
+          borderRadius: 12,
+          padding: 16,
+        }}
+      >
+        <MeasurementChart
+          title="Active Power Trend (Receipt-Time with Gaps)"
+          series={chartSeries}
+          height={300}
+          ariaDescription="Real-time and recent active power samples with breaks during communication gaps"
+        />
+      </div>
 
       {/* 5-Channel Mapped Slots Table */}
-      <Card className="p-4 md:p-6">
-        <div className="flex items-center justify-between mb-4">
+      <div
+        style={{
+          background: 'var(--dark-surface)',
+          border: '1px solid var(--dark-border)',
+          borderRadius: 12,
+          padding: '20px 24px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
-            <h3 className="text-sm font-semibold text-text-primary tracking-tight">
+            <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-text-primary)', margin: 0 }}>
               Hardware Channel Mappings (CH01–CH05)
             </h3>
-            <p className="text-xs text-text-secondary mt-0.5">
+            <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
               Mapped per device. Missing readings are null (—); valid zero load is 0.00.
             </p>
           </div>
-          <span className="text-xs text-text-secondary font-medium">
+          <span style={{ fontSize: 12, color: 'var(--dark-text-muted)', fontWeight: 500 }}>
             Slots reporting: {activeCount}/{configuredCount}
           </span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
-              <tr className="border-b border-border bg-canvas text-text-secondary font-semibold">
-                <th className="py-2.5 px-3">Slot</th>
-                <th className="py-2.5 px-3">Channel / Label</th>
-                <th className="py-2.5 px-3 text-right">Voltage</th>
-                <th className="py-2.5 px-3 text-right">Current</th>
-                <th className="py-2.5 px-3 text-right">Power</th>
-                <th className="py-2.5 px-3 text-right">Energy (Raw)</th>
-                <th className="py-2.5 px-3 text-right">Freq</th>
-                <th className="py-2.5 px-3 text-center">Status</th>
+              <tr style={{ borderBottom: '1px solid var(--dark-border-strong)', background: 'transparent' }}>
+                {['Slot', 'Channel / Label', 'Voltage', 'Current', 'Power', 'Energy (Raw)', 'Freq', 'Status'].map((h, i) => (
+                  <th
+                    key={h}
+                    style={{
+                      padding: '10px 12px',
+                      color: 'var(--dark-text-muted)',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      fontSize: 10,
+                      letterSpacing: '0.1em',
+                      textAlign: i >= 2 && i <= 6 ? 'right' : i === 7 ? 'center' : 'left',
+                    }}
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody>
               {channels.map((ch, idx) => {
                 const s = ch.lastSample;
                 const isUnconf = ch.freshness === 'unconfigured';
                 return (
                   <tr
                     key={ch.displaySlot ?? idx}
-                    className={`hover:bg-canvas/50 transition-colors ${
-                      isUnconf ? 'opacity-50' : ''
-                    }`}
+                    style={{
+                      borderBottom: '1px solid var(--dark-border)',
+                      opacity: isUnconf ? 0.5 : 1,
+                      color: 'var(--dark-text-primary)',
+                    }}
                   >
-                    <td className="py-3 px-3 font-semibold text-brand-gold-text">
+                    <td style={{ padding: '12px', fontWeight: 700, color: 'var(--dark-accent)', fontFamily: 'monospace' }}>
                       {`CH0${ch.displaySlot ?? idx + 1}`}
                     </td>
-                    <td className="py-3 px-3 font-medium text-text-primary">
+                    <td style={{ padding: '12px', fontWeight: 500, color: 'var(--dark-text-primary)' }}>
                       {ch.label}
-                      <span className="block text-[11px] text-text-secondary font-mono">
+                      <span style={{ display: 'block', fontSize: 11, color: 'var(--dark-text-muted)', fontFamily: 'monospace' }}>
                         {ch.rawChannelId}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-right font-mono tabular-nums">
+                    <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }}>
                       {s?.values.voltage != null ? `${s.values.voltage.toFixed(2)} V` : '—'}
                     </td>
-                    <td className="py-3 px-3 text-right font-mono tabular-nums">
+                    <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }}>
                       {s?.values.current != null ? `${s.values.current.toFixed(2)} A` : '—'}
                     </td>
-                    <td className="py-3 px-3 text-right font-mono tabular-nums font-semibold">
+                    <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
                       {s?.values.power != null ? `${s.values.power.toFixed(2)} W` : '—'}
                     </td>
-                    <td className="py-3 px-3 text-right font-mono tabular-nums text-text-secondary">
+                    <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', color: 'var(--dark-text-muted)' }}>
                       {s?.values.energyRaw != null ? s.values.energyRaw : '—'}
                     </td>
-                    <td className="py-3 px-3 text-right font-mono tabular-nums">
+                    <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }}>
                       {s?.values.frequency != null ? `${s.values.frequency.toFixed(2)} Hz` : '—'}
                     </td>
-                    <td className="py-3 px-3 text-center">
+                    <td style={{ padding: '12px', textAlign: 'center' }}>
                       <FreshnessLabel freshness={ch.freshness} />
                     </td>
                   </tr>
@@ -245,7 +345,7 @@ export const Overview: React.FC<OverviewProps> = ({
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

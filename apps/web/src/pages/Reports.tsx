@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Button } from '../components';
+import { Button } from '../components';
 import { useAuth } from '../auth/AuthContext';
 import type { UseLiveTelemetryResult } from '../live/useLiveTelemetry';
 import {
@@ -16,6 +16,48 @@ export interface ReportsProps {
   telemetry: UseLiveTelemetryResult;
   selectedDevice: string;
 }
+
+const darkSurface: React.CSSProperties = {
+  background: 'var(--dark-surface)',
+  border: '1px solid var(--dark-border)',
+  borderRadius: 12,
+};
+
+const metricBoxStyle: React.CSSProperties = {
+  background: 'var(--dark-surface)',
+  border: '1px solid var(--dark-border)',
+  borderRadius: 12,
+  padding: '20px 24px',
+  borderTop: '2px solid var(--dark-accent)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 4,
+};
+
+const sectionLabel: React.CSSProperties = {
+  fontSize: 10,
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.15em',
+  color: 'var(--dark-text-muted)',
+};
+
+const metricValue: React.CSSProperties = {
+  color: 'var(--dark-text-primary)',
+  fontSize: '1.75rem',
+  fontWeight: 800,
+  fontVariantNumeric: 'tabular-nums',
+  lineHeight: 1.1,
+};
+
+const thStyle: React.CSSProperties = {
+  padding: '10px 12px',
+  color: 'var(--dark-text-muted)',
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  fontSize: 10,
+  letterSpacing: '0.1em',
+};
 
 export const Reports: React.FC<ReportsProps> = ({ selectedDevice }) => {
   const { accessToken, user } = useAuth();
@@ -65,23 +107,57 @@ export const Reports: React.FC<ReportsProps> = ({ selectedDevice }) => {
   return (
     <div className="space-y-6">
       {/* Top Header Card */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-surface p-4 rounded-card border border-border">
+      <div
+        style={{
+          ...darkSurface,
+          padding: '16px 20px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+        }}
+      >
         <div>
-          <h2 className="text-base font-bold text-text-primary tracking-tight">
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--dark-text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
             Certified Periodic Reports &amp; Tariffs
           </h2>
-          <p className="text-xs text-text-secondary mt-0.5">
+          <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
             Defensible civil interval aggregation, boundary gap detection, and explicit billing suppression disclosures.
           </p>
         </div>
 
         {report && (
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-canvas rounded border border-border text-xs text-text-secondary font-mono">
-              <Clock className="w-3.5 h-3.5 text-brand-gold-text" aria-hidden="true" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 10px',
+                background: 'var(--dark-canvas, #050507)',
+                borderRadius: 6,
+                border: '1px solid var(--dark-border)',
+                fontSize: 12,
+                color: 'var(--dark-text-muted)',
+                fontFamily: 'monospace',
+              }}
+            >
+              <Clock style={{ width: 13, height: 13, color: 'var(--dark-accent)' }} aria-hidden="true" />
               <span>{`Revision: v${report.revision}`}</span>
             </span>
-            <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700">
+            <span
+              style={{
+                display: 'inline-block',
+                padding: '3px 8px',
+                borderRadius: 4,
+                fontSize: 10,
+                fontWeight: 700,
+                background: 'rgba(34,197,94,0.12)',
+                color: '#22c55e',
+                border: '1px solid rgba(34,197,94,0.25)',
+              }}
+            >
               {report.status.toUpperCase()}
             </span>
           </div>
@@ -89,21 +165,48 @@ export const Reports: React.FC<ReportsProps> = ({ selectedDevice }) => {
       </div>
 
       {/* Control Card: Period, Date, Timezone */}
-      <Card className="p-4 bg-surface border border-border flex flex-wrap items-center justify-between gap-4 text-xs">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-brand-gold-text" aria-hidden="true" />
-            <span className="font-semibold text-text-primary">Period:</span>
-            <div className="inline-flex rounded border border-border p-0.5 bg-canvas">
+      <div
+        style={{
+          ...darkSurface,
+          padding: '12px 16px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+          fontSize: 12,
+        }}
+      >
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Calendar style={{ width: 15, height: 15, color: 'var(--dark-accent)' }} aria-hidden="true" />
+            <span style={{ fontWeight: 600, color: 'var(--dark-text-primary)' }}>Period:</span>
+            <div
+              style={{
+                display: 'inline-flex',
+                borderRadius: 6,
+                border: '1px solid var(--dark-border)',
+                background: 'var(--dark-canvas, #050507)',
+                padding: 2,
+                gap: 2,
+              }}
+            >
               <button
                 type="button"
                 onClick={() => {
                   setPeriodType('daily');
                   setDateStr('2026-10-16');
                 }}
-                className={`px-3 py-1 rounded text-xs font-semibold ${
-                  periodType === 'daily' ? 'bg-surface text-brand-gold-text shadow-xs' : 'text-text-secondary'
-                }`}
+                style={{
+                  padding: '4px 12px',
+                  borderRadius: 4,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: periodType === 'daily' ? 'var(--dark-surface)' : 'transparent',
+                  color: periodType === 'daily' ? 'var(--dark-accent)' : 'var(--dark-text-muted)',
+                }}
               >
                 Daily
               </button>
@@ -113,28 +216,44 @@ export const Reports: React.FC<ReportsProps> = ({ selectedDevice }) => {
                   setPeriodType('monthly');
                   setDateStr('2026-10');
                 }}
-                className={`px-3 py-1 rounded text-xs font-semibold ${
-                  periodType === 'monthly' ? 'bg-surface text-brand-gold-text shadow-xs' : 'text-text-secondary'
-                }`}
+                style={{
+                  padding: '4px 12px',
+                  borderRadius: 4,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: periodType === 'monthly' ? 'var(--dark-surface)' : 'transparent',
+                  color: periodType === 'monthly' ? 'var(--dark-accent)' : 'var(--dark-text-muted)',
+                }}
               >
                 Monthly
               </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-text-primary">Target:</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontWeight: 600, color: 'var(--dark-text-primary)' }}>Target:</span>
             <input
               type={periodType === 'daily' ? 'date' : 'month'}
               value={dateStr}
               onChange={(e) => setDateStr(e.target.value)}
-              className="px-2.5 py-1 bg-canvas border border-border rounded text-text-primary font-mono text-xs focus:outline-none"
+              style={{
+                padding: '5px 10px',
+                background: 'var(--dark-canvas, #050507)',
+                border: '1px solid var(--dark-border)',
+                borderRadius: 6,
+                color: 'var(--dark-text-primary)',
+                fontFamily: 'monospace',
+                fontSize: 12,
+                outline: 'none',
+              }}
             />
           </div>
 
-          <div className="flex items-center gap-1.5 text-text-secondary">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--dark-text-muted)' }}>
             <span>Timezone:</span>
-            <strong className="text-text-primary font-mono">Asia/Kolkata (UTC+05:30)</strong>
+            <strong style={{ color: 'var(--dark-text-primary)', fontFamily: 'monospace' }}>Asia/Kolkata (UTC+05:30)</strong>
           </div>
         </div>
 
@@ -148,24 +267,48 @@ export const Reports: React.FC<ReportsProps> = ({ selectedDevice }) => {
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} aria-hidden="true" />
           <span>Generate Report</span>
         </Button>
-      </Card>
+      </div>
 
       {/* Degraded Error */}
       {error && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-control flex items-center gap-3 text-xs text-brand-gold-text">
-          <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" aria-hidden="true" />
+        <div
+          style={{
+            padding: 16,
+            background: 'rgba(245,158,11,0.08)',
+            border: '1px solid rgba(245,158,11,0.25)',
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            fontSize: 12,
+            color: 'var(--dark-accent)',
+          }}
+        >
+          <AlertTriangle style={{ width: 16, height: 16, flexShrink: 0 }} aria-hidden="true" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Non-negotiable Billing Suppression Notice (R12, R13, T17) */}
-      <div className="p-4 bg-amber-50/70 border border-brand-gold/30 rounded-card flex items-start gap-3 text-xs">
-        <AlertOctagon className="w-5 h-5 text-brand-gold-text shrink-0 mt-0.5" aria-hidden="true" />
-        <div className="space-y-1">
-          <h4 className="font-bold text-text-primary">
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 12,
+          padding: 16,
+          background: 'rgba(245,158,11,0.06)',
+          border: '1px solid rgba(245,158,11,0.20)',
+          borderRadius: 10,
+          fontSize: 12,
+          color: 'var(--dark-text-primary)',
+        }}
+      >
+        <AlertOctagon style={{ width: 18, height: 18, color: 'var(--dark-accent)', flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ fontWeight: 700, color: 'var(--dark-accent)' }}>
             Contract Notice: Verified Billing Calculation Suppressed
-          </h4>
-          <p className="text-text-secondary leading-relaxed">
+          </span>
+          <p style={{ color: 'var(--dark-text-muted)', lineHeight: 1.6, margin: 0 }}>
             {report?.totals.billingSuppressionNotice ||
               'ESP32 raw legacy packets supply cumulative energy as uncalibrated tokens without verified tariff approval or certified calibration evidence. Verified currency calculations are strictly suppressed.'}
           </p>
@@ -176,126 +319,144 @@ export const Reports: React.FC<ReportsProps> = ({ selectedDevice }) => {
         <>
           {/* Summary KPIs */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="p-4 bg-surface border border-border">
-              <span className="text-xs text-text-secondary font-medium">Coverage Fraction</span>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-bold font-mono tracking-tight text-text-primary">
+            <div style={metricBoxStyle}>
+              <span style={sectionLabel}>Coverage Fraction</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                <span style={metricValue}>
                   {`${(report.coverage.timeCoveredFraction * 100).toFixed(1)}%`}
                 </span>
-                <span className="text-[11px] text-brand-gold-text font-semibold capitalize">
+                <span style={{ fontSize: 11, color: 'var(--dark-accent)', fontWeight: 700, textTransform: 'capitalize' }}>
                   {report.coverage.boundaryQuality.replace('_', ' ')}
                 </span>
               </div>
-              <span className="text-[11px] text-text-secondary mt-1 block font-mono">
+              <span style={{ fontSize: 11, color: 'var(--dark-text-muted)', fontFamily: 'monospace', marginTop: 4 }}>
                 {`${report.coverage.receivedSampleCount} / ${report.coverage.expectedSampleCount} samples`}
               </span>
-            </Card>
+            </div>
 
-            <Card className="p-4 bg-surface border border-border">
-              <span className="text-xs text-text-secondary font-medium">Identified Gaps</span>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-bold font-mono tracking-tight text-text-primary">
-                  {report.coverage.gaps.length}
-                </span>
-                <span className="text-[11px] text-text-secondary">intervals</span>
+            <div style={metricBoxStyle}>
+              <span style={sectionLabel}>Identified Gaps</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                <span style={metricValue}>{report.coverage.gaps.length}</span>
+                <span style={{ fontSize: 11, color: 'var(--dark-text-muted)' }}>intervals</span>
               </div>
-              <span className="text-[11px] text-text-secondary mt-1 block">
+              <span style={{ fontSize: 11, color: 'var(--dark-text-muted)', marginTop: 4 }}>
                 {report.coverage.gaps.length === 0 ? 'Zero missing packet timeouts' : 'Discontinuous data'}
               </span>
-            </Card>
+            </div>
 
-            <Card className="p-4 bg-surface border border-border">
-              <span className="text-xs text-text-secondary font-medium">Verified Consumption</span>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-bold font-mono tracking-tight text-text-primary">
+            <div style={metricBoxStyle}>
+              <span style={sectionLabel}>Verified Consumption</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                <span style={metricValue}>
                   {report.totals.totalUsageKwh !== null ? `${report.totals.totalUsageKwh} kWh` : '—'}
                 </span>
               </div>
-              <span className="text-[11px] text-text-secondary mt-1 block">
+              <span style={{ fontSize: 11, color: 'var(--dark-text-muted)', marginTop: 4 }}>
                 {report.totals.totalUsageKwh !== null ? 'Sum of verified channels' : 'Uncalibrated tokens'}
               </span>
-            </Card>
+            </div>
 
-            <Card className="p-4 bg-surface border border-border">
-              <span className="text-xs text-text-secondary font-medium">Certified Utility Cost</span>
-              <div className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-bold font-mono tracking-tight text-text-primary">
+            <div style={metricBoxStyle}>
+              <span style={sectionLabel}>Certified Utility Cost</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                <span style={metricValue}>
                   {report.totals.costEstimateInr !== null ? `₹${report.totals.costEstimateInr}` : '—'}
                 </span>
-                <span className="text-[10px] text-status-warning font-semibold">
+                <span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 700 }}>
                   {report.totals.isCostVerified ? 'Verified' : 'Suppressed'}
                 </span>
               </div>
-              <span className="text-[11px] text-text-secondary mt-1 block">
+              <span style={{ fontSize: 11, color: 'var(--dark-text-muted)', marginTop: 4 }}>
                 {report.totals.isCostVerified ? 'Approved Tariff' : 'Requires tariff certification'}
               </span>
-            </Card>
+            </div>
           </div>
 
           {/* Channel Detail Table */}
-          <Card className="p-0 overflow-hidden">
-            <div className="p-4 border-b border-border bg-surface flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-text-primary tracking-tight">
-                  Channel Usage &amp; Counter Delta Breakdown
-                </h3>
-                <p className="text-xs text-text-secondary mt-0.5">
-                  Calculated strictly across verified epochs without synthetic interpolation or proration.
-                </p>
-              </div>
+          <div style={{ ...darkSurface, padding: '20px 24px' }}>
+            <div style={{ marginBottom: 16 }}>
+              <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-text-primary)', margin: 0 }}>
+                Channel Usage &amp; Counter Delta Breakdown
+              </h3>
+              <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
+                Calculated strictly across verified epochs without synthetic interpolation or proration.
+              </p>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
+              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: 12 }}>
                 <thead>
-                  <tr className="border-b border-border bg-canvas text-text-secondary font-semibold">
-                    <th className="py-2.5 px-3">Slot</th>
-                    <th className="py-2.5 px-3">Channel / Label</th>
-                    <th className="py-2.5 px-3 text-right">Start Counter</th>
-                    <th className="py-2.5 px-3 text-right">End Counter</th>
-                    <th className="py-2.5 px-3 text-right">Usage</th>
-                    <th className="py-2.5 px-3 text-right">Coverage</th>
-                    <th className="py-2.5 px-3 text-center">Status</th>
+                  <tr style={{ borderBottom: '1px solid var(--dark-border-strong)', background: 'transparent' }}>
+                    <th style={thStyle}>Slot</th>
+                    <th style={thStyle}>Channel / Label</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>Start Counter</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>End Counter</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>Usage</th>
+                    <th style={{ ...thStyle, textAlign: 'right' }}>Coverage</th>
+                    <th style={{ ...thStyle, textAlign: 'center' }}>Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody>
                   {Object.values(report.totals.channels).length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center text-text-secondary">
+                      <td colSpan={7} style={{ padding: '32px 12px', textAlign: 'center', color: 'var(--dark-text-muted)' }}>
                         No configured channels reporting for selected interval.
                       </td>
                     </tr>
                   ) : (
                     Object.values(report.totals.channels).map((ch) => (
-                      <tr key={ch.channelId} className="hover:bg-canvas/50 transition-colors font-mono">
-                        <td className="py-3 px-3 font-semibold text-brand-gold-text">
+                      <tr key={ch.channelId} style={{ borderBottom: '1px solid var(--dark-border)', fontFamily: 'monospace', color: 'var(--dark-text-primary)' }}>
+                        <td style={{ padding: '12px', fontWeight: 700, color: 'var(--dark-accent)' }}>
                           {ch.displaySlot ? `CH0${ch.displaySlot}` : '—'}
                         </td>
-                        <td className="py-3 px-3 font-sans font-medium text-text-primary">
+                        <td style={{ padding: '12px', fontFamily: 'sans-serif', fontWeight: 500 }}>
                           {ch.label}
-                          <span className="block text-[11px] text-text-secondary font-mono">{ch.channelId}</span>
+                          <span style={{ display: 'block', fontSize: 11, color: 'var(--dark-text-muted)', fontFamily: 'monospace' }}>{ch.channelId}</span>
                         </td>
-                        <td className="py-3 px-3 text-right tabular-nums text-text-secondary">
+                        <td style={{ padding: '12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--dark-text-muted)' }}>
                           {ch.startCounter ?? '—'}
                         </td>
-                        <td className="py-3 px-3 text-right tabular-nums text-text-secondary">
+                        <td style={{ padding: '12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--dark-text-muted)' }}>
                           {ch.endCounter ?? '—'}
                         </td>
-                        <td className="py-3 px-3 text-right tabular-nums font-semibold text-text-primary">
+                        <td style={{ padding: '12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: 'var(--dark-text-primary)' }}>
                           {ch.usageKwh !== null ? `${ch.usageKwh} kWh` : '—'}
                         </td>
-                        <td className="py-3 px-3 text-right tabular-nums">
+                        <td style={{ padding: '12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                           {`${(ch.coverage.timeCoveredFraction * 100).toFixed(1)}%`}
                         </td>
-                        <td className="py-3 px-3 text-center font-sans">
+                        <td style={{ padding: '12px', textAlign: 'center', fontFamily: 'sans-serif' }}>
                           {ch.usageKwh !== null ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 font-semibold">
-                              <CheckCircle2 className="w-3 h-3" />
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                padding: '2px 8px',
+                                borderRadius: 4,
+                                fontSize: 10,
+                                fontWeight: 700,
+                                background: 'rgba(34,197,94,0.12)',
+                                color: '#22c55e',
+                              }}
+                            >
+                              <CheckCircle2 style={{ width: 12, height: 12 }} />
                               <span>Calculated</span>
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-amber-50 text-amber-700 font-semibold">
-                              <span>Tokens</span>
+                            <span
+                              style={{
+                                display: 'inline-block',
+                                padding: '2px 8px',
+                                borderRadius: 4,
+                                fontSize: 10,
+                                fontWeight: 700,
+                                background: 'rgba(245,158,11,0.12)',
+                                color: '#f59e0b',
+                              }}
+                            >
+                              Tokens
                             </span>
                           )}
                         </td>
@@ -305,7 +466,7 @@ export const Reports: React.FC<ReportsProps> = ({ selectedDevice }) => {
                 </tbody>
               </table>
             </div>
-          </Card>
+          </div>
         </>
       )}
     </div>

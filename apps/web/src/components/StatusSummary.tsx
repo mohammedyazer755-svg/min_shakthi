@@ -20,19 +20,15 @@ export const StatusSummary: React.FC<StatusSummaryProps> = ({
   className = '',
 }) => {
   const getStatusIcon = (isGood: boolean, isDegraded = false) => {
-    if (isGood) {
-      return <CheckCircle2 className="w-4 h-4 text-status-positive flex-shrink-0" aria-hidden="true" />;
-    }
-    if (isDegraded) {
-      return <AlertTriangle className="w-4 h-4 text-status-warning flex-shrink-0" aria-hidden="true" />;
-    }
-    return <XCircle className="w-4 h-4 text-status-critical flex-shrink-0" aria-hidden="true" />;
+    if (isGood) return <CheckCircle2 className="w-3 h-3 flex-shrink-0" aria-hidden="true" style={{ color: 'var(--dark-status-ok)' }} />;
+    if (isDegraded) return <AlertTriangle className="w-3 h-3 flex-shrink-0" aria-hidden="true" style={{ color: 'var(--dark-status-warn)' }} />;
+    return <XCircle className="w-3 h-3 flex-shrink-0" aria-hidden="true" style={{ color: 'var(--dark-status-critical)' }} />;
   };
 
   const layers = [
     {
       name: 'Broker',
-      stateText: health.broker === 'connected' ? (health.brokerSubscribed ? 'Subscribed' : 'Connected (No SUBACK)') : health.broker === 'subscribing' ? 'Subscribing' : 'Disconnected',
+      stateText: health.broker === 'connected' ? (health.brokerSubscribed ? 'Subscribed' : 'Connected') : health.broker === 'subscribing' ? 'Subscribing' : 'Disconnected',
       isGood: health.broker === 'connected' && health.brokerSubscribed,
       isDegraded: health.broker === 'connected' && !health.brokerSubscribed,
     },
@@ -43,14 +39,14 @@ export const StatusSummary: React.FC<StatusSummaryProps> = ({
       isDegraded: health.process === 'degraded',
     },
     {
-      name: 'Database',
-      stateText: health.database === 'healthy' ? 'Healthy' : 'Outage / Spooling',
+      name: 'DB',
+      stateText: health.database === 'healthy' ? 'OK' : 'Outage',
       isGood: health.database === 'healthy',
       isDegraded: health.database === 'degraded',
     },
     {
       name: 'Stream',
-      stateText: socketConnected ? 'Connected' : 'Reconnecting',
+      stateText: socketConnected ? 'Live' : 'Reconnecting',
       isGood: socketConnected,
       isDegraded: false,
     },
@@ -58,24 +54,28 @@ export const StatusSummary: React.FC<StatusSummaryProps> = ({
 
   return (
     <div
-      className={`inline-flex flex-wrap items-center gap-3 sm:gap-4 px-3 py-1.5 bg-surface border border-border rounded-control text-xs ${className}`}
+      className={`inline-flex flex-wrap items-center gap-3 px-3 py-1.5 rounded-lg text-[10px] ${className}`}
       role="status"
       aria-label="System Health Status Summary"
+      style={{
+        background: 'var(--dark-surface)',
+        border: '1px solid var(--dark-border)',
+      }}
     >
       {layers.map((layer) => (
-        <div key={layer.name} className="inline-flex items-center space-x-1.5">
+        <div key={layer.name} className="inline-flex items-center gap-1">
           {layer.stateText === 'Reconnecting' || layer.stateText === 'Subscribing' ? (
-            <RefreshCw className="w-3.5 h-3.5 text-status-warning animate-spin flex-shrink-0" aria-hidden="true" />
+            <RefreshCw className="w-3 h-3 animate-spin flex-shrink-0" aria-hidden="true" style={{ color: 'var(--dark-status-warn)' }} />
           ) : (
             getStatusIcon(layer.isGood, layer.isDegraded)
           )}
-          <span className="font-medium text-text-primary">{layer.name}:</span>
-          <span className="text-text-secondary">{layer.stateText}</span>
+          <span className="font-bold uppercase tracking-wide" style={{ color: 'var(--dark-text-muted)' }}>{layer.name}</span>
+          <span className="font-medium" style={{ color: 'var(--dark-text-primary)' }}>{layer.stateText}</span>
         </div>
       ))}
       {health.persistenceLagMs > 1000 && (
-        <div className="inline-flex items-center space-x-1 text-status-warning font-medium">
-          <AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" />
+        <div className="inline-flex items-center gap-1 font-bold" style={{ color: 'var(--dark-status-warn)' }}>
+          <AlertTriangle className="w-3 h-3" aria-hidden="true" />
           <span>Lag: {Math.round(health.persistenceLagMs / 1000)}s</span>
         </div>
       )}

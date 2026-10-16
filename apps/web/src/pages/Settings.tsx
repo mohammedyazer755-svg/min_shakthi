@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Button } from '../components';
+import { Button } from '../components';
 import { useAuth } from '../auth/AuthContext';
 import {
   Settings as SettingsIcon,
@@ -19,6 +19,32 @@ interface AuditLogEntry {
   target: string;
   at: string;
 }
+
+const darkSurface: React.CSSProperties = {
+  background: 'var(--dark-surface)',
+  border: '1px solid var(--dark-border)',
+  borderRadius: 12,
+};
+
+const darkInput: React.CSSProperties = {
+  padding: '6px 10px',
+  background: 'var(--dark-canvas, #050507)',
+  border: '1px solid var(--dark-border-strong)',
+  borderRadius: 6,
+  color: 'var(--dark-text-primary)',
+  fontSize: 12,
+  fontWeight: 500,
+  outline: 'none',
+};
+
+const thStyle: React.CSSProperties = {
+  padding: '10px 12px',
+  color: 'var(--dark-text-muted)',
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  fontSize: 10,
+  letterSpacing: '0.1em',
+};
 
 export const Settings: React.FC = () => {
   const { user, accessToken, logout } = useAuth();
@@ -176,12 +202,22 @@ export const Settings: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-surface p-4 rounded-card border border-border">
+      <div
+        style={{
+          ...darkSurface,
+          padding: '16px 20px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+        }}
+      >
         <div>
-          <h2 className="text-base font-bold text-text-primary tracking-tight">
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--dark-text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
             Account Preferences &amp; Platform Configuration
           </h2>
-          <p className="text-xs text-text-secondary mt-0.5">
+          <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
             Manage user display preferences, security sessions, and administrative threshold rules.
           </p>
         </div>
@@ -190,7 +226,12 @@ export const Settings: React.FC = () => {
           variant="secondary"
           size="sm"
           onClick={logout}
-          className="inline-flex items-center gap-1.5 text-status-critical border-status-critical/30 hover:bg-status-critical/10"
+          className="inline-flex items-center gap-1.5"
+          style={{
+            color: '#f87171',
+            borderColor: 'rgba(245,101,101,0.3)',
+            background: 'rgba(245,101,101,0.08)',
+          }}
         >
           <LogOut className="w-3.5 h-3.5" />
           <span>Sign Out</span>
@@ -201,49 +242,64 @@ export const Settings: React.FC = () => {
         {/* Left Column: Account Profile & Preferences */}
         <div className="space-y-6">
           {/* Profile Card */}
-          <Card className="p-4 bg-surface border border-border space-y-4">
-            <div className="flex items-center gap-2 border-b border-border pb-3">
-              <User className="w-4 h-4 text-brand-gold-text" />
-              <h3 className="text-sm font-semibold text-text-primary">User Profile</h3>
+          <div style={{ ...darkSurface, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--dark-border)', paddingBottom: 12 }}>
+              <User style={{ width: 16, height: 16, color: 'var(--dark-accent)' }} />
+              <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-text-primary)', margin: 0 }}>User Profile</h3>
             </div>
 
-            <div className="space-y-2 text-xs">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 12 }}>
               <div>
-                <span className="text-text-secondary block">Display Name</span>
-                <span className="font-semibold text-text-primary">{user?.displayName}</span>
+                <span style={{ color: 'var(--dark-text-muted)', display: 'block', fontSize: 11, marginBottom: 2 }}>Display Name</span>
+                <span style={{ fontWeight: 600, color: 'var(--dark-text-primary)' }}>{user?.displayName}</span>
               </div>
               <div>
-                <span className="text-text-secondary block">Email</span>
-                <span className="font-mono text-text-primary">{user?.email}</span>
+                <span style={{ color: 'var(--dark-text-muted)', display: 'block', fontSize: 11, marginBottom: 2 }}>Email</span>
+                <span style={{ fontFamily: 'monospace', color: 'var(--dark-text-primary)' }}>{user?.email}</span>
               </div>
               <div>
-                <span className="text-text-secondary block">Assigned Role</span>
-                <span className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-brand-gold/20 text-brand-gold-text">
+                <span style={{ color: 'var(--dark-text-muted)', display: 'block', fontSize: 11, marginBottom: 4 }}>Assigned Role</span>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    padding: '2px 8px',
+                    borderRadius: 4,
+                    fontSize: 10,
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    background: 'var(--dark-accent-dim)',
+                    color: 'var(--dark-accent)',
+                    border: '1px solid rgba(200,169,110,0.3)',
+                  }}
+                >
                   {user?.role}
                 </span>
               </div>
               <div>
-                <span className="text-text-secondary block">Site Membership</span>
-                <span className="font-mono text-[11px] text-text-secondary break-all">{user?.siteId}</span>
+                <span style={{ color: 'var(--dark-text-muted)', display: 'block', fontSize: 11, marginBottom: 2 }}>Site Membership</span>
+                <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--dark-text-muted)', wordBreak: 'break-all' }}>{user?.siteId}</span>
               </div>
             </div>
-          </Card>
+          </div>
 
           {/* Preferences Card */}
-          <Card className="p-4 bg-surface border border-border space-y-4">
-            <div className="flex items-center gap-2 border-b border-border pb-3">
-              <SettingsIcon className="w-4 h-4 text-brand-gold-text" />
-              <h3 className="text-sm font-semibold text-text-primary">Display Preferences</h3>
+          <div style={{ ...darkSurface, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--dark-border)', paddingBottom: 12 }}>
+              <SettingsIcon style={{ width: 16, height: 16, color: 'var(--dark-accent)' }} />
+              <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-text-primary)', margin: 0 }}>Display Preferences</h3>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: 12 }}>
               <div>
-                <label htmlFor="settings-timezone-select" className="block text-text-secondary mb-1">Civil Timezone</label>
+                <label htmlFor="settings-timezone-select" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 6, fontSize: 11 }}>
+                  Civil Timezone
+                </label>
                 <select
                   id="settings-timezone-select"
                   value={timezone}
                   onChange={(e) => setTimezone(e.target.value)}
-                  className="w-full py-1.5 px-2.5 bg-canvas border border-border rounded text-text-primary font-medium focus:outline-none"
+                  style={{ ...darkInput, width: '100%' }}
                 >
                   <option value="Asia/Kolkata">Asia/Kolkata (IST · UTC+05:30)</option>
                   <option value="UTC">UTC (Universal Coordinated Time)</option>
@@ -252,22 +308,24 @@ export const Settings: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="settings-device-select" className="block text-text-secondary mb-1">Default Device</label>
+                <label htmlFor="settings-device-select" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 6, fontSize: 11 }}>
+                  Default Device
+                </label>
                 <select
                   id="settings-device-select"
                   value={preferredDevice}
                   onChange={(e) => setPreferredDevice(e.target.value)}
-                  className="w-full py-1.5 px-2.5 bg-canvas border border-border rounded text-text-primary font-medium focus:outline-none"
+                  style={{ ...darkInput, width: '100%', fontFamily: 'monospace' }}
                 >
                   <option value="prototype1">prototype1</option>
                   <option value="prototype2">prototype2</option>
                 </select>
               </div>
 
-              <div className="pt-2 flex items-center justify-between">
+              <div style={{ paddingTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 {prefsSaved && (
-                  <span className="text-xs text-emerald-700 flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span style={{ fontSize: 12, color: 'var(--dark-status-ok)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <CheckCircle2 style={{ width: 14, height: 14 }} />
                     <span>Saved</span>
                   </span>
                 )}
@@ -283,19 +341,19 @@ export const Settings: React.FC = () => {
                 </Button>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
 
         {/* Right Columns: Alert Rules Management & Audit Log */}
         <div className="lg:col-span-2 space-y-6">
           {/* Rules Management Card */}
-          <Card className="p-0 overflow-hidden bg-surface border border-border">
-            <div className="p-4 border-b border-border flex items-center justify-between">
+          <div style={{ ...darkSurface, overflow: 'hidden' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--dark-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h3 className="text-sm font-semibold text-text-primary tracking-tight">
+                <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-text-primary)', margin: 0 }}>
                   Threshold Alert Rules
                 </h3>
-                <p className="text-xs text-text-secondary mt-0.5">
+                <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
                   Durable alert criteria with debounce delays and hysteresis deadbands.
                 </p>
               </div>
@@ -315,16 +373,16 @@ export const Settings: React.FC = () => {
 
             {/* Add Rule Form */}
             {showAddRule && (
-              <div className="p-4 bg-canvas border-b border-border space-y-3 text-xs">
-                <h4 className="font-bold text-text-primary">Create New Threshold Rule</h4>
+              <div style={{ padding: 16, background: 'var(--dark-canvas, #050507)', borderBottom: '1px solid var(--dark-border)', display: 'flex', flexDirection: 'column', gap: 12, fontSize: 12 }}>
+                <h4 style={{ fontWeight: 700, color: 'var(--dark-text-primary)', margin: 0 }}>Create New Threshold Rule</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
-                    <label htmlFor="settings-metric-select" className="block text-text-secondary mb-1">Metric</label>
+                    <label htmlFor="settings-metric-select" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 4, fontSize: 11 }}>Metric</label>
                     <select
                       id="settings-metric-select"
                       value={newMetric}
                       onChange={(e) => setNewMetric(e.target.value as 'voltage' | 'current' | 'power' | 'frequency')}
-                      className="w-full p-1.5 bg-surface border border-border rounded"
+                      style={{ ...darkInput, width: '100%' }}
                     >
                       <option value="voltage">Voltage (V)</option>
                       <option value="current">Current (A)</option>
@@ -334,12 +392,12 @@ export const Settings: React.FC = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="settings-operator-select" className="block text-text-secondary mb-1">Operator</label>
+                    <label htmlFor="settings-operator-select" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 4, fontSize: 11 }}>Operator</label>
                     <select
                       id="settings-operator-select"
                       value={newOperator}
                       onChange={(e) => setNewOperator(e.target.value as 'gt' | 'lt' | 'gte' | 'lte')}
-                      className="w-full p-1.5 bg-surface border border-border rounded"
+                      style={{ ...darkInput, width: '100%' }}
                     >
                       <option value="gt">&gt; Greater Than</option>
                       <option value="gte">&gt;= Greater/Equal</option>
@@ -349,47 +407,47 @@ export const Settings: React.FC = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="settings-threshold-input" className="block text-text-secondary mb-1">Threshold Value</label>
+                    <label htmlFor="settings-threshold-input" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 4, fontSize: 11 }}>Threshold Value</label>
                     <input
                       id="settings-threshold-input"
                       type="number"
                       step="any"
                       value={newThreshold}
                       onChange={(e) => setNewThreshold(Number(e.target.value))}
-                      className="w-full p-1.5 bg-surface border border-border rounded font-mono"
+                      style={{ ...darkInput, width: '100%', fontFamily: 'monospace' }}
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="settings-hysteresis-input" className="block text-text-secondary mb-1">Hysteresis</label>
+                    <label htmlFor="settings-hysteresis-input" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 4, fontSize: 11 }}>Hysteresis</label>
                     <input
                       id="settings-hysteresis-input"
                       type="number"
                       step="any"
                       value={newHysteresis}
                       onChange={(e) => setNewHysteresis(Number(e.target.value))}
-                      className="w-full p-1.5 bg-surface border border-border rounded font-mono"
+                      style={{ ...darkInput, width: '100%', fontFamily: 'monospace' }}
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="settings-debounce-input" className="block text-text-secondary mb-1">Debounce (ms)</label>
+                    <label htmlFor="settings-debounce-input" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 4, fontSize: 11 }}>Debounce (ms)</label>
                     <input
                       id="settings-debounce-input"
                       type="number"
                       value={newDebounceMs}
                       onChange={(e) => setNewDebounceMs(Number(e.target.value))}
-                      className="w-full p-1.5 bg-surface border border-border rounded font-mono"
+                      style={{ ...darkInput, width: '100%', fontFamily: 'monospace' }}
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="settings-severity-select" className="block text-text-secondary mb-1">Severity</label>
+                    <label htmlFor="settings-severity-select" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 4, fontSize: 11 }}>Severity</label>
                     <select
                       id="settings-severity-select"
                       value={newSeverity}
                       onChange={(e) => setNewSeverity(e.target.value as 'critical' | 'warning' | 'info')}
-                      className="w-full p-1.5 bg-surface border border-border rounded"
+                      style={{ ...darkInput, width: '100%' }}
                     >
                       <option value="critical">Critical</option>
                       <option value="warning">Warning</option>
@@ -398,7 +456,7 @@ export const Settings: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-2 pt-2">
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, paddingTop: 6 }}>
                   <Button variant="secondary" size="sm" onClick={() => setShowAddRule(false)}>
                     Cancel
                   </Button>
@@ -411,57 +469,64 @@ export const Settings: React.FC = () => {
 
             {/* Rules Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
+              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: 12 }}>
                 <thead>
-                  <tr className="border-b border-border bg-canvas text-text-secondary font-semibold">
-                    <th className="py-2.5 px-3">Metric</th>
-                    <th className="py-2.5 px-3">Condition</th>
-                    <th className="py-2.5 px-3">Hysteresis</th>
-                    <th className="py-2.5 px-3">Debounce</th>
-                    <th className="py-2.5 px-3">Severity</th>
-                    {isAdmin && <th className="py-2.5 px-3 text-right">Action</th>}
+                  <tr style={{ borderBottom: '1px solid var(--dark-border-strong)', background: 'transparent' }}>
+                    <th style={thStyle}>Metric</th>
+                    <th style={thStyle}>Condition</th>
+                    <th style={thStyle}>Hysteresis</th>
+                    <th style={thStyle}>Debounce</th>
+                    <th style={thStyle}>Severity</th>
+                    {isAdmin && <th style={{ ...thStyle, textAlign: 'right' }}>Action</th>}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody>
                   {rules.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-text-secondary">
+                      <td colSpan={6} style={{ padding: '32px 12px', textAlign: 'center', color: 'var(--dark-text-muted)' }}>
                         {loadingRules ? 'Loading rules...' : 'No alert rules configured.'}
                       </td>
                     </tr>
                   ) : (
                     rules.map((r) => (
-                      <tr key={r.id} className="hover:bg-canvas/50 font-mono">
-                        <td className="py-3 px-3 font-semibold text-text-primary uppercase">
+                      <tr key={r.id} style={{ borderBottom: '1px solid var(--dark-border)', fontFamily: 'monospace', color: 'var(--dark-text-primary)' }}>
+                        <td style={{ padding: '12px', fontWeight: 700, color: 'var(--dark-text-primary)', textTransform: 'uppercase' }}>
                           {r.metric}
                         </td>
-                        <td className="py-3 px-3">
+                        <td style={{ padding: '12px' }}>
                           {`${r.operator} ${r.threshold}`}
                         </td>
-                        <td className="py-3 px-3 text-text-secondary">
+                        <td style={{ padding: '12px', color: 'var(--dark-text-muted)' }}>
                           {`±${r.hysteresis}`}
                         </td>
-                        <td className="py-3 px-3 text-text-secondary">
+                        <td style={{ padding: '12px', color: 'var(--dark-text-muted)' }}>
                           {`${r.debounceMs}ms`}
                         </td>
-                        <td className="py-3 px-3 font-sans">
+                        <td style={{ padding: '12px', fontFamily: 'sans-serif' }}>
                           <span
-                            className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${
-                              r.severity === 'critical' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'
-                            }`}
+                            style={{
+                              display: 'inline-block',
+                              padding: '2px 8px',
+                              borderRadius: 4,
+                              fontSize: 10,
+                              fontWeight: 800,
+                              textTransform: 'uppercase',
+                              background: r.severity === 'critical' ? 'rgba(245,101,101,0.15)' : 'rgba(245,158,11,0.15)',
+                              color: r.severity === 'critical' ? '#f87171' : '#fbbf24',
+                            }}
                           >
                             {r.severity}
                           </span>
                         </td>
                         {isAdmin && (
-                          <td className="py-3 px-3 text-right">
+                          <td style={{ padding: '12px', textAlign: 'right' }}>
                             <button
                               type="button"
                               onClick={() => handleDeleteRule(r.id)}
-                              className="text-text-secondary hover:text-red-700 p-1"
+                              style={{ color: 'var(--dark-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
                               title="Delete Rule"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 style={{ width: 14, height: 14 }} />
                             </button>
                           </td>
                         )}
@@ -471,49 +536,49 @@ export const Settings: React.FC = () => {
                 </tbody>
               </table>
             </div>
-          </Card>
+          </div>
 
           {/* Audit Log Card (Admin Only) */}
           {isAdmin && (
-            <Card className="p-0 overflow-hidden bg-surface border border-border">
-              <div className="p-4 border-b border-border flex items-center justify-between">
+            <div style={{ ...darkSurface, overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--dark-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <h3 className="text-sm font-semibold text-text-primary tracking-tight">
+                  <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-text-primary)', margin: 0 }}>
                     Administrative Configuration Audit Trail
                   </h3>
-                  <p className="text-xs text-text-secondary mt-0.5">
+                  <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
                     Immutable history of mapping revisions, rule changes, and alert acknowledgements.
                   </p>
                 </div>
-                <Shield className="w-4 h-4 text-brand-gold-text" />
+                <Shield style={{ width: 16, height: 16, color: 'var(--dark-accent)' }} />
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
+                <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead>
-                    <tr className="border-b border-border bg-canvas text-text-secondary font-semibold">
-                      <th className="py-2.5 px-3">Timestamp</th>
-                      <th className="py-2.5 px-3">Action</th>
-                      <th className="py-2.5 px-3">Target</th>
+                    <tr style={{ borderBottom: '1px solid var(--dark-border-strong)', background: 'transparent' }}>
+                      <th style={thStyle}>Timestamp</th>
+                      <th style={thStyle}>Action</th>
+                      <th style={thStyle}>Target</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border font-mono">
+                  <tbody style={{ fontFamily: 'monospace' }}>
                     {auditLogs.length === 0 ? (
                       <tr>
-                        <td colSpan={3} className="py-6 text-center text-text-secondary">
+                        <td colSpan={3} style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--dark-text-muted)' }}>
                           No administrative actions recorded in current session.
                         </td>
                       </tr>
                     ) : (
                       auditLogs.map((l) => (
-                        <tr key={l.id} className="hover:bg-canvas/50">
-                          <td className="py-2.5 px-3 text-text-secondary">
+                        <tr key={l.id} style={{ borderBottom: '1px solid var(--dark-border)', color: 'var(--dark-text-primary)' }}>
+                          <td style={{ padding: '10px 12px', color: 'var(--dark-text-muted)' }}>
                             {new Date(l.at).toLocaleString()}
                           </td>
-                          <td className="py-2.5 px-3 font-semibold text-text-primary">
+                          <td style={{ padding: '10px 12px', fontWeight: 600 }}>
                             {l.action}
                           </td>
-                          <td className="py-2.5 px-3 text-brand-gold-text">
+                          <td style={{ padding: '10px 12px', color: 'var(--dark-accent)' }}>
                             {l.target}
                           </td>
                         </tr>
@@ -522,7 +587,7 @@ export const Settings: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-            </Card>
+            </div>
           )}
         </div>
       </div>

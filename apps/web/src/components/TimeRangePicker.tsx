@@ -24,7 +24,11 @@ export const TimeRangePicker: React.FC<TimeRangePickerProps> = ({
     <div
       role="radiogroup"
       aria-label="Select historical time range"
-      className={`inline-flex rounded-control border border-border bg-canvas p-0.5 ${className}`}
+      className={`inline-flex rounded-lg p-0.5 ${className}`}
+      style={{
+        background: 'var(--dark-canvas, #050507)',
+        border: '1px solid var(--dark-border)',
+      }}
     >
       {options.map((opt) => {
         const isSelected = value === opt.id;
@@ -35,11 +39,12 @@ export const TimeRangePicker: React.FC<TimeRangePickerProps> = ({
             aria-checked={isSelected}
             type="button"
             onClick={() => onChange(opt.id)}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-[6px] transition-all focus:outline-none focus:ring-2 focus:ring-brand-gold ${
-              isSelected
-                ? 'bg-surface text-text-primary shadow-xs'
-                : 'text-text-secondary hover:text-text-primary'
-            }`}
+            className="px-3 py-1.5 text-xs font-bold rounded-md transition-all focus:outline-none"
+            style={{
+              background: isSelected ? 'var(--dark-surface)' : 'transparent',
+              color: isSelected ? 'var(--dark-accent)' : 'var(--dark-text-muted)',
+              border: isSelected ? '1px solid rgba(200,169,110,0.3)' : '1px solid transparent',
+            }}
           >
             {opt.label}
           </button>

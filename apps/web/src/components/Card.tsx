@@ -10,18 +10,26 @@ export const Card: React.FC<CardProps> = ({
   children,
   className = '',
   padding = 'md',
+  style,
   ...rest
 }) => {
-  const paddingClasses = {
-    none: 'p-0',
-    sm: 'p-3',
-    md: 'p-4 sm:p-6',
-    lg: 'p-6 sm:p-8',
+  const paddingStyle = {
+    none: {},
+    sm: { padding: '12px' },
+    md: { padding: '16px 20px' },
+    lg: { padding: '24px 28px' },
   }[padding];
 
   return (
     <div
-      className={`bg-surface border border-border rounded-card shadow-subtle ${paddingClasses} ${className}`}
+      className={className}
+      style={{
+        background: 'var(--dark-surface)',
+        border: '1px solid var(--dark-border)',
+        borderRadius: '12px',
+        ...paddingStyle,
+        ...style,
+      }}
       {...rest}
     >
       {children}

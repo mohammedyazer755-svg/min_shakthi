@@ -13,46 +13,62 @@ export const Button: React.FC<ButtonProps> = ({
   isLoading = false,
   disabled,
   className = '',
+  style,
   ...rest
 }) => {
-  const baseClasses =
-    'inline-flex items-center justify-center font-medium rounded-control transition-colors select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-gold disabled:opacity-50 disabled:pointer-events-none';
-
-  const sizeClasses = {
-    sm: 'min-h-[36px] px-3 py-1 text-xs',
-    md: 'min-h-[44px] px-4 py-2 text-sm', // Meets 44px minimum touch target
-    lg: 'min-h-[48px] px-6 py-2.5 text-base',
+  const sizeStyle = {
+    sm: { minHeight: '36px', padding: '4px 12px', fontSize: '12px' },
+    md: { minHeight: '44px', padding: '8px 16px', fontSize: '14px' },
+    lg: { minHeight: '48px', padding: '10px 24px', fontSize: '16px' },
   }[size];
 
-  const variantClasses = {
-    primary: 'bg-btn-primary text-white hover:bg-[#343936] active:bg-[#181a19]',
-    secondary: 'bg-surface text-text-primary border border-border hover:bg-[#F2F1EC] active:bg-[#EAE8E1]',
-    danger: 'bg-status-critical text-white hover:bg-[#8e2626] active:bg-[#721e1e]',
-    ghost: 'bg-transparent text-text-primary hover:bg-[#EAE8E1]/50 active:bg-[#EAE8E1]',
+  const variantStyle: React.CSSProperties = {
+    primary: {
+      background: 'var(--dark-accent)',
+      color: '#000000',
+      border: 'none',
+    },
+    secondary: {
+      background: 'var(--dark-surface)',
+      color: 'var(--dark-text-primary)',
+      border: '1px solid var(--dark-border-strong)',
+    },
+    danger: {
+      background: 'rgba(245,101,101,0.15)',
+      color: '#f87171',
+      border: '1px solid rgba(245,101,101,0.3)',
+    },
+    ghost: {
+      background: 'transparent',
+      color: 'var(--dark-text-muted)',
+      border: '1px solid var(--dark-border)',
+    },
   }[variant];
 
   return (
     <button
-      className={`${baseClasses} ${sizeClasses} ${variantClasses} ${className}`}
+      className={`inline-flex items-center justify-center font-semibold rounded-lg transition-all select-none relative overflow-hidden
+        disabled:opacity-40 disabled:pointer-events-none
+        focus-visible:outline-2 focus-visible:outline-offset-2
+        ${className}`}
       disabled={disabled || isLoading}
+      style={{
+        ...sizeStyle,
+        ...variantStyle,
+        cursor: disabled || isLoading ? 'not-allowed' : 'pointer',
+        ...style,
+      }}
       {...rest}
     >
       {isLoading ? (
-        <span className="inline-flex items-center space-x-2">
+        <span className="inline-flex items-center gap-2">
           <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
+            className="animate-spin h-4 w-4 text-current"
             fill="none"
             viewBox="0 0 24 24"
             aria-hidden="true"
           >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path
               className="opacity-75"
               fill="currentColor"

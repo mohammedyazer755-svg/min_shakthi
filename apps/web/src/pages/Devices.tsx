@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Button } from '../components';
+import { Button } from '../components';
 import { useAuth } from '../auth/AuthContext';
 import type { UseLiveTelemetryResult } from '../live/useLiveTelemetry';
 import {
@@ -16,6 +16,51 @@ export interface DevicesProps {
   telemetry: UseLiveTelemetryResult;
   selectedDevice: string;
 }
+
+const darkSurface: React.CSSProperties = {
+  background: 'var(--dark-surface)',
+  border: '1px solid var(--dark-border)',
+  borderRadius: 12,
+};
+
+const metricBoxStyle: React.CSSProperties = {
+  background: 'var(--dark-surface)',
+  border: '1px solid var(--dark-border)',
+  borderRadius: 12,
+  padding: '20px 24px',
+  borderTop: '2px solid var(--dark-accent)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 4,
+};
+
+const sectionLabel: React.CSSProperties = {
+  fontSize: 10,
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.15em',
+  color: 'var(--dark-text-muted)',
+};
+
+const darkInput: React.CSSProperties = {
+  padding: '6px 10px',
+  background: 'var(--dark-canvas, #050507)',
+  border: '1px solid var(--dark-border-strong)',
+  borderRadius: 6,
+  color: 'var(--dark-text-primary)',
+  fontSize: 12,
+  fontWeight: 500,
+  outline: 'none',
+};
+
+const thStyle: React.CSSProperties = {
+  padding: '10px 12px',
+  color: 'var(--dark-text-muted)',
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  fontSize: 10,
+  letterSpacing: '0.1em',
+};
 
 export const Devices: React.FC<DevicesProps> = ({ selectedDevice }) => {
   const { accessToken, user } = useAuth();
@@ -108,7 +153,6 @@ export const Devices: React.FC<DevicesProps> = ({ selectedDevice }) => {
       });
 
       if (res.status === 409) {
-        // Optimistic locking conflict (R15)
         setConflictError(true);
         setError('Configuration conflict: Device mappings were updated by another administrator. Please reload current state.');
         return;
@@ -134,19 +178,42 @@ export const Devices: React.FC<DevicesProps> = ({ selectedDevice }) => {
   return (
     <div className="space-y-6">
       {/* Top Header Card */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-surface p-4 rounded-card border border-border">
+      <div
+        style={{
+          ...darkSurface,
+          padding: '16px 20px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+        }}
+      >
         <div>
-          <h2 className="text-base font-bold text-text-primary tracking-tight">
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--dark-text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
             Device Diagnostics &amp; Channel Mapping Editor
           </h2>
-          <p className="text-xs text-text-secondary mt-0.5">
+          <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
             Configure hardware slot assignments (CH01–CH05) with optimistic version locking and audit logging.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-canvas rounded border border-border text-xs text-text-secondary font-mono">
-            <Layers className="w-3.5 h-3.5 text-brand-gold-text" aria-hidden="true" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '4px 10px',
+              background: 'var(--dark-canvas, #050507)',
+              borderRadius: 6,
+              border: '1px solid var(--dark-border)',
+              fontSize: 12,
+              color: 'var(--dark-text-muted)',
+              fontFamily: 'monospace',
+            }}
+          >
+            <Layers style={{ width: 14, height: 14, color: 'var(--dark-accent)' }} aria-hidden="true" />
             <span>{`Config Version: v${configVersion}`}</span>
           </span>
 
@@ -178,10 +245,22 @@ export const Devices: React.FC<DevicesProps> = ({ selectedDevice }) => {
 
       {/* Conflict / Error Banner */}
       {conflictError && (
-        <div className="p-4 bg-amber-50 border border-amber-300 rounded-control flex items-center justify-between text-xs text-brand-gold-text">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" aria-hidden="true" />
-            <span className="font-semibold">{error}</span>
+        <div
+          style={{
+            padding: 16,
+            background: 'rgba(245,158,11,0.08)',
+            border: '1px solid rgba(245,158,11,0.3)',
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: 12,
+            color: 'var(--dark-accent)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <AlertTriangle style={{ width: 16, height: 16, flexShrink: 0 }} aria-hidden="true" />
+            <span style={{ fontWeight: 600 }}>{error}</span>
           </div>
           <Button variant="secondary" size="sm" onClick={fetchDevice}>
             Reload Current Mappings
@@ -190,15 +269,39 @@ export const Devices: React.FC<DevicesProps> = ({ selectedDevice }) => {
       )}
 
       {saveSuccess && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-control flex items-center gap-2 text-xs text-emerald-800">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+        <div
+          style={{
+            padding: 12,
+            background: 'rgba(34,212,124,0.1)',
+            border: '1px solid rgba(34,212,124,0.25)',
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            fontSize: 12,
+            color: 'var(--dark-status-ok)',
+          }}
+        >
+          <CheckCircle2 style={{ width: 16, height: 16, flexShrink: 0 }} />
           <span>Device channel mappings successfully committed and cached.</span>
         </div>
       )}
 
       {!isAdmin && (
-        <div className="p-3 bg-canvas border border-border rounded-control flex items-center gap-2 text-xs text-text-secondary">
-          <Lock className="w-3.5 h-3.5 text-brand-gold-text" />
+        <div
+          style={{
+            padding: 12,
+            background: 'var(--dark-canvas, #050507)',
+            border: '1px solid var(--dark-border)',
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            fontSize: 12,
+            color: 'var(--dark-text-muted)',
+          }}
+        >
+          <Lock style={{ width: 14, height: 14, color: 'var(--dark-accent)' }} />
           <span>Channel mapping modification requires Administrator credentials. Viewing in read-only mode.</span>
         </div>
       )}
@@ -206,105 +309,108 @@ export const Devices: React.FC<DevicesProps> = ({ selectedDevice }) => {
       {/* Diagnostics Cards */}
       {diagnostics && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="p-4 bg-surface border border-border">
-            <span className="text-xs text-text-secondary font-medium">Broker Transport Link</span>
-            <div className="mt-1 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-status-positive animate-pulse" />
-              <span className="text-base font-bold font-mono text-text-primary capitalize">
+          <div style={metricBoxStyle}>
+            <span style={sectionLabel}>Broker Transport Link</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
+              <span style={{ fontSize: 16, fontWeight: 800, fontFamily: 'monospace', color: 'var(--dark-text-primary)', textTransform: 'capitalize' }}>
                 {diagnostics.brokerStatus}
               </span>
             </div>
-            <span className="text-[11px] text-text-secondary mt-1 block font-mono">
+            <span style={{ fontSize: 11, color: 'var(--dark-text-muted)', fontFamily: 'monospace', marginTop: 4 }}>
               Dedicated Ingest Pipeline
             </span>
-          </Card>
+          </div>
 
-          <Card className="p-4 bg-surface border border-border">
-            <span className="text-xs text-text-secondary font-medium">Expected Interval</span>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-xl font-bold font-mono text-text-primary">
+          <div style={metricBoxStyle}>
+            <span style={sectionLabel}>Expected Interval</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
+              <span style={{ fontSize: 18, fontWeight: 800, fontFamily: 'monospace', color: 'var(--dark-text-primary)' }}>
                 {`${diagnostics.expectedIntervalMs}ms`}
               </span>
-              <span className="text-[11px] text-text-secondary font-mono">
+              <span style={{ fontSize: 11, color: 'var(--dark-text-muted)', fontFamily: 'monospace' }}>
                 {`±${diagnostics.intervalJitterMs}ms jitter`}
               </span>
             </div>
-            <span className="text-[11px] text-text-secondary mt-1 block">
+            <span style={{ fontSize: 11, color: 'var(--dark-text-muted)', marginTop: 4 }}>
               Configured per ESP32 firmware
             </span>
-          </Card>
+          </div>
 
-          <Card className="p-4 bg-surface border border-border">
-            <span className="text-xs text-text-secondary font-medium">Quarantined Packets</span>
-            <div className="mt-1 flex items-baseline gap-2">
-              <span className="text-xl font-bold font-mono text-text-primary">
+          <div style={metricBoxStyle}>
+            <span style={sectionLabel}>Quarantined Packets</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
+              <span style={{ fontSize: 18, fontWeight: 800, fontFamily: 'monospace', color: 'var(--dark-text-primary)' }}>
                 {diagnostics.quarantineCount}
               </span>
-              <span className="text-[11px] text-text-secondary">dropped</span>
+              <span style={{ fontSize: 11, color: 'var(--dark-text-muted)' }}>dropped</span>
             </div>
-            <span className="text-[11px] text-text-secondary mt-1 block">
+            <span style={{ fontSize: 11, color: 'var(--dark-text-muted)', marginTop: 4 }}>
               Malformed / NaN packets rejected
             </span>
-          </Card>
+          </div>
 
-          <Card className="p-4 bg-surface border border-border">
-            <span className="text-xs text-text-secondary font-medium">Device Status</span>
-            <div className="mt-1 flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-status-positive" />
-              <span className="text-base font-bold text-text-primary font-mono">
+          <div style={metricBoxStyle}>
+            <span style={sectionLabel}>Device Status</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
+              <span style={{ fontSize: 16, fontWeight: 800, fontFamily: 'monospace', color: 'var(--dark-text-primary)' }}>
                 {diagnostics.enabled ? 'Enabled' : 'Disabled'}
               </span>
             </div>
-            <span className="text-[11px] text-text-secondary mt-1 block font-mono">
+            <span style={{ fontSize: 11, color: 'var(--dark-text-muted)', fontFamily: 'monospace', marginTop: 4 }}>
               {diagnostics.rawDeviceId}
             </span>
-          </Card>
+          </div>
         </div>
       )}
 
       {/* Mapping Editor Table */}
-      <Card className="p-0 overflow-hidden">
-        <div className="p-4 border-b border-border bg-surface flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-text-primary tracking-tight">
-              Hardware Channel Mappings (CH01–CH05)
-            </h3>
-            <p className="text-xs text-text-secondary mt-0.5">
-              Assign physical ESP32 telemetry keys to operational UI slots. Unmapped channels are preserved in raw storage.
-            </p>
-          </div>
+      <div style={{ ...darkSurface, padding: '20px 24px' }}>
+        <div style={{ marginBottom: 16 }}>
+          <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-text-primary)', margin: 0 }}>
+            Hardware Channel Mappings (CH01–CH05)
+          </h3>
+          <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
+            Assign physical ESP32 telemetry keys to operational UI slots. Unmapped channels are preserved in raw storage.
+          </p>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
-              <tr className="border-b border-border bg-canvas text-text-secondary font-semibold">
-                <th className="py-2.5 px-3">Raw Channel ID</th>
-                <th className="py-2.5 px-3">Display Slot</th>
-                <th className="py-2.5 px-3">Operational Label</th>
-                <th className="py-2.5 px-3 text-center">Status</th>
+              <tr style={{ borderBottom: '1px solid var(--dark-border-strong)', background: 'transparent' }}>
+                <th style={thStyle}>Raw Channel ID</th>
+                <th style={{ ...thStyle, color: 'var(--dark-accent)' }}>Display Slot</th>
+                <th style={thStyle}>Operational Label</th>
+                <th style={{ ...thStyle, textAlign: 'center' }}>Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody>
               {mappings.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-text-secondary">
+                  <td colSpan={4} style={{ padding: '32px 12px', textAlign: 'center', color: 'var(--dark-text-muted)' }}>
                     {loading ? 'Loading channel configuration...' : 'No channels discovered for this hardware device.'}
                   </td>
                 </tr>
               ) : (
                 mappings.map((m) => (
-                  <tr key={m.channelId} className="hover:bg-canvas/50 transition-colors">
-                    <td className="py-3 px-3 font-mono font-medium text-text-primary">
+                  <tr key={m.channelId} style={{ borderBottom: '1px solid var(--dark-border)', color: 'var(--dark-text-primary)' }}>
+                    <td style={{ padding: '12px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--dark-text-primary)' }}>
                       {m.channelId}
                     </td>
 
-                    <td className="py-3 px-3">
+                    <td style={{ padding: '12px' }}>
                       <select
                         value={m.displaySlot ? String(m.displaySlot) : 'none'}
                         onChange={(e) => handleSlotChange(m.channelId, e.target.value)}
                         disabled={!isAdmin}
-                        className="py-1 px-2.5 bg-canvas border border-border rounded text-text-primary font-semibold text-xs focus:outline-none disabled:opacity-60"
+                        style={{
+                          ...darkInput,
+                          fontFamily: 'monospace',
+                          fontWeight: 700,
+                          opacity: !isAdmin ? 0.6 : 1,
+                        }}
                       >
                         <option value="none">Unmapped (—)</option>
                         <option value="1">CH01 (Slot 1)</option>
@@ -315,26 +421,37 @@ export const Devices: React.FC<DevicesProps> = ({ selectedDevice }) => {
                       </select>
                     </td>
 
-                    <td className="py-3 px-3">
+                    <td style={{ padding: '12px' }}>
                       <input
                         type="text"
                         value={m.label}
                         onChange={(e) => handleLabelChange(m.channelId, e.target.value)}
                         disabled={!isAdmin}
-                        className="w-full max-w-sm py-1 px-2.5 bg-canvas border border-border rounded text-text-primary text-xs focus:outline-none disabled:opacity-60"
+                        style={{
+                          ...darkInput,
+                          width: '100%',
+                          maxWidth: 320,
+                          opacity: !isAdmin ? 0.6 : 1,
+                        }}
                       />
                     </td>
 
-                    <td className="py-3 px-3 text-center">
+                    <td style={{ padding: '12px', textAlign: 'center' }}>
                       <button
                         type="button"
                         onClick={() => handleToggleEnabled(m.channelId)}
                         disabled={!isAdmin}
-                        className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-colors ${
-                          m.enabled
-                            ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                            : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                        } disabled:pointer-events-none disabled:opacity-60`}
+                        style={{
+                          padding: '3px 10px',
+                          borderRadius: 4,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          border: 'none',
+                          cursor: !isAdmin ? 'not-allowed' : 'pointer',
+                          background: m.enabled ? 'rgba(34,212,124,0.12)' : 'rgba(85,85,95,0.2)',
+                          color: m.enabled ? '#22d47c' : 'var(--dark-text-muted)',
+                          opacity: !isAdmin ? 0.6 : 1,
+                        }}
                       >
                         {m.enabled ? 'Enabled' : 'Disabled'}
                       </button>
@@ -345,7 +462,7 @@ export const Devices: React.FC<DevicesProps> = ({ selectedDevice }) => {
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

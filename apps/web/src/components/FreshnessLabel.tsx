@@ -17,43 +17,64 @@ export const FreshnessLabel: React.FC<FreshnessLabelProps> = ({
     switch (freshness) {
       case 'fresh':
         return {
-          icon: <CheckCircle2 className="w-3.5 h-3.5 text-status-positive" aria-hidden="true" />,
+          icon: <CheckCircle2 className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--dark-status-ok)' }} />,
           label: 'Fresh',
-          containerClasses: 'text-status-positive bg-emerald-50 border-emerald-200',
+          style: {
+            color: 'var(--dark-status-ok)',
+            background: 'rgba(34,212,124,0.1)',
+            border: '1px solid rgba(34,212,124,0.25)',
+          },
         };
       case 'stale':
         return {
-          icon: <Clock className="w-3.5 h-3.5 text-status-warning" aria-hidden="true" />,
+          icon: <Clock className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--dark-status-warn)' }} />,
           label: 'Stale',
-          containerClasses: 'text-status-warning bg-amber-50 border-amber-200',
+          style: {
+            color: 'var(--dark-status-warn)',
+            background: 'rgba(245,158,11,0.1)',
+            border: '1px solid rgba(245,158,11,0.25)',
+          },
         };
       case 'offline_inferred':
         return {
-          icon: <AlertOctagon className="w-3.5 h-3.5 text-status-critical" aria-hidden="true" />,
-          label: 'Offline (inferred)',
-          containerClasses: 'text-status-critical bg-rose-50 border-rose-200',
+          icon: <AlertOctagon className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--dark-status-critical)' }} />,
+          label: 'Offline',
+          style: {
+            color: 'var(--dark-status-critical)',
+            background: 'rgba(245,101,101,0.1)',
+            border: '1px solid rgba(245,101,101,0.25)',
+          },
         };
       case 'unseen':
         return {
-          icon: <HelpCircle className="w-3.5 h-3.5 text-text-secondary" aria-hidden="true" />,
-          label: 'Awaiting first packet',
-          containerClasses: 'text-text-secondary bg-[#F2F1EC] border-border',
+          icon: <HelpCircle className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--dark-text-dim)' }} />,
+          label: 'Awaiting',
+          style: {
+            color: 'var(--dark-text-dim)',
+            background: 'rgba(85,85,95,0.15)',
+            border: '1px solid var(--dark-border)',
+          },
         };
       case 'unconfigured':
       default:
         return {
-          icon: <HelpCircle className="w-3.5 h-3.5 text-text-secondary" aria-hidden="true" />,
+          icon: <HelpCircle className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--dark-text-dim)' }} />,
           label: 'Not configured',
-          containerClasses: 'text-text-secondary bg-[#F2F1EC] border-border',
+          style: {
+            color: 'var(--dark-text-dim)',
+            background: 'rgba(85,85,95,0.15)',
+            border: '1px solid var(--dark-border)',
+          },
         };
     }
   };
 
-  const { icon, label, containerClasses } = getDisplay();
+  const { icon, label, style } = getDisplay();
 
   return (
     <span
-      className={`inline-flex items-center space-x-1.5 px-2 py-0.5 text-xs font-medium border rounded-badge ${containerClasses} ${className}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded ${className}`}
+      style={style}
       title={lastReceivedAt ? `Last received at: ${new Date(lastReceivedAt).toLocaleTimeString()}` : undefined}
     >
       {icon}

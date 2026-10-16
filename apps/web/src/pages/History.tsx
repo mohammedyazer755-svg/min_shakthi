@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Button } from '../components';
+import { Button } from '../components';
 import { useAuth } from '../auth/AuthContext';
 import type { UseLiveTelemetryResult } from '../live/useLiveTelemetry';
 import {
@@ -19,6 +19,32 @@ export interface HistoryProps {
   telemetry: UseLiveTelemetryResult;
   selectedDevice: string;
 }
+
+const darkSurface: React.CSSProperties = {
+  background: 'var(--dark-surface)',
+  border: '1px solid var(--dark-border)',
+  borderRadius: 12,
+};
+
+const darkInput: React.CSSProperties = {
+  padding: '6px 10px',
+  background: 'var(--dark-canvas, #050507)',
+  border: '1px solid var(--dark-border)',
+  borderRadius: 6,
+  color: 'var(--dark-text-primary)',
+  fontSize: 12,
+  fontWeight: 500,
+  outline: 'none',
+};
+
+const thStyle: React.CSSProperties = {
+  padding: '10px 12px',
+  color: 'var(--dark-text-muted)',
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  fontSize: 10,
+  letterSpacing: '0.1em',
+};
 
 export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) => {
   const { accessToken, user } = useAuth();
@@ -144,20 +170,43 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
   return (
     <div className="space-y-6">
       {/* Header & Controls Card */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-surface p-4 rounded-card border border-border">
+      <div
+        style={{
+          ...darkSurface,
+          padding: '16px 20px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+        }}
+      >
         <div>
-          <h2 className="text-base font-bold text-text-primary tracking-tight">
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--dark-text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
             Historical Telemetry Logs &amp; Audit
           </h2>
-          <p className="text-xs text-text-secondary mt-0.5">
+          <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
             Query immutable historical readings with deterministic cutoff and formula-escaped CSV exports.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
           {cutoff && (
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-canvas rounded border border-border text-xs text-text-secondary font-mono">
-              <Clock className="w-3.5 h-3.5 text-brand-gold-text" aria-hidden="true" />
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '4px 10px',
+                background: 'var(--dark-canvas, #050507)',
+                borderRadius: 6,
+                border: '1px solid var(--dark-border)',
+                fontSize: 12,
+                color: 'var(--dark-text-muted)',
+                fontFamily: 'monospace',
+              }}
+            >
+              <Clock style={{ width: 13, height: 13, color: 'var(--dark-accent)' }} aria-hidden="true" />
               <span>{`Cutoff: ${new Date(cutoff).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`}</span>
             </div>
           )}
@@ -189,18 +238,29 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
       </div>
 
       {/* Filter Bar */}
-      <Card className="p-3 bg-surface border border-border flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-1.5 text-text-secondary">
-            <Filter className="w-3.5 h-3.5 text-brand-gold-text" aria-hidden="true" />
-            <span className="font-medium text-text-primary">Channel:</span>
+      <div
+        style={{
+          ...darkSurface,
+          padding: '12px 16px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          fontSize: 12,
+        }}
+      >
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--dark-text-muted)' }}>
+            <Filter style={{ width: 13, height: 13, color: 'var(--dark-accent)' }} aria-hidden="true" />
+            <span style={{ fontWeight: 600, color: 'var(--dark-text-primary)' }}>Channel:</span>
             <select
               value={selectedChannel}
               onChange={(e) => {
                 setSelectedChannel(e.target.value);
                 setPage(1);
               }}
-              className="py-1 px-2.5 bg-canvas border border-border rounded text-text-primary focus:outline-none"
+              style={darkInput}
             >
               <option value="all">All Channels</option>
               {channels
@@ -213,9 +273,18 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 text-text-secondary">
-            <span className="font-medium text-text-primary">Window:</span>
-            <div className="inline-flex rounded border border-border p-0.5 bg-canvas">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--dark-text-muted)' }}>
+            <span style={{ fontWeight: 600, color: 'var(--dark-text-primary)' }}>Window:</span>
+            <div
+              style={{
+                display: 'inline-flex',
+                borderRadius: 6,
+                border: '1px solid var(--dark-border)',
+                background: 'var(--dark-canvas, #050507)',
+                padding: 2,
+                gap: 2,
+              }}
+            >
               {(['1h', '24h', '7d'] as const).map((w) => (
                 <button
                   key={w}
@@ -224,9 +293,17 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
                     setTimeRange(w);
                     setPage(1);
                   }}
-                  className={`px-2.5 py-0.5 rounded text-xs font-semibold ${
-                    timeRange === w ? 'bg-surface text-brand-gold-text shadow-xs' : 'text-text-secondary'
-                  }`}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: 4,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: timeRange === w ? 'var(--dark-surface)' : 'transparent',
+                    color: timeRange === w ? 'var(--dark-accent)' : 'var(--dark-text-muted)',
+                    transition: 'all 0.15s',
+                  }}
                 >
                   {w}
                 </button>
@@ -235,52 +312,64 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-text-secondary">Rows:</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ color: 'var(--dark-text-muted)' }}>Rows:</span>
           <select
             value={pageSize}
             onChange={(e) => {
               setPageSize(Number(e.target.value));
               setPage(1);
             }}
-            className="py-1 px-2 bg-canvas border border-border rounded text-text-primary focus:outline-none"
+            style={darkInput}
           >
             <option value={25}>25</option>
             <option value={50}>50</option>
             <option value={100}>100</option>
           </select>
         </div>
-      </Card>
+      </div>
 
       {/* Degraded DB Banner */}
       {error && (
-        <div className="p-4 bg-amber-50 border border-amber-200 rounded-control flex items-center gap-3 text-xs text-brand-gold-text">
-          <AlertTriangle className="w-4 h-4 text-amber-700 shrink-0" aria-hidden="true" />
+        <div
+          style={{
+            padding: 16,
+            background: 'rgba(245,158,11,0.08)',
+            border: '1px solid rgba(245,158,11,0.25)',
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            fontSize: 12,
+            color: 'var(--dark-accent)',
+          }}
+        >
+          <AlertTriangle style={{ width: 16, height: 16, flexShrink: 0 }} aria-hidden="true" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Samples Table */}
-      <Card className="p-0 overflow-hidden">
+      <div style={{ ...darkSurface, overflow: 'hidden' }}>
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
-              <tr className="border-b border-border bg-canvas text-text-secondary font-semibold">
-                <th className="py-2.5 px-3">Receipt Time (UTC)</th>
-                <th className="py-2.5 px-3">Event ID</th>
-                <th className="py-2.5 px-3">Channel</th>
-                <th className="py-2.5 px-3 text-right">Voltage</th>
-                <th className="py-2.5 px-3 text-right">Current</th>
-                <th className="py-2.5 px-3 text-right">Power</th>
-                <th className="py-2.5 px-3 text-right">Energy (Raw)</th>
-                <th className="py-2.5 px-3 text-right">Freq</th>
-                <th className="py-2.5 px-3 text-center">Status</th>
+              <tr style={{ borderBottom: '1px solid var(--dark-border-strong)', background: 'transparent' }}>
+                <th style={thStyle}>Receipt Time (UTC)</th>
+                <th style={thStyle}>Event ID</th>
+                <th style={{ ...thStyle, color: 'var(--dark-accent)' }}>Channel</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Voltage</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Current</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Power</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Energy (Raw)</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Freq</th>
+                <th style={{ ...thStyle, textAlign: 'center' }}>Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody>
               {samples.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-text-secondary">
+                  <td colSpan={9} style={{ padding: '48px 12px', textAlign: 'center', color: 'var(--dark-text-muted)' }}>
                     {loading ? 'Executing historical query...' : 'No historical telemetry records match query filters.'}
                   </td>
                 </tr>
@@ -288,45 +377,74 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
                 samples.map((pkt) => {
                   const isCopied = copiedEventId === pkt.eventId;
                   return (
-                    <tr key={pkt.eventId} className="hover:bg-canvas/50 transition-colors font-mono">
-                      <td className="py-2.5 px-3 text-text-primary">
+                    <tr
+                      key={pkt.eventId}
+                      style={{
+                        borderBottom: '1px solid var(--dark-border)',
+                        fontFamily: 'monospace',
+                        color: 'var(--dark-text-primary)',
+                      }}
+                    >
+                      <td style={{ padding: '10px 12px' }}>
                         {new Date(pkt.receivedAt).toLocaleString()}
                       </td>
-                      <td className="py-2.5 px-3">
+                      <td style={{ padding: '10px 12px' }}>
                         <button
                           type="button"
                           onClick={() => handleCopyEventId(pkt.eventId)}
-                          className="inline-flex items-center gap-1 text-[11px] text-text-secondary hover:text-brand-gold-text"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                            fontSize: 11,
+                            color: 'var(--dark-text-muted)',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: 0,
+                          }}
                           title="Click to copy full Event ID"
                         >
                           <span>{`${pkt.eventId.slice(0, 8)}...`}</span>
                           {isCopied ? (
-                            <Check className="w-3 h-3 text-status-positive" aria-hidden="true" />
+                            <Check style={{ width: 11, height: 11, color: '#22c55e' }} aria-hidden="true" />
                           ) : (
-                            <Copy className="w-3 h-3" aria-hidden="true" />
+                            <Copy style={{ width: 11, height: 11 }} aria-hidden="true" />
                           )}
                         </button>
                       </td>
-                      <td className="py-2.5 px-3 font-sans font-medium text-text-primary">
+                      <td style={{ padding: '10px 12px', fontFamily: 'sans-serif', fontWeight: 500, color: 'var(--dark-accent)' }}>
                         {pkt.channelId}
                       </td>
-                      <td className="py-2.5 px-3 text-right tabular-nums">
+                      <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                         {`${pkt.values.voltage.toFixed(2)} V`}
                       </td>
-                      <td className="py-2.5 px-3 text-right tabular-nums">
+                      <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                         {`${pkt.values.current.toFixed(2)} A`}
                       </td>
-                      <td className="py-2.5 px-3 text-right tabular-nums font-semibold text-text-primary">
+                      <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
                         {`${pkt.values.power.toFixed(2)} W`}
                       </td>
-                      <td className="py-2.5 px-3 text-right tabular-nums text-text-secondary">
+                      <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--dark-text-muted)' }}>
                         {pkt.values.energyRaw}
                       </td>
-                      <td className="py-2.5 px-3 text-right tabular-nums">
+                      <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                         {`${pkt.values.frequency.toFixed(2)} Hz`}
                       </td>
-                      <td className="py-2.5 px-3 text-center">
-                        <span className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 font-sans font-semibold">
+                      <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                        <span
+                          style={{
+                            display: 'inline-block',
+                            padding: '2px 6px',
+                            borderRadius: 4,
+                            fontSize: 10,
+                            fontFamily: 'sans-serif',
+                            fontWeight: 700,
+                            background: 'rgba(34,197,94,0.10)',
+                            color: '#22c55e',
+                            border: '1px solid rgba(34,197,94,0.20)',
+                          }}
+                        >
                           Persisted
                         </span>
                       </td>
@@ -339,32 +457,61 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
         </div>
 
         {/* Pagination Bar */}
-        <div className="p-3 bg-canvas border-t border-border flex items-center justify-between text-xs text-text-secondary">
+        <div
+          style={{
+            padding: '12px 16px',
+            background: 'var(--dark-canvas, #050507)',
+            borderTop: '1px solid var(--dark-border)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            fontSize: 12,
+            color: 'var(--dark-text-muted)',
+          }}
+        >
           <span>{`Showing ${samples.length > 0 ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, total)} of ${total} records`}</span>
 
-          <div className="flex items-center gap-2">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button
               type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1 || loading}
-              className="p-1 rounded border border-border bg-surface text-text-primary disabled:opacity-40 hover:bg-canvas"
+              style={{
+                padding: '4px 8px',
+                borderRadius: 6,
+                border: '1px solid var(--dark-border)',
+                background: 'var(--dark-surface)',
+                color: 'var(--dark-text-primary)',
+                cursor: page <= 1 || loading ? 'not-allowed' : 'pointer',
+                opacity: page <= 1 || loading ? 0.4 : 1,
+              }}
               title="Previous Page"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft style={{ width: 14, height: 14 }} />
             </button>
-            <span className="font-semibold text-text-primary font-mono">{`${page} / ${totalPages}`}</span>
+            <span style={{ fontWeight: 700, color: 'var(--dark-text-primary)', fontFamily: 'monospace' }}>
+              {`${page} / ${totalPages}`}
+            </span>
             <button
               type="button"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || loading}
-              className="p-1 rounded border border-border bg-surface text-text-primary disabled:opacity-40 hover:bg-canvas"
+              style={{
+                padding: '4px 8px',
+                borderRadius: 6,
+                border: '1px solid var(--dark-border)',
+                background: 'var(--dark-surface)',
+                color: 'var(--dark-text-primary)',
+                cursor: page >= totalPages || loading ? 'not-allowed' : 'pointer',
+                opacity: page >= totalPages || loading ? 0.4 : 1,
+              }}
               title="Next Page"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight style={{ width: 14, height: 14 }} />
             </button>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };
