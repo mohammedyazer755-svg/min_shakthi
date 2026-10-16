@@ -203,6 +203,12 @@ export function parseLegacyMqttPacket(
   if (power < 0 || energyNum < 0) {
     quality.push('SIGNED_FLOW_UNVERIFIED');
   }
+  if (options.retained) {
+    quality.push('RETAINED_UNKNOWN_AGE');
+  }
+  if (options.dup) {
+    quality.push('SUSPECT_DUPLICATE');
+  }
 
   const data: ParsedMeasurement = {
     deviceId,

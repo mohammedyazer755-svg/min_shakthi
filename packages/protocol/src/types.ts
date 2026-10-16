@@ -32,4 +32,7 @@ export type ParseResult = ParseSuccess | ParseFailure;
 export interface ParserOptions {
   configuredTopic: string;
   maxPayloadBytes?: number;
+  retained?: boolean;
+  dup?: boolean;
+  qos?: number;
 }

@@ -48,6 +48,7 @@ export interface DeviceChannelMapping {
   displaySlot: 1 | 2 | 3 | 4 | 5 | null;
   label: string;
   enabled: boolean;
+  expectedIntervalMs?: number;
 }
 
 /**

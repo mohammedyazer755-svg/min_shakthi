@@ -127,12 +127,19 @@ switch (command) {
     break;
   }
 
-  // Future-tier commands: must report NOT IMPLEMENTED and exit nonzero
   case 'test:integration': {
-    console.error(
-      '[CONTRACT ERROR] NOT IMPLEMENTED: test:integration is scheduled for Phase 2 (MQTT Ingestion & Integration).'
-    );
-    process.exit(1);
+    console.log('[TEST:INTEGRATION] Running integration test suite with Vitest...');
+    const vitestArgs = ['vitest', 'run', 'tests/integration'];
+
+    // Support --suite and --scope filtering contracts
+    const filter = suite || scope;
+    if (filter) {
+      console.log(`[TEST:INTEGRATION] Filtering to suite/scope: "${filter}"`);
+      vitestArgs.push(filter);
+    }
+
+    vitestArgs.push(...passthroughArgs);
+    run('npx', vitestArgs);
     break;
   }
 

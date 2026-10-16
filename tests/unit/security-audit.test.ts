@@ -48,7 +48,6 @@ describe('Security & Contract Compliance Audits', () => {
     const runnerPath = path.resolve(__dirname, '../../scripts/runner.js');
 
     const futureCommands = [
-      'test:integration',
       'test:e2e',
       'test:visual',
       'test:load',
