@@ -265,3 +265,6 @@ export function useLiveTelemetry(deviceId: string) {
     resumeView,
   };
 }
+
+export type UseLiveTelemetryResult = ReturnType<typeof useLiveTelemetry>;
+

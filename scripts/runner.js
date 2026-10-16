@@ -152,8 +152,8 @@ switch (command) {
   }
 
   case 'test:e2e': {
-    console.log('[TEST:E2E] Running end-to-end monitoring test suite with Vitest...');
-    const vitestArgs = ['vitest', 'run', 'tests/e2e/monitoring.spec.ts'];
+    console.log('[TEST:E2E] Running end-to-end test suite with Vitest...');
+    const vitestArgs = ['vitest', 'run', 'tests/e2e'];
     if (grep) {
       vitestArgs.push('-t', grep);
     }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, LayoutDashboard, Cpu, Bell, History, FileText, Settings, Radio, BarChart3, LogOut } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Cpu, Bell, History, FileText, Settings, Radio, BarChart3, LogOut, Server } from 'lucide-react';
 import { StatusSummary } from './StatusSummary';
 import { useAuth } from '../auth/AuthContext';
 
@@ -31,6 +31,7 @@ export const AppShell: React.FC<AppShellProps> = ({
     { label: 'History', route: '/history', icon: History },
     { label: 'Reports', route: '/reports', icon: FileText },
     { label: 'Alerts', route: '/alerts', icon: Bell },
+    { label: 'Devices', route: '/devices', icon: Server },
     { label: 'Settings', route: '/settings', icon: Settings },
   ];
 

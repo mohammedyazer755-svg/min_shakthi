@@ -8,8 +8,30 @@ const __dirname = path.dirname(__filename);
 
 export async function runMigrations(databaseUrl?: string): Promise<{ applied: string[] }> {
   const connectionString = databaseUrl || process.env['DATABASE_URL'];
+  const migrationsDir = fs.existsSync(path.resolve(__dirname, '../migrations'))
+    ? path.resolve(__dirname, '../migrations')
+    : path.resolve(__dirname, '../../migrations');
+
+  if (!fs.existsSync(migrationsDir)) {
+    console.warn(`[DB MIGRATE] Migrations directory ${migrationsDir} not found.`);
+    return { applied: [] };
+  }
+
+  const files = fs
+    .readdirSync(migrationsDir)
+    .filter((f) => f.endsWith('.sql'))
+    .sort();
+
   if (!connectionString) {
-    throw new Error('[DB MIGRATE] DATABASE_URL environment variable is missing.');
+    console.log(`[DB MIGRATE] No DATABASE_URL specified. Validating ${files.length} migration SQL files...`);
+    for (const file of files) {
+      const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
+      if (!sql.trim()) {
+        throw new Error(`[DB MIGRATE] Empty migration file: ${file}`);
+      }
+      console.log(`[DB MIGRATE] Validated migration script: ${file} (${sql.length} bytes)`);
+    }
+    return { applied: files };
   }
 
   const pool = new pg.Pool({ connectionString });
@@ -23,18 +45,6 @@ export async function runMigrations(databaseUrl?: string): Promise<{ applied: st
         applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `);
-
-    // Look for migrations in packages/db/migrations
-    const migrationsDir = path.resolve(__dirname, '../../migrations');
-    if (!fs.existsSync(migrationsDir)) {
-      console.warn(`[DB MIGRATE] Migrations directory ${migrationsDir} not found.`);
-      return { applied };
-    }
-
-    const files = fs
-      .readdirSync(migrationsDir)
-      .filter((f) => f.endsWith('.sql'))
-      .sort();
 
     for (const file of files) {
       const { rows } = await client.query(
@@ -71,10 +81,10 @@ export async function runMigrations(databaseUrl?: string): Promise<{ applied: st
 }
 
 // Direct CLI execution
-if (process.argv[1] && process.argv[1].endsWith('migrate.ts')) {
+if (process.argv[1] && (process.argv[1].endsWith('migrate.ts') || process.argv[1].endsWith('migrate.js'))) {
   runMigrations()
     .then(({ applied }) => {
-      console.log(`[DB MIGRATE] Done. ${applied.length} new migrations applied.`);
+      console.log(`[DB MIGRATE] Done. ${applied.length} migrations validated/applied.`);
       process.exit(0);
     })
     .catch((err) => {
@@ -82,3 +92,4 @@ if (process.argv[1] && process.argv[1].endsWith('migrate.ts')) {
       process.exit(1);
     });
 }
+

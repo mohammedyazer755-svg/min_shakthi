@@ -45,7 +45,7 @@ export function createTelemetryRouter(
   // GET /api/v1/sites/:siteId/devices/:deviceId/channels/:channelId/history
   router.get('/sites/:siteId/devices/:deviceId/channels/:channelId/history', async (req, res) => {
     const { siteId, deviceId, channelId } = req.params;
-    const { from, to, limit } = req.query;
+    const { from, to, limit, offset, cutoff } = req.query;
 
     if (!siteId || !deviceId || !channelId) {
       res.status(400).json({ error: 'MISSING_PARAMS', message: 'siteId, deviceId and channelId required' });
@@ -53,19 +53,22 @@ export function createTelemetryRouter(
     }
 
     try {
-      const history = await repo.getTelemetryHistory(
-        siteId,
-        deviceId,
+      const result = await repo.queryTelemetryHistory(siteId, deviceId, {
         channelId,
-        typeof from === 'string' ? from : undefined,
-        typeof to === 'string' ? to : undefined,
-        typeof limit === 'string' ? parseInt(limit, 10) : 100
-      );
+        from: typeof from === 'string' ? from : undefined,
+        to: typeof to === 'string' ? to : undefined,
+        limit: typeof limit === 'string' ? parseInt(limit, 10) : 100,
+        offset: typeof offset === 'string' ? parseInt(offset, 10) : 0,
+        cutoff: typeof cutoff === 'string' ? cutoff : undefined,
+      });
+
       res.status(200).json({
         siteId,
         deviceId,
         channelId,
-        samples: history,
+        samples: result.samples,
+        total: result.total,
+        cutoff: result.cutoff,
       });
     } catch (err) {
       if ((err as Error).message === 'DATABASE_UNAVAILABLE') {
@@ -81,22 +84,72 @@ export function createTelemetryRouter(
     }
   });
 
+  // GET /api/v1/sites/:siteId/devices/:deviceId/history (Cross-channel history with pagination)
+  router.get('/sites/:siteId/devices/:deviceId/history', async (req, res) => {
+    const { siteId, deviceId } = req.params;
+    const { channelId, from, to, limit, offset, cutoff } = req.query;
+
+    if (!siteId || !deviceId) {
+      res.status(400).json({ error: 'MISSING_PARAMS', message: 'siteId and deviceId required' });
+      return;
+    }
+
+    try {
+      const result = await repo.queryTelemetryHistory(siteId, deviceId, {
+        channelId: typeof channelId === 'string' ? channelId : 'all',
+        from: typeof from === 'string' ? from : undefined,
+        to: typeof to === 'string' ? to : undefined,
+        limit: typeof limit === 'string' ? parseInt(limit, 10) : 100,
+        offset: typeof offset === 'string' ? parseInt(offset, 10) : 0,
+        cutoff: typeof cutoff === 'string' ? cutoff : undefined,
+      });
+
+      res.status(200).json({
+        siteId,
+        deviceId,
+        channelId: channelId || 'all',
+        samples: result.samples,
+        total: result.total,
+        cutoff: result.cutoff,
+      });
+    } catch (err) {
+      if ((err as Error).message === 'DATABASE_UNAVAILABLE') {
+        res.setHeader('Retry-After', '5');
+        res.status(503).json({
+          error: 'DATABASE_UNAVAILABLE',
+          message: 'Telemetry database currently unavailable. Please retry in 5 seconds.',
+        });
+        return;
+      }
+      res.status(500).json({ error: 'QUERY_ERROR', message: (err as Error).message });
+    }
+  });
+
   // GET /api/v1/sites/:siteId/devices/:deviceId/export (CSV export with formula injection defense - T22)
   router.get('/sites/:siteId/devices/:deviceId/export', async (req, res) => {
     const { siteId, deviceId } = req.params;
+    const { channelId, from, to, cutoff } = req.query;
+
     if (!siteId || !deviceId) {
       res.status(400).json({ error: 'MISSING_PARAMS' });
       return;
     }
 
     try {
-      const history = await repo.getTelemetryHistory(siteId, deviceId, 'channel1', undefined, undefined, 50);
+      const history = await repo.queryTelemetryHistory(siteId, deviceId, {
+        channelId: typeof channelId === 'string' ? channelId : undefined,
+        from: typeof from === 'string' ? from : undefined,
+        to: typeof to === 'string' ? to : undefined,
+        cutoff: typeof cutoff === 'string' ? cutoff : undefined,
+        limit: 10000,
+        offset: 0,
+      });
 
-      // Safe CSV generation with formula escape (T22)
+      // Safe CSV generation with formula escape (T22: =, +, -, @ prepended with ')
       const sanitizeCell = (val: string | number | null | undefined): string => {
         if (val === null || val === undefined) return '';
         const str = String(val);
-        // If string starts with =, +, -, @, prepend single quote '
+        // If text cell starts with =, +, -, @, prepend single quote '
         if (/^[=+\-@]/.test(str)) {
           return `'${str.replace(/"/g, '""')}`;
         }
@@ -106,21 +159,29 @@ export function createTelemetryRouter(
         return str;
       };
 
-      const rows: string[] = ['received_at,event_id,voltage,current,power,energy_raw,frequency'];
-      for (const s of history) {
-        rows.push([
-          sanitizeCell(s.receivedAt),
-          sanitizeCell(s.eventId),
-          sanitizeCell(s.values.voltage),
-          sanitizeCell(s.values.current),
-          sanitizeCell(s.values.power),
-          sanitizeCell(s.values.energyRaw),
-          sanitizeCell(s.values.frequency),
-        ].join(','));
+      const rows: string[] = [
+        'received_at,event_id,channel_id,voltage,current,power,energy_raw,frequency',
+      ];
+      for (const s of history.samples) {
+        rows.push(
+          [
+            sanitizeCell(s.receivedAt),
+            sanitizeCell(s.eventId),
+            sanitizeCell(s.channelId),
+            sanitizeCell(s.values.voltage),
+            sanitizeCell(s.values.current),
+            sanitizeCell(s.values.power),
+            sanitizeCell(s.values.energyRaw),
+            sanitizeCell(s.values.frequency),
+          ].join(',')
+        );
       }
 
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="${deviceId}-telemetry.csv"`);
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${deviceId}-${channelId || 'all'}-telemetry.csv"`
+      );
       res.status(200).send(rows.join('\r\n'));
     } catch (err) {
       if ((err as Error).message === 'DATABASE_UNAVAILABLE') {

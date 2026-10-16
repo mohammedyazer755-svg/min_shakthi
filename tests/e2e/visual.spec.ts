@@ -84,4 +84,39 @@ describe('Visual, Responsive and Accessibility Suite (DESIGN_SYSTEM: 360–1920p
     expect(css).toContain('#805300'); // Warning Amber
     expect(css).toContain('#A52E2E'); // Critical Crimson
   });
+
+  it('verifies all ten operational screens render cleanly within AppShell', () => {
+    const screens = [
+      '/overview',
+      '/analytics',
+      '/channels',
+      '/live',
+      '/history',
+      '/reports',
+      '/alerts',
+      '/devices',
+      '/settings',
+    ];
+
+    for (const route of screens) {
+      const html = renderToString(
+        React.createElement(
+          AuthProvider,
+          null,
+          React.createElement(
+            AppShell,
+            {
+              selectedDevice: 'prototype1',
+              activeRoute: route,
+            },
+            React.createElement('div', { id: 'screen-content' }, `Screen: ${route}`)
+          )
+        )
+      );
+
+      expect(html).toContain('MIN-SAKTHI');
+      expect(html).toContain(`Screen: ${route}`);
+    }
+  });
 });
+

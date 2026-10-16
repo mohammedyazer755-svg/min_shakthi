@@ -164,3 +164,185 @@ export const spoolCheckpoints = pgTable('spool_checkpoints', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+export const alertRules = pgTable(
+  'alert_rules',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    siteId: uuid('site_id').notNull().references(() => sites.id, { onDelete: 'cascade' }),
+    deviceId: uuid('device_id').notNull().references(() => devices.id, { onDelete: 'cascade' }),
+    channelId: uuid('channel_id').references(() => deviceChannels.id, { onDelete: 'cascade' }),
+    metric: varchar('metric', { length: 32 }).notNull(), // 'voltage' | 'current' | 'power' | 'frequency'
+    operator: varchar('operator', { length: 16 }).notNull(), // 'gt' | 'lt' | 'gte' | 'lte'
+    threshold: numeric('threshold', { precision: 14, scale: 4 }).notNull(),
+    hysteresis: numeric('hysteresis', { precision: 14, scale: 4 }).default('0').notNull(),
+    debounceMs: integer('debounce_ms').default(0).notNull(),
+    severity: varchar('severity', { length: 16 }).default('warning').notNull(),
+    enabled: boolean('enabled').default(true).notNull(),
+    version: integer('version').default(1).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('alert_rules_dev_enabled_idx').on(table.deviceId, table.enabled),
+    index('alert_rules_site_idx').on(table.siteId),
+  ]
+);
+
+export const alerts = pgTable(
+  'alerts',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    ruleId: uuid('rule_id').notNull().references(() => alertRules.id, { onDelete: 'cascade' }),
+    deviceId: uuid('device_id').notNull(),
+    channelId: uuid('channel_id'),
+    openedAt: timestamp('opened_at', { withTimezone: true }).defaultNow().notNull(),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).defaultNow().notNull(),
+    state: varchar('state', { length: 32 }).default('open').notNull(), // 'open' | 'acknowledged' | 'resolved'
+    triggerEventId: uuid('trigger_event_id'),
+    triggerValue: numeric('trigger_value', { precision: 14, scale: 4 }).notNull(),
+    violationStartAt: timestamp('violation_start_at', { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    index('alerts_rule_dev_state_idx').on(table.ruleId, table.deviceId, table.state),
+    index('alerts_opened_idx').on(table.openedAt),
+  ]
+);
+
+export const alertAcknowledgements = pgTable(
+  'alert_acknowledgements',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    alertId: uuid('alert_id').notNull().references(() => alerts.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    ackAt: timestamp('ack_at', { withTimezone: true }).defaultNow().notNull(),
+    note: text('note'),
+  },
+  (table) => [
+    uniqueIndex('alert_ack_unique').on(table.alertId, table.userId),
+  ]
+);
+
+export const auditLog = pgTable(
+  'audit_log',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    siteId: uuid('site_id').notNull().references(() => sites.id, { onDelete: 'cascade' }),
+    actorId: uuid('actor_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    action: varchar('action', { length: 64 }).notNull(),
+    target: varchar('target', { length: 128 }).notNull(),
+    beforeJson: jsonb('before_json'),
+    afterJson: jsonb('after_json'),
+    at: timestamp('at', { withTimezone: true }).defaultNow().notNull(),
+    requestId: varchar('request_id', { length: 64 }),
+  },
+  (table) => [
+    index('audit_log_site_at_idx').on(table.siteId, table.at),
+  ]
+);
+
+export const userPreferences = pgTable('user_preferences', {
+  userId: uuid('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  timezone: varchar('timezone', { length: 64 }).default('Asia/Kolkata').notNull(),
+  preferredDeviceId: uuid('preferred_device_id'),
+  displayPreferences: jsonb('display_preferences').default({}).notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const mappingVersions = pgTable(
+  'mapping_versions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    deviceId: uuid('device_id').notNull().references(() => devices.id, { onDelete: 'cascade' }),
+    version: integer('version').notNull(),
+    effectiveFrom: timestamp('effective_from', { withTimezone: true }).defaultNow().notNull(),
+    mappingJson: jsonb('mapping_json').notNull(),
+    actorId: uuid('actor_id').notNull().references(() => users.id),
+  },
+  (table) => [
+    uniqueIndex('mapping_dev_version_unique').on(table.deviceId, table.version),
+  ]
+);
+
+export const counterEpochs = pgTable(
+  'counter_epochs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    deviceId: uuid('device_id').notNull().references(() => devices.id, { onDelete: 'cascade' }),
+    channelId: uuid('channel_id').notNull(),
+    startAt: timestamp('start_at', { withTimezone: true }).notNull(),
+    endAt: timestamp('end_at', { withTimezone: true }),
+    reason: varchar('reason', { length: 64 }).notNull(),
+    unit: varchar('unit', { length: 32 }).default('unknown').notNull(),
+    semantics: varchar('semantics', { length: 32 }).default('cumulative').notNull(),
+    configVersion: integer('config_version').default(1).notNull(),
+    verifiedBy: uuid('verified_by').references(() => users.id),
+  },
+  (table) => [
+    index('counter_epochs_dev_chan_idx').on(table.deviceId, table.channelId, table.startAt),
+  ]
+);
+
+export const measurementConfigs = pgTable(
+  'measurement_configs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    deviceId: uuid('device_id').notNull().references(() => devices.id, { onDelete: 'cascade' }),
+    version: integer('version').default(1).notNull(),
+    energyUnit: varchar('energy_unit', { length: 32 }).default('unknown').notNull(),
+    semantics: varchar('semantics', { length: 32 }).default('cumulative').notNull(),
+    wrapModulus: numeric('wrap_modulus', { precision: 30, scale: 12 }),
+    signSupport: varchar('sign_support', { length: 16 }).default('unsigned').notNull(),
+    calibrationEvidence: jsonb('calibration_evidence'),
+    verifiedBy: uuid('verified_by').references(() => users.id),
+    verifiedAt: timestamp('verified_at', { withTimezone: true }),
+  },
+  (table) => [
+    uniqueIndex('measurement_configs_dev_ver_unique').on(table.deviceId, table.version),
+  ]
+);
+
+export const tariffVersions = pgTable(
+  'tariff_versions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    siteId: uuid('site_id').notNull().references(() => sites.id, { onDelete: 'cascade' }),
+    currency: varchar('currency', { length: 16 }).default('INR').notNull(),
+    effectiveFrom: timestamp('effective_from', { withTimezone: true }).notNull(),
+    toAt: timestamp('to_at', { withTimezone: true }),
+    method: varchar('method', { length: 32 }).default('flat').notNull(),
+    rulesJson: jsonb('rules_json').notNull(),
+    sourceReference: text('source_reference'),
+    approvedBy: uuid('approved_by').references(() => users.id),
+    approvedAt: timestamp('approved_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('tariff_versions_site_from_idx').on(table.siteId, table.effectiveFrom),
+  ]
+);
+
+export const reports = pgTable(
+  'reports',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    siteId: uuid('site_id').notNull().references(() => sites.id, { onDelete: 'cascade' }),
+    deviceId: uuid('device_id').notNull().references(() => devices.id, { onDelete: 'cascade' }),
+    periodStart: timestamp('period_start', { withTimezone: true }).notNull(),
+    periodEnd: timestamp('period_end', { withTimezone: true }).notNull(),
+    timezone: varchar('timezone', { length: 64 }).notNull(),
+    cutoff: timestamp('cutoff', { withTimezone: true }).notNull(),
+    configVersion: integer('config_version').default(1).notNull(),
+    tariffVersion: uuid('tariff_version').references(() => tariffVersions.id),
+    revision: integer('revision').default(1).notNull(),
+    coverage: jsonb('coverage').notNull(),
+    totalsJson: jsonb('totals_json').notNull(),
+    status: varchar('status', { length: 32 }).default('preliminary').notNull(),
+    generatedAt: timestamp('generated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('reports_dev_period_rev_unique').on(table.deviceId, table.periodStart, table.revision),
+    index('reports_dev_period_idx').on(table.deviceId, table.periodStart),
+  ]
+);
+
+

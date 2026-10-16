@@ -9,6 +9,10 @@ import { IngestMetrics } from './observability/metrics.js';
 import { AuthService } from './auth/service.js';
 import { createAuthRouter, createMeRouter } from './auth/routes.js';
 import { createTelemetryRouter } from './routes/telemetry.js';
+import { createReportsRouter } from './routes/reports.js';
+import { createAlertsRouter } from './routes/alerts.js';
+import { createDevicesRouter } from './routes/devices.js';
+import { createUsersRouter } from './routes/users.js';
 import { getTelemetryRepository } from './storage/db.js';
 import { DurableSpoolManager } from './storage/spool.js';
 import { TelemetryPersisterWorker } from './storage/persister.js';
@@ -84,7 +88,11 @@ app.get('/health/ready', (_req, res) => {
 // Auth & API Routes
 app.use('/api/v1/auth', createAuthRouter(authService));
 app.use('/api/v1/me', createMeRouter(authService));
+app.use('/api/v1/users', createUsersRouter(authService, repo));
 app.use('/api/v1', createTelemetryRouter(authService, repo));
+app.use('/api/v1', createReportsRouter(authService, repo));
+app.use('/api/v1', createAlertsRouter(authService, repo));
+app.use('/api/v1', createDevicesRouter(authService, repo));
 
 let isRunning = false;
 
