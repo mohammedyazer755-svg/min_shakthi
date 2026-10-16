@@ -171,10 +171,8 @@ switch (command) {
   }
 
   case 'test:load': {
-    console.error(
-      '[CONTRACT ERROR] NOT IMPLEMENTED: test:load is scheduled for Phase 3/6 (Performance & Load Validation).'
-    );
-    process.exit(1);
+    console.log('[TEST:LOAD] Running performance & synthetic load test suite (T26)...');
+    run('npx', ['tsx', 'scripts/load-test.ts', ...passthroughArgs]);
     break;
   }
 
@@ -185,10 +183,14 @@ switch (command) {
   }
 
   case 'test:hardware': {
-    console.error(
-      '[CONTRACT ERROR] NOT IMPLEMENTED: test:hardware is scheduled for Phase 6 (Hardware Verification & Handover).'
-    );
-    process.exit(1);
+    console.log('[TEST:HARDWARE] Running hardware validation suite (H01–H06)...');
+    const args = ['tsx', 'scripts/hardware-test.ts'];
+    if (passthroughArgs.length > 0) {
+      args.push(...passthroughArgs);
+    } else {
+      args.push('--contract-check');
+    }
+    run('npx', args);
     break;
   }
 

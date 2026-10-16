@@ -18,6 +18,7 @@ export default defineConfig({
       'tests/unit/**/*.test.ts',
       'tests/integration/**/*.test.ts',
       'tests/security/**/*.test.ts',
+      'tests/hardware/**/*.test.ts',
       'tests/e2e/**/*.spec.ts',
     ],
     coverage: {

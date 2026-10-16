@@ -33,5 +33,26 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit
 
+      - name: Run database migration validation
+        run: npm run db:migrate
+
+      - name: Run integration test suite
+        run: npm run test:integration
+
+      - name: Run security test suite
+        run: npm run test:security
+
+      - name: Run end-to-end screen tests
+        run: npm run test:e2e
+
+      - name: Run visual and accessibility tests
+        run: npm run test:visual
+
+      - name: Run performance and synthetic load validation (T26)
+        run: npm run test:load -- --duration=10
+
+      - name: Run hardware verification contract check
+        run: npm run test:hardware
+
       - name: Build all packages and applications
         run: npm run build

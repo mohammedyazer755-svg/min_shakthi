@@ -1,0 +1,57 @@
+# Render Infrastructure as Code Blueprint
+# Reference: docs/DEPLOYMENT_RUNBOOK.md and ARCHITECTURE.md
+
+services:
+  # Web Service: Single paid always-on disk-backed Render service
+  - type: web
+    name: minsakthi-server
+    runtime: node
+    plan: starter
+    region: singapore
+    buildCommand: npm ci && npm run build:server
+    startCommand: npm run start:server
+    healthCheckPath: /health/live
+    disk:
+      name: minsakthi-spool
+      mountPath: /var/data
+      sizeGB: 10
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MQTT_URL
+        value: mqtt://192.155.92.123:1883
+      - key: MQTT_TOPIC
+        value: swiftpower
+      - key: MQTT_USERNAME
+        sync: false
+      - key: MQTT_PASSWORD
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: minsakthi-db
+          property: connectionString
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: AUTH_TOKEN_PEPPER
+        generateValue: true
+      - key: PUBLIC_API_ORIGIN
+        sync: false
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAME_SITE
+        value: lax
+      - key: SPOOL_DIR
+        value: /var/data/minsakthi-spool
+      - key: SPOOL_MAX_BYTES
+        value: "1073741824"
+
+databases:
+  # Managed PostgreSQL: Backend regional instance with TLS & automated daily backups
+  - name: minsakthi-db
+    databaseName: minsakthi
+    user: minsakthi
+    plan: starter
+    region: singapore
+    postgresMajorVersion: 16

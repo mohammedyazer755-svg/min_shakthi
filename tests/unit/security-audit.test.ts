@@ -44,22 +44,25 @@ describe('Security & Contract Compliance Audits', () => {
     }
   });
 
-  it('verifies future-tier commands report NOT IMPLEMENTED and exit non-zero (Exit Code 1)', () => {
+  it('confirms all Phase 1-6 contract test commands are fully implemented in runner.js', () => {
     const runnerPath = path.resolve(__dirname, '../../scripts/runner.js');
+    const runnerContent = fs.readFileSync(runnerPath, 'utf-8');
 
-    const futureCommands = [
+    expect(runnerContent).not.toContain('NOT IMPLEMENTED');
+
+    const contractCommands = [
+      'test:unit',
+      'test:integration',
+      'test:e2e',
+      'test:visual',
+      'test:security',
       'test:load',
       'test:hardware',
+      'db:migrate',
     ];
 
-    for (const cmd of futureCommands) {
-      const result = spawnSync('node', [runnerPath, cmd], {
-        encoding: 'utf-8',
-      });
-
-      expect(result.status, `Command ${cmd} must exit with code 1`).toBe(1);
-      const output = (result.stderr || '') + (result.stdout || '');
-      expect(output).toContain('NOT IMPLEMENTED');
+    for (const cmd of contractCommands) {
+      expect(runnerContent).toContain(`case '${cmd}':`);
     }
   });
 

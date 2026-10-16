@@ -1,0 +1,37 @@
+name: Deployment Verification
+
+on:
+  workflow_dispatch:
+    inputs:
+      backend_url:
+        description: 'Render Backend Public URL (e.g. https://minsakthi-server.onrender.com)'
+        required: true
+        default: 'https://minsakthi-server.onrender.com'
+      frontend_url:
+        description: 'Vercel Frontend Public URL (e.g. https://minsakthi.vercel.app)'
+        required: true
+        default: 'https://minsakthi.vercel.app'
+
+jobs:
+  verify-deployment:
+    name: Verify Staging / Production Deployment
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies from lockfile
+        run: npm ci
+
+      - name: Run Deployment Health & Routing Verifier
+        env:
+          TARGET_BACKEND_URL: ${{ github.event.inputs.backend_url }}
+          TARGET_FRONTEND_URL: ${{ github.event.inputs.frontend_url }}
+        run: npx tsx scripts/verify-deploy.ts
