@@ -10,7 +10,7 @@
     "api": {
       "root": "apps/server",
       "framework": "express",
-      "entrypoint": "src/cloud-api.ts",
+      "entrypoint": "src/cloud-api.mts",
       "buildCommand": "cd ../.. && npm run build:server"
     }
   },

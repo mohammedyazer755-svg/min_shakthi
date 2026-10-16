@@ -5,7 +5,7 @@ let server;
 let repo;
 let base = process.env.CLOUD_BASE_URL;
 if (!base) {
-  server = (await import('../apps/server/dist/cloud-api.js')).default;
+  server = (await import('../apps/server/dist/cloud-api.mjs')).default;
   const db = await import('../apps/server/dist/storage/db.js');
   repo = db.getTelemetryRepository();
   await new Promise((resolve) => server.listen(0,'127.0.0.1',resolve));

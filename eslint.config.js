@@ -8,6 +8,8 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/coverage/**',
       '**/.spool/**',
+      '**/.vercel/**',
+      '**/.agents/**',
       'infra/**',
     ],
   },
