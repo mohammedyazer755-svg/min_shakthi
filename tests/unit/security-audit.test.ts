@@ -51,10 +51,7 @@ describe('Security & Contract Compliance Audits', () => {
       'test:e2e',
       'test:visual',
       'test:load',
-      'test:security',
       'test:hardware',
-      'db:migrate',
-      'db:seed:test',
     ];
 
     for (const cmd of futureCommands) {

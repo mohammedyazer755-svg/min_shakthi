@@ -156,3 +156,11 @@ export const latestData = pgTable(
     primaryKey({ columns: [table.deviceId, table.channelId] }),
   ]
 );
+
+export const spoolCheckpoints = pgTable('spool_checkpoints', {
+  consumerId: varchar('consumer_id', { length: 64 }).primaryKey(),
+  lastCommittedOffset: numeric('last_committed_offset', { precision: 20, scale: 0 }).notNull(),
+  lastEventId: uuid('last_event_id'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+});
+

@@ -168,10 +168,8 @@ switch (command) {
   }
 
   case 'test:security': {
-    console.error(
-      '[CONTRACT ERROR] NOT IMPLEMENTED: test:security is scheduled for Phase 3/6 (Security & Authorization Testing).'
-    );
-    process.exit(1);
+    console.log('[TEST:SECURITY] Running security & authorization test suite with Vitest...');
+    run('npx', ['vitest', 'run', 'tests/security']);
     break;
   }
 
@@ -184,20 +182,19 @@ switch (command) {
   }
 
   case 'db:migrate': {
-    console.error(
-      '[CONTRACT ERROR] NOT IMPLEMENTED: db:migrate is scheduled for Phase 3 (Database Persistence).'
-    );
-    process.exit(1);
+    console.log('[DB:MIGRATE] Running database migrations...');
+    run('npm', ['run', 'build', '--workspace=@minsakthi/db']);
+    run('node', ['packages/db/dist/migrate.js']);
     break;
   }
 
   case 'db:seed:test': {
-    console.error(
-      '[CONTRACT ERROR] NOT IMPLEMENTED: db:seed:test is scheduled for Phase 3 (Database Persistence & Test Identities).'
-    );
-    process.exit(1);
+    console.log('[DB:SEED:TEST] Seeding test identities and devices...');
+    run('npm', ['run', 'build', '--workspace=@minsakthi/db']);
+    run('node', ['packages/db/dist/seed.js']);
     break;
   }
+
 
   default: {
     console.error(`[RUNNER] Unknown root contract command: "${command}".`);

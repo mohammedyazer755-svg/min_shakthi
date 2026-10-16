@@ -8,14 +8,44 @@ import { DeviceRegistry } from '../ingest/registry.js';
 import { QuarantineManager } from '../ingest/quarantine.js';
 import { IngestTestSink } from '../ingest/sink.js';
 import { IngestMetrics } from '../observability/metrics.js';
+import type { DurableSpoolManager } from '../storage/spool.js';
+import type { TelemetryPersisterWorker } from '../storage/persister.js';
+import type { RealtimeSocketServer } from '../realtime/socket.js';
 
 export class MqttIngestService {
   private client: MqttClient | null = null;
   private readonly serverEpoch = crypto.randomUUID();
   private sequence = 0n;
   private heartbeatTimer: NodeJS.Timeout | null = null;
+  private spool: DurableSpoolManager | null = null;
+  private persister: TelemetryPersisterWorker | null = null;
+  private socketServer: RealtimeSocketServer | null = null;
 
-  constructor(private readonly env: ServerEnv) {}
+  constructor(
+    private readonly env: ServerEnv,
+    options?: {
+      spool?: DurableSpoolManager;
+      persister?: TelemetryPersisterWorker;
+      socketServer?: RealtimeSocketServer;
+    }
+  ) {
+    if (options?.spool) this.spool = options.spool;
+    if (options?.persister) this.persister = options.persister;
+    if (options?.socketServer) this.socketServer = options.socketServer;
+  }
+
+  public attachSpool(spool: DurableSpoolManager): void {
+    this.spool = spool;
+  }
+
+  public attachPersister(persister: TelemetryPersisterWorker): void {
+    this.persister = persister;
+  }
+
+  public attachSocketServer(socketServer: RealtimeSocketServer): void {
+    this.socketServer = socketServer;
+  }
+
 
   public async start(): Promise<void> {
     const clientId =
@@ -185,10 +215,28 @@ export class MqttIngestService {
     // 5. Update cache immediately
     cache.set(telemetry, t0);
 
+    // 6. Append to durable spool
+    if (this.spool) {
+      const spoolRes = this.spool.append(telemetry);
+      if (spoolRes.ok && this.persister) {
+        this.persister.onRecordAppended({
+          offset: spoolRes.offset,
+          length: 0,
+          payload: telemetry,
+        });
+      }
+    }
+
+    // 7. Broadcast to realtime socket room
+    if (this.socketServer) {
+      this.socketServer.broadcastTelemetryUpdate(telemetry);
+    }
+
     const latencyMs = performance.now() - t0;
     metrics.recordAccepted(latencyMs);
     sink.emitAccepted(telemetry, latencyMs);
   }
+
 
   private emitHeartbeat(): void {
     const metrics = IngestMetrics.getInstance();

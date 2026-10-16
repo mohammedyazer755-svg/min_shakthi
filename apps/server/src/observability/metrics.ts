@@ -27,6 +27,15 @@ export class IngestMetrics {
   public lastIngressToCacheMs = 0;
   public ingressLatenciesMs: number[] = [];
 
+  public displayAcksReceived = 0;
+  public lastDisplayLatencyMs = 0;
+  public displayLatenciesMs: number[] = [];
+
+  public get receivedCount(): number {
+    return this.totalReceived;
+  }
+
+
   public errorsByReason: Record<string, number> = {};
   public recentErrors: BoundedDiagnosticError[] = [];
   private readonly maxRecentErrors = 50;
@@ -54,6 +63,16 @@ export class IngestMetrics {
       this.ingressLatenciesMs.shift();
     }
   }
+
+  public recordDisplayAck(_eventId: string, latencyMs: number): void {
+    this.displayAcksReceived += 1;
+    this.lastDisplayLatencyMs = latencyMs;
+    this.displayLatenciesMs.push(latencyMs);
+    if (this.displayLatenciesMs.length > this.maxLatencySamples) {
+      this.displayLatenciesMs.shift();
+    }
+  }
+
 
   public recordRejected(code: string, reason: string, topic: string, rawPayload: string): void {
     this.totalRejected += 1;
