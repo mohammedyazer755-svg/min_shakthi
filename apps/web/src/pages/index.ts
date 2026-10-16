@@ -1,3 +1,4 @@
+export * from './LandingPage';
 export * from './SignIn';
 export * from './Overview';
 export * from './OverallAnalytics';

@@ -3,7 +3,7 @@ import { AuthProvider, useAuth } from './auth/AuthContext';
 import { AppShell, ComponentShowcase } from './components';
 import { useLiveTelemetry } from './live/useLiveTelemetry';
 import {
-  SignIn,
+  LandingPage,
   Overview,
   OverallAnalytics,
   ChannelAnalytics,
@@ -39,7 +39,7 @@ export const MainApp: React.FC = () => {
   }
 
   if (status === 'unauthenticated') {
-    return <SignIn onSuccess={() => setActiveRoute('/overview')} />;
+    return <LandingPage onSuccess={() => setActiveRoute('/overview')} />;
   }
 
   return (

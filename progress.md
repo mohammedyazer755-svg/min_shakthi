@@ -136,10 +136,83 @@ npm run build
 
 ## 5. Remaining Blockers & Handover Protocol
 
-- **Software Status:** 100% COMPLETE and production ready.
+- **Software Status (deployment audit, 16 October 2026):** Frontend and backend builds pass. Production deployment is not complete: runtime persistence still uses the test-seeded in-memory repository, frontend backend routing is inconsistent, and the MQTT registry uses site identifiers that differ from the authentication repository. Earlier phase completion statements above are historical claims and do not establish production readiness.
 - **Physical Hardware Blockers:**
   1. Access to physical ESP32 boards (`prototype1` and `prototype2`) for live on-site test.
   2. Calibrated reference power meter operated by hardware owner for metrology comparison (H01).
   3. Electrical wiring sheet confirming physical load connections for CH01–CH05 (Q02 / H05).
   4. Calibration certificate and signed approval from hardware owner and company finance officer before unsuppressing energy billing calculations (H06).
 - **Billing Status:** **Explicitly suppressed by contract** (`isCostVerified: false`, `cost: null`). Monitoring is safe to release immediately for electrical parameters (Voltage, Current, Active Power, Frequency); billing will remain suppressed until H06 is signed.
+
+## 6. Vercel deployment attempt - 16 October 2026
+
+- Requested deployment of repository `mohammedyazer755-svg/min_shakthi`, branch `main`, commit `f0e37dabf8908ed686093baa6e781befbb7831ab`.
+- Verified `npm run build:web` passes, producing `apps/web/dist`. Root `vercel.json` already selects the correct build command, output directory, and SPA fallback.
+- Deployment remains blocked: the Vercel plugin rejected project creation for `min-shakthi` with HTTP 403, reporting no access to scope `mohammedyazer755-7432s-projects`. No project or deployment was created by this attempt. No local Vercel CLI authentication was available for fallback.
+- Backend HTTPS origin is still required before authentication and live telemetry can work. Runtime authentication reads `VITE_API_URL` and telemetry reads `VITE_WS_URL`, both defaulting to localhost; the documented build validation instead reads `VITE_API_BASE_URL`. Several other API calls use relative `/api/v1` paths, which also require backend routing. This configuration needs reconciliation once the backend origin is known.
+- Resume after Vercel access is restored. No backend, database, MQTT, or hardware deployment was performed.
+
+### Full-stack follow-up - 16 October 2026
+
+- User clarified that both frontend and backend should deploy from current code, with ESP32 MQTT telemetry expected afterward.
+- Verified `npm run build:server` passes. No credentials for backend hosting, database, or MQTT were available through the checked deployment environment; secret values were not printed.
+- The existing infrastructure design uses Vercel for the frontend and Render for the continuous MQTT/HTTP/Socket.IO backend with persistent spool storage. A Render plugin connection was suggested so the existing backend deployment can be provisioned once access is available. Vercel access remains unresolved.
+- Confirmed `getTelemetryRepository()` unconditionally creates `MemoryTelemetryRepository`, which seeds test identities. Merely provisioning PostgreSQL or setting `DATABASE_URL` does not connect the runtime repository to it.
+- Confirmed the MQTT registry seeds `site_default`, while authentication fixtures use UUID site IDs. These need reconciliation for authenticated users to receive real device data.
+- Receiving a packet does not calibrate the system: ingestion sets `energyUnit: 'unknown'`; billing remains suppressed pending independent calibration evidence and verified units. Unregistered devices and unmapped channels are quarantined.
+- No deployment URL, real broker subscription, database connection, calibration result, or hardware pass was produced.
+
+### Vercel agent setup - 16 October 2026
+
+- Fetched and followed `https://vercel.com/get-started.md` at the user's request.
+- Installed Vercel CLI globally with `npm install --global vercel@latest`; verified version `64.3.1`.
+- Verified the existing user-scoped Vercel plugin `0.54.1` includes skills and deployment/status commands; did not duplicate it with standalone skills.
+- Inspected the existing Codex configuration and added the global shared MCP server `vercel` at `https://mcp.vercel.com` using `codex mcp add`, preserving existing configuration. Configuration path: `C:/Users/Mohammed yazer/.codex/config.toml`.
+- Started browser OAuth for MCP and device login for CLI. Both remain pending user sign-in; `codex mcp list` reports enabled but not logged in, and `vercel whoami` reports logged out.
+- No project was created or linked during this global setup. Verify both authentication flows before resuming project deployment; the new local MCP server's tools have not yet been refreshed into this chat or authenticated here.
+
+### Successful GitHub deployment - 16 October 2026
+
+- User completed browser authentication and explicitly requested deployment from GitHub itself. Verified CLI user `mohammedyazer755-7432` in team `team_v7eZvBpoe56H4HxvJkUfw02w`; `codex mcp list` now reports OAuth for the shared Vercel MCP server.
+- The existing in-chat connector still returned HTTP 403 for the team, so used the authenticated Vercel CLI API fallback under the same explicit team. No tokens were read or printed.
+- Created project `min-shakthi` (`prj_eGKmrpke4ZYInJTGte6GFAJsQ85O`) connected to GitHub repository `mohammedyazer755-svg/min_shakthi`, with production branch `main`.
+- Created production deployment `dpl_CHabykifxJvtgFjs1XkgpVGdWnjj` using Git source commit `f0e37dabf8908ed686093baa6e781befbb7831ab`. Build logs confirm Vercel cloned GitHub directly. No local source files were uploaded.
+- Status: READY. Build duration: 31 seconds. Framework: Vite, Node 24.x; install `npm ci`, build `npm run build:web`, output `apps/web/dist`.
+- Public production URL: https://min-shakthi.vercel.app
+- Deployment inspector: https://vercel.com/mohammedyazer755-7432s-projects/min-shakthi/CHabykifxJvtgFjs1XkgpVGdWnjj
+- Verified unauthenticated HTTP 200 for the app shell on `/` and all ten configured SPA paths, HTTP 200 for JavaScript/CSS assets, and `X-Content-Type-Options: nosniff` on page responses. These are HTTP smoke checks, not authenticated browser or hardware verification.
+- This deployment serves the current frontend only. Authentication, PostgreSQL persistence, continuous MQTT ingestion, device mapping reconciliation, and hardware calibration remain unresolved as described above. No backend or database was provisioned.
+
+### Clean Interactive Landing Page & Frosted Glassmorphism Auth Modal - 16 October 2026
+
+- Implemented editorial home screen (`LandingPage.tsx`, `LandingPage.css`) matching the Drop-T reference design:
+  - Cursor-tracking volumetric WebGL `LightRays` casting dynamic light shafts down over the typography.
+  - Sticky frosted navigation bar with `ElectricBrandMark`, status badge, and glowing action button.
+  - Editorial headline: *"Measure every watt before the grid commits."*
+  - Interactive index card `01 / OVERVIEW` with quick exploration actions.
+  - Dynamic live telemetry strip with pulsating beacon, flowing animated SVG sine sparkline, and simulated real-time electrical metrics (Voltage, Current, Power, Grid Frequency) ensuring the screen never feels static.
+  - 5-Channel hardware composite tracking preview cards (`CH01` to `CH05`) with hover lift and glowing golden border states.
+  - Clean pipeline architecture diagram illustrating deterministic hardware-to-cloud telemetry flow.
+- Implemented frosted glassmorphism authentication modal (`AuthModal.tsx`, `AuthModal.css`):
+  - Deep frosted glass styling (`backdrop-filter: blur(36px) saturate(160%)`, `inset 0 1.5px 1.5px rgba(255, 255, 255, 0.35)`).
+  - Ambient radial glow halo behind the modal card.
+  - Circular top-right close button with 90° rotation and scale hover micro-interactions.
+  - Floating Lucide icon inputs (`Mail`, `Lock`) with golden focus glow rings and smooth focus lifts.
+  - Password visibility toggle with animated eye icon transition.
+  - Custom cheerful animated "Remember me" checkbox.
+  - Shimmering metallic primary sign-in button with animated diagonal sweep.
+  - One-click Test Identity quick-select pills (`Admin`, `Operator`, `Viewer`) with color-coded badge indicators.
+  - Full keyboard accessibility (Esc to close, Tab focus trapping, Enter to submit).
+- Seamless routing integration in `App.tsx`:
+  - When unauthenticated, users land on the clean, dynamic `LandingPage`.
+  - Clicking "Sign In" or "Live Stream" opens the `AuthModal` directly over the living WebGL ray background.
+  - Upon successful authentication, smoothly transitions into the mission-control `AppShell` with `/overview`.
+- Quality and regression test matrix:
+  - `npm run lint` -> 0 errors, 0 warnings.
+  - `npm run typecheck` -> strict typecheck passed on all workspaces.
+  - `npm run test:unit` -> 19 test files passed, 124/124 tests passed.
+  - `npm run test:integration` -> 4 test files passed, 29/29 tests passed.
+  - `npm run test:e2e` -> 3 test files passed, 14/14 tests passed.
+  - `npm run test:visual` -> 1 test file passed, 4/4 tests passed.
+  - `npm run test:security` -> 1 test file passed, 3/3 tests passed (production broker IP strictly excluded from frontend client bundles).
+  - `npm run build` -> all packages built cleanly, frontend Vite bundle compiled in 1.92s.

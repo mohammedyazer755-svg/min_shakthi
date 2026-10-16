@@ -1,5 +1,6 @@
 export * from './LightRays/LightRays';
 export * from './ElectricBrandMark';
+export * from './Auth/AuthModal';
 export * from './Card';
 export * from './MetricCard';
 export * from './Button';
