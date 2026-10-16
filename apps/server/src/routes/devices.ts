@@ -2,6 +2,8 @@ import { Router } from 'express';
 import { AuthService } from '../auth/service.js';
 import { requireAuth, requireSiteAccess, requireSiteRole } from '../auth/middleware.js';
 import { type ITelemetryRepository, getTelemetryRepository } from '../storage/db.js';
+import { PostgresTelemetryRepository } from '../storage/postgres.js';
+import { IngestMetrics } from '../observability/metrics.js';
 import {
   UpdateDeviceMappingRequestSchema,
   type DeviceDiagnostics,
@@ -30,6 +32,10 @@ export function createDevicesRouter(
 
       const channels = await repo.getDeviceChannels(siteId, deviceId);
       const latestMap = await repo.getLatestTelemetry(siteId, deviceId);
+      const worker = repo instanceof PostgresTelemetryRepository ? await repo.getWorkerStatus() : null;
+      const brokerConnected = repo instanceof PostgresTelemetryRepository
+        ? !!worker && Date.now()-new Date(worker.at).getTime()<15000 && worker.connected
+        : IngestMetrics.getInstance().brokerConnected;
 
       const diagnostics: DeviceDiagnostics = {
         deviceId: dev.rawDeviceId,
@@ -38,11 +44,11 @@ export function createDevicesRouter(
         enabled: dev.enabled,
         expectedIntervalMs: dev.expectedIntervalMs,
         configVersion: dev.configVersion,
-        brokerStatus: 'connected',
-        lastReceivedAt: Array.from(latestMap.values())[0]?.receivedAt ?? null,
-        totalPacketsReceived: latestMap.size * 100,
-        quarantineCount: 0,
-        intervalJitterMs: 24,
+        brokerStatus: brokerConnected ? 'connected' : 'disconnected',
+        lastReceivedAt: Array.from(latestMap.values()).map((s) => s.receivedAt).sort().at(-1) ?? null,
+        totalPacketsReceived: repo instanceof PostgresTelemetryRepository ? await repo.getDevicePacketCount(siteId,deviceId) : IngestMetrics.getInstance().totalAccepted,
+        quarantineCount: null,
+        intervalJitterMs: null,
         channels: channels.map((c) => {
           const latest = latestMap.get(c.rawChannelId);
           return {
@@ -50,7 +56,8 @@ export function createDevicesRouter(
             displaySlot: c.displaySlot,
             label: c.label,
             enabled: c.enabled,
-            freshness: latest ? 'fresh' : c.displaySlot ? 'stale' : 'unconfigured',
+            freshness: !c.enabled || !c.displaySlot ? 'unconfigured' : !latest ? 'unseen' : latest.retained ? 'stale'
+              : Date.now()-new Date(latest.receivedAt).getTime()<=5000 ? 'fresh' : 'stale',
             lastSeenAt: latest?.receivedAt ?? null,
           };
         }),

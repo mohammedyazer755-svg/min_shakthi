@@ -39,3 +39,6 @@ Thumbs.db
 test-results/
 playwright-report/
 blob-report/
+.vercel
+/.agents/
+/skills-lock.json

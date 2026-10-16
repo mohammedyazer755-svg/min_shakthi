@@ -1,0 +1,10 @@
+.git
+.env*
+.vercel
+.agents
+node_modules
+**/node_modules
+**/dist
+reference
+test-results
+playwright-report

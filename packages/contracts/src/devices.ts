@@ -24,7 +24,7 @@ export const DeviceDiagnosticsSchema = z.object({
   brokerStatus: z.string(),
   lastReceivedAt: z.string().nullable(),
   totalPacketsReceived: z.number(),
-  quarantineCount: z.number(),
+  quarantineCount: z.number().nullable(),
   intervalJitterMs: z.number().nullable(),
   channels: z.array(
     z.object({

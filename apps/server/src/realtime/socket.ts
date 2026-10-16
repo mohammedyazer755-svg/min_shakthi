@@ -15,6 +15,8 @@ import { DeviceRegistry } from '../ingest/registry.js';
 import { IngestCache } from '../ingest/cache.js';
 import { IngestMetrics } from '../observability/metrics.js';
 import { type ITelemetryRepository, getTelemetryRepository } from '../storage/db.js';
+import { PostgresTelemetryRepository } from '../storage/postgres.js';
+import { cloudSnapshot } from './cloud-snapshot.js';
 
 interface SocketData {
   sessionContext?: SessionContext;
@@ -87,6 +89,29 @@ export class RealtimeSocketServer {
         return;
       }
 
+      let subscription: { requestId: string; generation: number; deviceId: string; since: string } | null = null;
+      let pollTimer: NodeJS.Timeout | undefined;
+      const seen = new Set<string>();
+      const poll = async () => {
+        const selected = subscription;
+        if (!socket.connected || !selected || !(this.repo instanceof PostgresTelemetryRepository)) return;
+        try {
+          const token = socket.handshake.auth?.['token'] as string;
+          if (!await this.authService.verifyAccessToken(token)) { socket.disconnect(true); return; }
+          const history = await this.repo.queryTelemetryHistory(session.siteId,selected.deviceId,{ from:selected.since,limit:1000 });
+          if (subscription !== selected || !socket.connected) return;
+          const snapshot = await this.generateSnapshot(selected.requestId,selected.generation,session.siteId,selected.deviceId);
+          socket.emit('state:snapshot',snapshot);
+          for (const sample of [...history.samples].reverse()) {
+            if (!seen.has(sample.eventId)) { socket.emit('telemetry:update',sample); seen.add(sample.eventId); }
+          }
+          // Inclusive overlap plus event ID deduplication handles timestamps shared by samples.
+          selected.since = history.cutoff;
+          if (seen.size>2000) { const retained=[...seen].slice(-1000); seen.clear(); for (const id of retained) seen.add(id); }
+        } catch { socket.emit('resync:required','DATABASE_UNAVAILABLE'); }
+        if (socket.connected && subscription === selected) pollTimer=setTimeout(() => { void poll(); },1000);
+      };
+
       socket.on('device:subscribe', async (payload, callback) => {
         const parseResult = DeviceSubscribeSchema.safeParse(payload);
         if (!parseResult.success) {
@@ -103,6 +128,13 @@ export class RealtimeSocketServer {
           return;
         }
 
+        if (this.repo instanceof PostgresTelemetryRepository) {
+          try {
+            const device = await this.repo.getDevice(siteId,deviceId);
+            if (!device?.enabled) { callback?.({ status:'error',error:'DEVICE_NOT_FOUND' }); return; }
+          } catch { callback?.({ status:'error',error:'DATABASE_UNAVAILABLE' }); return; }
+        }
+
         // Leave previous device room if any
         if (socket.data.subscribedDeviceId) {
           socket.leave(`device:${socket.data.subscribedDeviceId}`);
@@ -112,15 +144,23 @@ export class RealtimeSocketServer {
         socket.join(`device:${deviceId}`);
 
         // Generate atomic snapshot
-        const snapshot = await this.generateSnapshot(
+        let snapshot: SnapshotPayload;
+        try { snapshot = await this.generateSnapshot(
           requestId,
           selectionGeneration,
           siteId,
           deviceId
-        );
+        ); } catch { callback?.({ status:'error',error:'DATABASE_UNAVAILABLE' }); return; }
 
         socket.emit('state:snapshot', snapshot);
         callback?.({ status: 'ok' });
+        if (this.repo instanceof PostgresTelemetryRepository) {
+          if (pollTimer) clearTimeout(pollTimer);
+          seen.clear();
+          for (const channel of snapshot.channels) if (channel.lastSample) seen.add(channel.lastSample.eventId);
+          subscription={ requestId,generation:selectionGeneration,deviceId,since:new Date().toISOString() };
+          pollTimer=setTimeout(() => { void poll(); },1000);
+        }
       });
 
       socket.on('display:ack', (ackPayload) => {
@@ -133,7 +173,8 @@ export class RealtimeSocketServer {
       });
 
       socket.on('disconnect', () => {
-        // Clean disconnect
+        subscription=null;
+        if (pollTimer) clearTimeout(pollTimer);
       });
     });
   }
@@ -144,6 +185,9 @@ export class RealtimeSocketServer {
     siteId: string,
     deviceId: string
   ): Promise<SnapshotPayload> {
+    if (this.repo instanceof PostgresTelemetryRepository) {
+      return cloudSnapshot(this.repo,requestId,selectionGeneration,siteId,deviceId);
+    }
     const registry = DeviceRegistry.getInstance();
     const cache = IngestCache.getInstance();
     const metrics = IngestMetrics.getInstance();

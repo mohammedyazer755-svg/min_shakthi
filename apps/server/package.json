@@ -14,11 +14,13 @@
     "@minsakthi/contracts": "*",
     "@minsakthi/db": "*",
     "@minsakthi/protocol": "*",
+    "@vercel/functions": "^3.10.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "mqtt": "^5.16.1",
+    "pg": "^8.23.1",
     "socket.io": "^4.8.4",
     "zod": "^3.24.2"
   },
@@ -27,6 +29,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.4",
+    "@types/pg": "^8.23.1",
     "typescript": "^5.7.3",
     "vitest": "^3.0.7"
   }

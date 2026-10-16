@@ -8,13 +8,14 @@ import type {
   SystemCoverage,
 } from '@minsakthi/contracts';
 import { useAuth } from '../auth/AuthContext';
+import { API_BASE } from '../api';
 
-const SOCKET_URL = import.meta.env.VITE_WS_URL || 'http://localhost:3000';
+const SOCKET_URL = import.meta.env.VITE_WS_URL || API_BASE;
 
 let globalSocket: Socket | null = null;
 
 function getOrCreateSocket(token: string): Socket {
-  if (!globalSocket || !globalSocket.connected) {
+  if (!globalSocket || !globalSocket.connected || (globalSocket.auth as { token?: string }).token !== token) {
     if (globalSocket) {
       globalSocket.disconnect();
     }
@@ -22,7 +23,7 @@ function getOrCreateSocket(token: string): Socket {
       path: '/socket.io/',
       auth: { token },
       withCredentials: true,
-      transports: ['websocket', 'polling'],
+      transports: ['websocket'],
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,
     });
@@ -185,7 +186,7 @@ export function useLiveTelemetry(deviceId: string) {
           ];
         }
       }
-      setPowerHistory(initialHist);
+      setPowerHistory((previous) => ({ ...initialHist,...previous }));
     };
 
     const onTelemetryUpdate = (update: TelemetryPayload) => {
@@ -202,7 +203,7 @@ export function useLiveTelemetry(deviceId: string) {
               ...ch,
               lastSample: update,
               lastReceivedAt: update.receivedAt,
-              freshness: 'fresh',
+              freshness: update.retained ? 'stale' : 'fresh',
             };
           }
           return ch;
@@ -247,6 +248,7 @@ export function useLiveTelemetry(deviceId: string) {
       socket.off('connect_error', onConnectError);
       socket.off('state:snapshot', onSnapshot);
       socket.off('telemetry:update', onTelemetryUpdate);
+      socket.disconnect();
     };
   }, [accessToken, user, deviceId, handleDisplayAck]);
 

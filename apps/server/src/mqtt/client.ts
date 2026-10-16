@@ -20,6 +20,8 @@ export class MqttIngestService {
   private spool: DurableSpoolManager | null = null;
   private persister: TelemetryPersisterWorker | null = null;
   private socketServer: RealtimeSocketServer | null = null;
+  private persist?: (sample: TelemetryPayload) => Promise<void>;
+  private persistentSession = false;
 
   constructor(
     private readonly env: ServerEnv,
@@ -27,11 +29,15 @@ export class MqttIngestService {
       spool?: DurableSpoolManager;
       persister?: TelemetryPersisterWorker;
       socketServer?: RealtimeSocketServer;
+      persist?: (sample: TelemetryPayload) => Promise<void>;
+      persistentSession?: boolean;
     }
   ) {
     if (options?.spool) this.spool = options.spool;
     if (options?.persister) this.persister = options.persister;
     if (options?.socketServer) this.socketServer = options.socketServer;
+    this.persist = options?.persist;
+    this.persistentSession = options?.persistentSession ?? false;
   }
 
   public attachSpool(spool: DurableSpoolManager): void {
@@ -59,7 +65,7 @@ export class MqttIngestService {
         clientId,
         username: this.env.MQTT_USERNAME,
         password: this.env.MQTT_PASSWORD,
-        clean: true, // Non-negotiable: clean start policy
+        clean: !this.persistentSession,
         connectTimeout: 10000,
         reconnectPeriod: 1000, // Starts at 1s, capped with jitter internally
       });
@@ -113,9 +119,21 @@ export class MqttIngestService {
         console.error(`[MQTT INGEST] Broker error: ${sanitizedMsg}`);
       });
 
-      this.client.on('message', (topic, payloadBuffer, packet) => {
-        this.handleMessage(topic, payloadBuffer, packet);
-      });
+      if (this.persist) {
+        this.client.handleMessage = (packet, callback) => {
+          const sample = this.handleMessage(packet.topic,Buffer.from(packet.payload),packet);
+          if (!sample) { callback(); return; }
+          this.persist!(sample).then(() => callback()).catch(() => {
+            console.error('[MQTT INGEST] Commit failed; reconnecting without acknowledging the packet.');
+            this.client?.stream.destroy();
+            callback(new Error('DATABASE_UNAVAILABLE'));
+          });
+        };
+      } else {
+        this.client.on('message', (topic, payloadBuffer, packet) => {
+          this.handleMessage(topic, payloadBuffer, packet);
+        });
+      }
 
       // Start 5s heartbeat monitor
       this.heartbeatTimer = setInterval(() => {
@@ -128,7 +146,7 @@ export class MqttIngestService {
     topic: string,
     payloadBuffer: Buffer,
     packet: { qos: number; retain: boolean; dup: boolean }
-  ): void {
+  ): TelemetryPayload | undefined {
     const t0 = performance.now();
     const receivedAt = new Date().toISOString();
 
@@ -235,6 +253,7 @@ export class MqttIngestService {
     const latencyMs = performance.now() - t0;
     metrics.recordAccepted(latencyMs);
     sink.emitAccepted(telemetry, latencyMs);
+    return telemetry;
   }
 
 

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { AuthUser, LoginResponse } from '@minsakthi/contracts';
+import { API_BASE } from '../api';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -12,8 +13,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -59,6 +58,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       mounted = false;
     };
   }, []);
+
+  // Refresh the short-lived token before expiry; keep bearer tokens in memory.
+  useEffect(() => {
+    if (!accessToken) return;
+    let active = true;
+    const timer = setTimeout(async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/v1/auth/refresh`,{ method:'POST',credentials:'include' });
+        if (!response.ok) throw new Error('Session expired');
+        const data = await response.json() as LoginResponse;
+        if (active) { setAccessToken(data.accessToken); setUser(data.user); }
+      } catch {
+        if (active) { setAccessToken(null); setUser(null); setStatus('unauthenticated'); }
+      }
+    },4*60*1000);
+    return () => { active=false; clearTimeout(timer); };
+  },[accessToken]);
 
   const login = useCallback(async (email: string, pass: string): Promise<boolean> => {
     setError(null);

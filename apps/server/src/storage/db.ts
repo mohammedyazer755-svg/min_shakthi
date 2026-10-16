@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import { PostgresTelemetryRepository } from './postgres.js';
 import type {
   TelemetryPayload,
   UserRole,
@@ -717,7 +718,13 @@ let globalRepo: ITelemetryRepository | null = null;
 
 export function getTelemetryRepository(): ITelemetryRepository {
   if (!globalRepo) {
-    globalRepo = new MemoryTelemetryRepository();
+    const url = process.env['DATABASE_URL'];
+    if (process.env['NODE_ENV'] === 'production' && !url) {
+      throw new Error('DATABASE_URL is required; test identities are never loaded in production.');
+    }
+    globalRepo = url && process.env['NODE_ENV'] !== 'test'
+      ? new PostgresTelemetryRepository(url)
+      : new MemoryTelemetryRepository();
   }
   return globalRepo;
 }

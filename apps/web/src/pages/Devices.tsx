@@ -312,7 +312,7 @@ export const Devices: React.FC<DevicesProps> = ({ selectedDevice }) => {
           <div style={metricBoxStyle}>
             <span style={sectionLabel}>Broker Transport Link</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: diagnostics.brokerStatus === 'connected' ? '#22c55e' : '#f59e0b', display: 'inline-block' }} />
               <span style={{ fontSize: 16, fontWeight: 800, fontFamily: 'monospace', color: 'var(--dark-text-primary)', textTransform: 'capitalize' }}>
                 {diagnostics.brokerStatus}
               </span>
@@ -329,7 +329,7 @@ export const Devices: React.FC<DevicesProps> = ({ selectedDevice }) => {
                 {`${diagnostics.expectedIntervalMs}ms`}
               </span>
               <span style={{ fontSize: 11, color: 'var(--dark-text-muted)', fontFamily: 'monospace' }}>
-                {`±${diagnostics.intervalJitterMs}ms jitter`}
+                {diagnostics.intervalJitterMs === null ? 'Jitter not measured' : `±${diagnostics.intervalJitterMs}ms jitter`}
               </span>
             </div>
             <span style={{ fontSize: 11, color: 'var(--dark-text-muted)', marginTop: 4 }}>
@@ -341,7 +341,7 @@ export const Devices: React.FC<DevicesProps> = ({ selectedDevice }) => {
             <span style={sectionLabel}>Quarantined Packets</span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
               <span style={{ fontSize: 18, fontWeight: 800, fontFamily: 'monospace', color: 'var(--dark-text-primary)' }}>
-                {diagnostics.quarantineCount}
+                {diagnostics.quarantineCount ?? '—'}
               </span>
               <span style={{ fontSize: 11, color: 'var(--dark-text-muted)' }}>dropped</span>
             </div>
