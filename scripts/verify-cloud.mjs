@@ -12,7 +12,7 @@ if (!base) {
   base = `http://127.0.0.1:${server.address().port}`;
 }
 const json = async (path,options) => {
-  const response = await fetch(`${base}${path}`,options);
+  const response = await globalThis.fetch(`${base}${path}`,options);
   assert.ok(response.headers.get('content-type')?.includes('application/json'),`${path} must serve the API, not SPA HTML`);
   return { response,data:await response.json() };
 };
