@@ -1,0 +1,10 @@
+case,mqtt_topic,raw_payload,expected_device,expected_channel,expected_voltage,expected_current,expected_power,expected_energy,expected_frequency,expect_valid
+sample_1,swiftpower,"swiftpower prototype1,channel1,239.67,0.14,33.22,88.11,49.98",prototype1,channel1,239.67,0.14,33.22,88.11,49.98,true
+sample_2,swiftpower,"swiftpower prototype1,channel2,239.67,0.80,191.17,658.53,49.98",prototype1,channel2,239.67,0.80,191.17,658.53,49.98,true
+sample_3,swiftpower,"swiftpower prototype1,channel1,241.09,0.09,22.27,88.58,49.99",prototype1,channel1,241.09,0.09,22.27,88.58,49.99,true
+sample_4,swiftpower,"swiftpower prototype1,channel2,241.09,1.74,418.94,662.30,50.01",prototype1,channel2,241.09,1.74,418.94,662.30,50.01,true
+plain_7,swiftpower,"prototype1,channel1,239.67,0.14,33.22,88.11,49.98",prototype1,channel1,239.67,0.14,33.22,88.11,49.98,true
+explicit_8,swiftpower,"swiftpower,prototype1,channel1,239.67,0.14,33.22,88.11,49.98",prototype1,channel1,239.67,0.14,33.22,88.11,49.98,true
+zero_load,swiftpower,"prototype1,channel1,240,0,0,88.11,50",prototype1,channel1,240,0,0,88.11,50,true
+wrong_topic,othertopic,"swiftpower,prototype1,channel1,239.67,0.14,33.22,88.11,49.98",prototype1,channel1,239.67,0.14,33.22,88.11,49.98,false
+bad_number,swiftpower,"prototype1,channel1,NaN,0.14,33.22,88.11,49.98",prototype1,channel1,,,,,,false

@@ -1,0 +1,42 @@
+{
+  "name": "minsakthi-v2",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/contracts",
+    "packages/protocol",
+    "packages/db",
+    "apps/server",
+    "apps/web"
+  ],
+  "engines": {
+    "node": "^24.19.0",
+    "npm": "^11.17.0"
+  },
+  "scripts": {
+    "dev": "node scripts/runner.js dev",
+    "lint": "node scripts/runner.js lint",
+    "typecheck": "node scripts/runner.js typecheck",
+    "build": "node scripts/runner.js build",
+    "build:server": "node scripts/runner.js build:server",
+    "build:web": "node scripts/runner.js build:web",
+    "start:server": "node scripts/runner.js start:server",
+    "test:unit": "node scripts/runner.js test:unit",
+    "test:integration": "node scripts/runner.js test:integration",
+    "test:e2e": "node scripts/runner.js test:e2e",
+    "test:visual": "node scripts/runner.js test:visual",
+    "test:load": "node scripts/runner.js test:load",
+    "test:security": "node scripts/runner.js test:security",
+    "test:hardware": "node scripts/runner.js test:hardware",
+    "db:migrate": "node scripts/runner.js db:migrate",
+    "db:seed:test": "node scripts/runner.js db:seed:test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "eslint": "^9.20.1",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.24.0",
+    "vitest": "^3.0.7"
+  }
+}

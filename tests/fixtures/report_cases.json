@@ -1,0 +1,73 @@
+[
+  {
+    "id": "verified_wh_flat_test_tariff",
+    "testOnly": true,
+    "unit": "Wh",
+    "semantics": "cumulative",
+    "counterValues": [
+      "1000",
+      "1125",
+      "1250"
+    ],
+    "sameVerifiedEpoch": true,
+    "expectedUsageKwh": "0.25",
+    "testTariffInrPerKwh": "8",
+    "expectedEstimatedCostInr": "2.00",
+    "allBillingEvidenceApproved": false,
+    "verifiedBilling": false
+  },
+  {
+    "id": "unknown_units",
+    "testOnly": true,
+    "unit": "unknown",
+    "counterValues": [
+      "88.11",
+      "88.58"
+    ],
+    "expectedUsageKwh": null,
+    "verifiedBilling": false
+  },
+  {
+    "id": "reset",
+    "testOnly": true,
+    "unit": "Wh",
+    "counterValues": [
+      "1000",
+      "10",
+      "20"
+    ],
+    "expectedKnownIntervalWh": "10",
+    "excludedIntervalIndices": [
+      0
+    ],
+    "complete": false
+  },
+  {
+    "id": "incremental_ambiguous_duplicates",
+    "testOnly": true,
+    "unit": "Wh",
+    "semantics": "incremental",
+    "counterValues": [
+      "10",
+      "10"
+    ],
+    "expectedUsageKwh": null,
+    "verifiedBilling": false
+  },
+  {
+    "id": "india_day",
+    "testOnly": true,
+    "timezone": "Asia/Kolkata",
+    "localDate": "2026-10-16",
+    "expectedUtcFromInclusive": "2026-10-15T18:30:00.000Z",
+    "expectedUtcToExclusive": "2026-10-16T18:30:00.000Z"
+  },
+  {
+    "id": "india_month",
+    "testOnly": true,
+    "timezone": "Asia/Kolkata",
+    "localMonth": "2026-10",
+    "expectedUtcFromInclusive": "2026-09-30T18:30:00.000Z",
+    "expectedUtcToExclusive": "2026-10-31T18:30:00.000Z"
+  }
+]

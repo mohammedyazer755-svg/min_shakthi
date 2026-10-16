@@ -1,0 +1,22 @@
+services:
+  test-broker:
+    image: eclipse-mosquitto:2.0
+    container_name: minsakthi-test-broker
+    ports:
+      - "18883:1883"
+    volumes:
+      - ./mosquitto.test.conf:/mosquitto/config/mosquitto.conf:ro
+    restart: unless-stopped
+
+  test-db:
+    image: postgres:16-alpine
+    container_name: minsakthi-test-db
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: minsakthi_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_test_password
+    tmpfs:
+      - /var/lib/postgresql/data
+    restart: unless-stopped

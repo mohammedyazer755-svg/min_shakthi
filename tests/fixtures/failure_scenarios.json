@@ -1,0 +1,77 @@
+[
+  {
+    "id": "power_cycle",
+    "testOnly": true,
+    "intervalMs": 1000,
+    "actions": [
+      "publish valid zero",
+      "advance 5001ms without packets",
+      "advance to 30001ms",
+      "publish actual new packet"
+    ],
+    "expected": [
+      "fresh zero",
+      "stale",
+      "offline inferred only if upstream healthy",
+      "fresh receipt"
+    ]
+  },
+  {
+    "id": "identical_channels",
+    "testOnly": true,
+    "payloads": [
+      "prototype1,channel1,240,1,240,100,50",
+      "prototype2,channel1,230,2,460,200,50"
+    ],
+    "expectedLatestCount": 2
+  },
+  {
+    "id": "db_outage",
+    "testOnly": true,
+    "ratePerSecond": 50,
+    "outageSeconds": 120,
+    "expectedAccepted": 6000,
+    "diskHealthy": true,
+    "expectedCommitAfterRecovery": 6000,
+    "duplicateEventIds": 0
+  },
+  {
+    "id": "retained_snapshot",
+    "testOnly": true,
+    "retain": true,
+    "payload": "prototype1,channel1,240,1,240,100,50",
+    "expectedFresh": false
+  },
+  {
+    "id": "out_of_order_unknown",
+    "testOnly": true,
+    "counterSequence": [
+      "100",
+      "90",
+      "105"
+    ],
+    "expected": "receive-order raw readings; ambiguous decrease flagged, no fabricated source ordering"
+  },
+  {
+    "id": "backend_restart",
+    "testOnly": true,
+    "actions": [
+      "commit samples",
+      "restart backend",
+      "resubscribe client"
+    ],
+    "expected": [
+      "history survives",
+      "new serverEpoch",
+      "snapshot followed by ordered deltas"
+    ]
+  },
+  {
+    "id": "slow_mobile",
+    "testOnly": true,
+    "rttMs": 800,
+    "lossPercent": 1,
+    "downlinkKbps": 400,
+    "expected": "bounded backlog, honest stale state and resync; no normal-network SLO claim"
+  }
+]

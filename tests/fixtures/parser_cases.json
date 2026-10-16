@@ -1,0 +1,355 @@
+[
+  {
+    "id": "sample_1",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "swiftpower prototype1,channel1,239.67,0.14,33.22,88.11,49.98",
+    "valid": true,
+    "expected": {
+      "deviceId": "prototype1",
+      "channelId": "channel1",
+      "voltage": 239.67,
+      "current": 0.14,
+      "power": 33.22,
+      "frequency": 49.98,
+      "energyRaw": "88.11",
+      "energyUnit": "unknown",
+      "deviceTimestamp": null
+    }
+  },
+  {
+    "id": "sample_2",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "swiftpower prototype1,channel2,239.67,0.80,191.17,658.53,49.98",
+    "valid": true,
+    "expected": {
+      "deviceId": "prototype1",
+      "channelId": "channel2",
+      "voltage": 239.67,
+      "current": 0.8,
+      "power": 191.17,
+      "frequency": 49.98,
+      "energyRaw": "658.53",
+      "energyUnit": "unknown",
+      "deviceTimestamp": null
+    }
+  },
+  {
+    "id": "sample_3",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "swiftpower prototype1,channel1,241.09,0.09,22.27,88.58,49.99",
+    "valid": true,
+    "expected": {
+      "deviceId": "prototype1",
+      "channelId": "channel1",
+      "voltage": 241.09,
+      "current": 0.09,
+      "power": 22.27,
+      "frequency": 49.99,
+      "energyRaw": "88.58",
+      "energyUnit": "unknown",
+      "deviceTimestamp": null
+    }
+  },
+  {
+    "id": "sample_4",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "swiftpower prototype1,channel2,241.09,1.74,418.94,662.30,50.01",
+    "valid": true,
+    "expected": {
+      "deviceId": "prototype1",
+      "channelId": "channel2",
+      "voltage": 241.09,
+      "current": 1.74,
+      "power": 418.94,
+      "frequency": 50.01,
+      "energyRaw": "662.30",
+      "energyUnit": "unknown",
+      "deviceTimestamp": null
+    }
+  },
+  {
+    "id": "plain_7",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,239.67,0.14,33.22,88.11,49.98",
+    "valid": true,
+    "expected": {
+      "deviceId": "prototype1",
+      "channelId": "channel1",
+      "voltage": 239.67,
+      "current": 0.14,
+      "power": 33.22,
+      "frequency": 49.98,
+      "energyRaw": "88.11",
+      "energyUnit": "unknown",
+      "deviceTimestamp": null
+    }
+  },
+  {
+    "id": "explicit_8",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "swiftpower,prototype1,channel1,239.67,0.14,33.22,88.11,49.98",
+    "valid": true,
+    "expected": {
+      "deviceId": "prototype1",
+      "channelId": "channel1",
+      "voltage": 239.67,
+      "current": 0.14,
+      "power": 33.22,
+      "frequency": 49.98,
+      "energyRaw": "88.11",
+      "energyUnit": "unknown",
+      "deviceTimestamp": null
+    }
+  },
+  {
+    "id": "zero_load",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,240,0,0,88.11,50",
+    "valid": true,
+    "expected": {
+      "deviceId": "prototype1",
+      "channelId": "channel1",
+      "voltage": 240.0,
+      "current": 0.0,
+      "power": 0.0,
+      "frequency": 50.0,
+      "energyRaw": "88.11",
+      "energyUnit": "unknown",
+      "deviceTimestamp": null
+    }
+  },
+  {
+    "id": "wrong_topic",
+    "testOnly": true,
+    "topic": "othertopic",
+    "payload": "swiftpower,prototype1,channel1,239.67,0.14,33.22,88.11,49.98",
+    "valid": false,
+    "error": "TOPIC_MISMATCH"
+  },
+  {
+    "id": "bad_number",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,NaN,0.14,33.22,88.11,49.98",
+    "valid": false,
+    "error": "NUMERIC_SYNTAX"
+  },
+  {
+    "id": "second_device",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype2,channel1,230,2,460,100,50",
+    "valid": true,
+    "expected": {
+      "deviceId": "prototype2",
+      "channelId": "channel1",
+      "voltage": 230.0,
+      "current": 2.0,
+      "power": 460.0,
+      "energyRaw": "100",
+      "frequency": 50.0,
+      "energyUnit": "unknown",
+      "deviceTimestamp": null
+    }
+  },
+  {
+    "id": "zero_all",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,0,0,0,0,0",
+    "valid": true,
+    "expected": {
+      "deviceId": "prototype1",
+      "channelId": "channel1",
+      "voltage": 0.0,
+      "current": 0.0,
+      "power": 0.0,
+      "energyRaw": "0",
+      "frequency": 0.0,
+      "energyUnit": "unknown",
+      "deviceTimestamp": null
+    }
+  },
+  {
+    "id": "whitespace",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "  swiftpower   prototype1 , channel1 , 239.67 , 0.14 , 33.22 , 88.11 , 49.98  ",
+    "valid": true,
+    "expected": {
+      "deviceId": "prototype1",
+      "channelId": "channel1",
+      "voltage": 239.67,
+      "current": 0.14,
+      "power": 33.22,
+      "energyRaw": "88.11",
+      "frequency": 49.98,
+      "energyUnit": "unknown",
+      "deviceTimestamp": null
+    }
+  },
+  {
+    "id": "empty_numeric",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,,0.14,33.22,88.11,49.98",
+    "valid": false,
+    "error": "NUMERIC_SYNTAX"
+  },
+  {
+    "id": "infinity",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,Infinity,0,0,0,50",
+    "valid": false,
+    "error": "NUMERIC_SYNTAX"
+  },
+  {
+    "id": "suffix",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,240V,0,0,0,50",
+    "valid": false,
+    "error": "NUMERIC_SYNTAX"
+  },
+  {
+    "id": "hex",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,0xF0,0,0,0,50",
+    "valid": false,
+    "error": "NUMERIC_SYNTAX"
+  },
+  {
+    "id": "exponent",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,2.4e2,0,0,0,50",
+    "valid": false,
+    "error": "NUMERIC_SYNTAX"
+  },
+  {
+    "id": "prefix_mismatch",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "wrong prototype1,channel1,240,0,0,0,50",
+    "valid": false,
+    "error": "TOPIC_MISMATCH"
+  },
+  {
+    "id": "explicit_mismatch",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "wrong,prototype1,channel1,240,0,0,0,50",
+    "valid": false,
+    "error": "TOPIC_MISMATCH"
+  },
+  {
+    "id": "empty_device",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": ",channel1,240,0,0,0,50",
+    "valid": false,
+    "error": "ID_INVALID"
+  },
+  {
+    "id": "invalid_id",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype/1,channel1,240,0,0,0,50",
+    "valid": false,
+    "error": "ID_INVALID"
+  },
+  {
+    "id": "extra_field",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,240,0,0,0,50,extra,extra",
+    "valid": false,
+    "error": "FIELD_COUNT"
+  },
+  {
+    "id": "missing_field",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,240,0,0,0",
+    "valid": false,
+    "error": "FIELD_COUNT"
+  },
+  {
+    "id": "negative_voltage",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,-240,0,0,0,50",
+    "valid": false,
+    "error": "SEMANTIC_RANGE"
+  },
+  {
+    "id": "negative_current",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,240,-1,0,0,50",
+    "valid": false,
+    "error": "SEMANTIC_RANGE"
+  },
+  {
+    "id": "negative_frequency",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,240,0,0,0,-50",
+    "valid": false,
+    "error": "SEMANTIC_RANGE"
+  },
+  {
+    "id": "signed_flow",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,240,1,-240,-10,50",
+    "valid": true,
+    "expected": {
+      "deviceId": "prototype1",
+      "channelId": "channel1",
+      "voltage": 240.0,
+      "current": 1.0,
+      "power": -240.0,
+      "energyRaw": "-10",
+      "frequency": 50.0,
+      "energyUnit": "unknown",
+      "deviceTimestamp": null
+    },
+    "qualityIncludes": [
+      "SIGNED_FLOW_UNVERIFIED"
+    ]
+  },
+  {
+    "id": "oversize",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "valid": false,
+    "error": "PAYLOAD_SIZE"
+  },
+  {
+    "id": "control_char",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,24\n0,0,0,0,50",
+    "valid": false,
+    "error": "CONTROL_CHARACTER"
+  },
+  {
+    "id": "huge_number",
+    "testOnly": true,
+    "topic": "swiftpower",
+    "payload": "prototype1,channel1,1000000000001,0,0,0,50",
+    "valid": false,
+    "error": "NUMERIC_RANGE"
+  }
+]

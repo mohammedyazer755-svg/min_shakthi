@@ -1,0 +1,70 @@
+/**
+ * MIN-SAKTHI V2 Design Tokens
+ * Direction: Premium Industrial Clarity
+ * Palette: Warm Ivory #F7F6F2, White #FFFFFF, Charcoal #202321, Restrained Gold #A38445
+ */
+
+:root {
+  /* Color Tokens */
+  --color-canvas: #F7F6F2;
+  --color-surface: #FFFFFF;
+  --color-text-primary: #202321;
+  --color-text-secondary: #5D625D;
+  --color-border: #DDDCD5;
+  --color-border-strong: #777B72;
+  --color-accent-gold: #A38445;
+  --color-accent-gold-text: #725719;
+  --color-button-primary: #202321;
+  --color-button-text: #FFFFFF;
+
+  /* Status Colors (Always paired with icon and text, never color alone) */
+  --color-status-positive: #176344;
+  --color-status-warning: #805300;
+  --color-status-critical: #A52E2E;
+
+  /* Typography Scale */
+  --font-size-xs: 0.75rem;     /* 12px: minor metadata */
+  --font-size-sm: 0.875rem;    /* 14px: labels, table cells */
+  --font-size-base: 1rem;      /* 16px: body text */
+  --font-size-lg: 1.125rem;    /* 18px */
+  --font-size-xl: 1.5rem;      /* 24px: page title */
+  --font-size-2xl: 1.75rem;    /* 28px: large titles */
+  --font-size-metric: 2rem;    /* 32px: primary KPI metrics */
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.45;
+  --line-height-relaxed: 1.5;
+
+  /* Spacing Scale (4, 8, 12, 16, 24, 32, 48px) */
+  --space-1: 0.25rem;  /* 4px */
+  --space-2: 0.5rem;   /* 8px */
+  --space-3: 0.75rem;  /* 12px */
+  --space-4: 1rem;     /* 16px: mobile card padding */
+  --space-6: 1.5rem;   /* 24px: desktop card padding */
+  --space-8: 2rem;     /* 32px */
+  --space-12: 3rem;    /* 48px */
+
+  /* Radii & Elevation */
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --radius-badge: 6px;
+  --shadow-subtle: 0 1px 3px rgba(32, 35, 33, 0.05), 0 1px 2px rgba(32, 35, 33, 0.03);
+
+  /* Touch Target */
+  --touch-target-min: 44px;
+
+  /* Focus Indicator */
+  --focus-ring-color: #A38445;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+
+  /* Motion */
+  --transition-duration: 150ms;
+  --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-duration: 0ms;
+  }
+}
