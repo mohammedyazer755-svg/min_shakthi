@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Menu, X, LayoutDashboard, Cpu, Bell, History, FileText, Settings, Radio } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Cpu, Bell, History, FileText, Settings, Radio, BarChart3, LogOut } from 'lucide-react';
 import { StatusSummary } from './StatusSummary';
+import { useAuth } from '../auth/AuthContext';
 
 export interface AppShellProps {
   children: React.ReactNode;
@@ -19,10 +20,12 @@ export const AppShell: React.FC<AppShellProps> = ({
   activeRoute = '/overview',
   onNavigate,
 }) => {
+  const { user, logout } = useAuth();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   const navItems = [
     { label: 'Overview', route: '/overview', icon: LayoutDashboard },
+    { label: 'Analytics', route: '/analytics', icon: BarChart3 },
     { label: 'Channels', route: '/channels', icon: Cpu },
     { label: 'Real-Time', route: '/live', icon: Radio },
     { label: 'History', route: '/history', icon: History },
@@ -87,7 +90,28 @@ export const AppShell: React.FC<AppShellProps> = ({
         </div>
 
         <div className="flex items-center space-x-2 sm:space-x-4">
-          <StatusSummary className="hidden md:inline-flex" />
+          <StatusSummary className="hidden xl:inline-flex" />
+          {user && (
+            <div className="flex items-center space-x-3 pl-2 sm:pl-3 border-l border-border">
+              <div className="hidden sm:block text-right">
+                <span className="text-xs font-semibold block text-text-primary leading-tight">
+                  {user.displayName}
+                </span>
+                <span className="text-[10px] text-brand-gold-text font-bold uppercase tracking-wider">
+                  {user.role}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => logout()}
+                className="text-xs font-medium px-2.5 py-1 rounded-control border border-border bg-surface hover:bg-canvas text-text-secondary hover:text-text-primary transition-colors focus:ring-1 focus:ring-brand-gold inline-flex items-center gap-1"
+                aria-label="Sign out"
+              >
+                <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </button>
+            </div>
+          )}
         </div>
       </header>
 

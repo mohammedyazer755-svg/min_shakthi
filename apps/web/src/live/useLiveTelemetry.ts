@@ -33,6 +33,10 @@ function getOrCreateSocket(token: string): Socket {
   return globalSocket;
 }
 
+export interface ChannelHistoryMap {
+  [channelId: string]: Array<{ timestamp: string; value: number | null }>;
+}
+
 export function useLiveTelemetry(deviceId: string) {
   const { accessToken, user } = useAuth();
 
@@ -43,9 +47,37 @@ export function useLiveTelemetry(deviceId: string) {
   const [connectionState, setConnectionState] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
   const [lastDisplayLatencyMs, setLastDisplayLatencyMs] = useState<number | null>(null);
 
+  // Live buffer (capped at 200 rows - R18)
+  const [livePackets, setLivePackets] = useState<TelemetryPayload[]>([]);
+  // History buffer (capped at 600 points/channel - R18)
+  const [powerHistory, setPowerHistory] = useState<ChannelHistoryMap>({});
+
+  // View pause control (R18, Live Screen spec)
+  const [isViewPaused, setIsViewPaused] = useState(false);
+  const isViewPausedRef = useRef(false);
+  isViewPausedRef.current = isViewPaused;
+  const pausedBufferRef = useRef<TelemetryPayload[]>([]);
+  const [pausedCatchupCount, setPausedCatchupCount] = useState(0);
+
   const selectionGenRef = useRef(0);
   const currentDeviceIdRef = useRef(deviceId);
   currentDeviceIdRef.current = deviceId;
+
+  const pauseView = useCallback(() => {
+    setIsViewPaused(true);
+  }, []);
+
+  const resumeView = useCallback(() => {
+    setIsViewPaused(false);
+    if (pausedBufferRef.current.length > 0) {
+      setLivePackets((prev) => {
+        const merged = [...pausedBufferRef.current, ...prev].slice(0, 200);
+        return merged;
+      });
+      pausedBufferRef.current = [];
+      setPausedCatchupCount(0);
+    }
+  }, []);
 
   const handleDisplayAck = useCallback((socket: Socket, eventId: string, clientReceivedAtMs: number) => {
     // Double requestAnimationFrame as browser paint proxy per specification (T26, R18)
@@ -65,7 +97,41 @@ export function useLiveTelemetry(deviceId: string) {
     });
   }, []);
 
+  // Periodic freshness check (fresh -> stale after 5s, offline after 30s)
   useEffect(() => {
+    const timer = setInterval(() => {
+      const nowMs = Date.now();
+      setChannels((prev) =>
+        prev.map((ch) => {
+          if (!ch.lastReceivedAt || ch.freshness === 'unconfigured') {
+            return ch;
+          }
+          const ageMs = nowMs - new Date(ch.lastReceivedAt).getTime();
+          let newFreshness = ch.freshness;
+          if (ageMs > 30000) {
+            newFreshness = 'offline_inferred';
+          } else if (ageMs > 5000) {
+            newFreshness = 'stale';
+          }
+          if (newFreshness !== ch.freshness) {
+            return { ...ch, freshness: newFreshness };
+          }
+          return ch;
+        })
+      );
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Main Socket Connection & Device Subscription
+  useEffect(() => {
+    // Reset device-scoped buffers when deviceId changes (T07)
+    setLivePackets([]);
+    setPowerHistory({});
+    pausedBufferRef.current = [];
+    setPausedCatchupCount(0);
+
     if (!accessToken || !user || !deviceId) {
       setConnectionState('disconnected');
       return;
@@ -76,7 +142,7 @@ export function useLiveTelemetry(deviceId: string) {
 
     const onConnect = () => {
       setConnectionState('connected');
-      // Subscribe to selected device
+      // Monotonic selection generation
       selectionGenRef.current += 1;
       const gen = selectionGenRef.current;
 
@@ -109,6 +175,17 @@ export function useLiveTelemetry(deviceId: string) {
       setChannels(snap.channels);
       setHealth(snap.health);
       setCoverage(snap.coverage);
+
+      // Preload initial history points from snapshot samples
+      const initialHist: ChannelHistoryMap = {};
+      for (const ch of snap.channels) {
+        if (ch.lastSample) {
+          initialHist[ch.rawChannelId] = [
+            { timestamp: ch.lastSample.receivedAt, value: ch.lastSample.values.power },
+          ];
+        }
+      }
+      setPowerHistory(initialHist);
     };
 
     const onTelemetryUpdate = (update: TelemetryPayload) => {
@@ -117,6 +194,7 @@ export function useLiveTelemetry(deviceId: string) {
         return;
       }
 
+      // 1. Update live channels matrix
       setChannels((prev) => {
         return prev.map((ch) => {
           if (ch.rawChannelId === update.channelId) {
@@ -131,6 +209,25 @@ export function useLiveTelemetry(deviceId: string) {
         });
       });
 
+      // 2. Append to power history (cap at 600 points - R18)
+      setPowerHistory((prev) => {
+        const cur = prev[update.channelId] || [];
+        const next = [...cur, { timestamp: update.receivedAt, value: update.values.power }].slice(-600);
+        return {
+          ...prev,
+          [update.channelId]: next,
+        };
+      });
+
+      // 3. Append to live packets table or pause buffer (cap at 200 rows - R18)
+      if (isViewPausedRef.current) {
+        pausedBufferRef.current.unshift(update);
+        setPausedCatchupCount(pausedBufferRef.current.length);
+      } else {
+        setLivePackets((prev) => [update, ...prev].slice(0, 200));
+      }
+
+      // 4. Send display ACK with double rAF paint proxy
       handleDisplayAck(socket, update.eventId, clientReceivedAtMs);
     };
 
@@ -160,5 +257,11 @@ export function useLiveTelemetry(deviceId: string) {
     health,
     coverage,
     lastDisplayLatencyMs,
+    livePackets,
+    powerHistory,
+    isViewPaused,
+    pausedCatchupCount,
+    pauseView,
+    resumeView,
   };
 }

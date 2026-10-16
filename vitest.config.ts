@@ -18,6 +18,7 @@ export default defineConfig({
       'tests/unit/**/*.test.ts',
       'tests/integration/**/*.test.ts',
       'tests/security/**/*.test.ts',
+      'tests/e2e/**/*.spec.ts',
     ],
     coverage: {
       provider: 'v8',

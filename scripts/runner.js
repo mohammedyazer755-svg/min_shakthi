@@ -17,18 +17,26 @@ if (!command) {
   process.exit(1);
 }
 
-// Parse custom root contract flags like --suite=<suite> and --scope=<scope>
+// Parse custom root contract flags like --suite=<suite>, --scope=<scope>, and --grep=<grep>
 let suite = null;
 let scope = null;
+let grep = null;
 const passthroughArgs = [];
 
-for (const arg of restArgs) {
+for (let i = 0; i < restArgs.length; i++) {
+  const arg = restArgs[i];
   if (arg.startsWith('--suite=')) {
     suite = arg.split('=')[1];
-  } else if (arg === '--suite') {
-    // next arg
+  } else if (arg === '--suite' && i + 1 < restArgs.length) {
+    suite = restArgs[++i];
   } else if (arg.startsWith('--scope=')) {
     scope = arg.split('=')[1];
+  } else if (arg === '--scope' && i + 1 < restArgs.length) {
+    scope = restArgs[++i];
+  } else if (arg.startsWith('--grep=')) {
+    grep = arg.split('=')[1];
+  } else if ((arg === '--grep' || arg === '-g') && i + 1 < restArgs.length) {
+    grep = restArgs[++i];
   } else {
     passthroughArgs.push(arg);
   }
@@ -144,18 +152,21 @@ switch (command) {
   }
 
   case 'test:e2e': {
-    console.error(
-      '[CONTRACT ERROR] NOT IMPLEMENTED: test:e2e is scheduled for Phase 3/4 (Authenticated Live Vertical Slice & Operations UI).'
-    );
-    process.exit(1);
+    console.log('[TEST:E2E] Running end-to-end monitoring test suite with Vitest...');
+    const vitestArgs = ['vitest', 'run', 'tests/e2e/monitoring.spec.ts'];
+    if (grep) {
+      vitestArgs.push('-t', grep);
+    }
+    vitestArgs.push(...passthroughArgs);
+    run('npx', vitestArgs);
     break;
   }
 
   case 'test:visual': {
-    console.error(
-      '[CONTRACT ERROR] NOT IMPLEMENTED: test:visual is scheduled for Phase 4 (Operations Interface).'
-    );
-    process.exit(1);
+    console.log('[TEST:VISUAL] Running visual, responsive and accessibility test suite with Vitest...');
+    const vitestArgs = ['vitest', 'run', 'tests/e2e/visual.spec.ts'];
+    vitestArgs.push(...passthroughArgs);
+    run('npx', vitestArgs);
     break;
   }
 
