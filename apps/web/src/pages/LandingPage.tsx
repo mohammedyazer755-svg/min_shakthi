@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { ArrowRight, Activity, ChevronRight } from 'lucide-react';
 import { ElectricBrandMark } from '../components/ElectricBrandMark';
 import { LightRays } from '../components/LightRays/LightRays';
@@ -19,26 +19,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(initialAuthOpen);
   const [prefillEmail, setPrefillEmail] = useState('admin@minsakthi.local');
 
-  // Dynamic micro-fluctuations so the electrical readings never feel static
-  const [metrics, setMetrics] = useState({
-    voltage: 239.67,
-    frequency: 49.98,
-    power: 33.22,
-    current: 0.14,
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setMetrics({
-        voltage: +(239.67 + (Math.random() * 0.4 - 0.2)).toFixed(2),
-        frequency: +(49.98 + (Math.random() * 0.04 - 0.02)).toFixed(2),
-        power: +(33.22 + (Math.random() * 0.3 - 0.15)).toFixed(2),
-        current: +(0.14 + (Math.random() * 0.02 - 0.01)).toFixed(2),
-      });
-    }, 1800);
-
-    return () => clearInterval(timer);
-  }, []);
+  // Public visitors have no authenticated device stream. Never invent live readings.
+  const metrics = { voltage:'—',frequency:'—',power:'—',current:'—' };
 
   const handleCloseAuth = useCallback(() => {
     setIsAuthModalOpen(false);
@@ -51,11 +33,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   };
 
   const channels = [
-    { slot: 'CH01', name: 'Main Incomer Phase', status: 'Active', voltage: '239.67 V', current: '0.14 A' },
-    { slot: 'CH02', name: 'Sub Load Feeder', status: 'Standby', voltage: '240.10 V', current: '0.00 A' },
-    { slot: 'CH03', name: 'Server UPS Line', status: 'Active', voltage: '238.90 V', current: '1.42 A' },
-    { slot: 'CH04', name: 'Auxiliary Power', status: 'Active', voltage: '240.50 V', current: '0.22 A' },
-    { slot: 'CH05', name: 'Lighting Circuit', status: 'Active', voltage: '239.80 V', current: '0.48 A' },
+    ...Array.from({length:5},(_,index) => ({ slot:`CH0${index+1}`,name:`Channel ${index+1}`,
+      status:'Sign in to view',voltage:'— V',current:'— A' })),
   ];
 
   const pipelineSteps = [
@@ -120,7 +99,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="landing-nav-actions">
             <div className="landing-status-badge hidden sm:inline-flex">
               <span className="landing-live-dot" aria-hidden="true" />
-              <span>Broker Active</span>
+              <span>Secure monitoring</span>
             </div>
 
             <button
@@ -206,10 +185,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span className="landing-live-dot" aria-hidden="true" />
             <div>
               <div className="text-xs font-bold tracking-wider text-emerald-400 uppercase">
-                Live Ingestion Active
+                Sign in for live readings
               </div>
               <div className="text-[10px] text-neutral-400">
-                prototype1 / channel1
+                Device status available after sign-in
               </div>
             </div>
           </div>

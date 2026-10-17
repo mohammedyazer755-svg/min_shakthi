@@ -38,9 +38,9 @@ export const Overview: React.FC<OverviewProps> = ({
     channels,
     health,
     coverage,
-    connectionState,
     powerHistory,
     lastDisplayLatencyMs,
+    streamStatus,
   } = telemetry;
 
   // Active power total across reporting configured channels
@@ -52,7 +52,7 @@ export const Overview: React.FC<OverviewProps> = ({
     for (const ch of channels) {
       if (ch.freshness !== 'unconfigured') {
         configured += 1;
-        if (ch.lastSample && (ch.freshness === 'fresh' || ch.freshness === 'stale')) {
+        if (ch.lastSample && ch.freshness === 'fresh') {
           sum += ch.lastSample.values.power;
           active += 1;
         }
@@ -77,7 +77,7 @@ export const Overview: React.FC<OverviewProps> = ({
     let count = 0;
 
     for (const ch of channels) {
-      if (ch.lastSample && ch.freshness !== 'unconfigured') {
+      if (ch.lastSample && ch.freshness === 'fresh') {
         const v = ch.lastSample.values.voltage;
         const f = ch.lastSample.values.frequency;
         const i = ch.lastSample.values.current;
@@ -176,10 +176,10 @@ export const Overview: React.FC<OverviewProps> = ({
                 height: 8,
                 borderRadius: '50%',
                 display: 'inline-block',
-                background: connectionState === 'connected' ? 'var(--dark-status-ok, #22c55e)' : 'var(--dark-status-critical, #ef4444)',
+                background: streamStatus.tone === 'positive' ? 'var(--dark-status-ok)' : 'var(--dark-status-warn)',
               }}
             />
-            <span style={{ color: 'var(--dark-text-muted)', textTransform: 'capitalize' }}>{`Socket ${connectionState}`}</span>
+            <span style={{ color: 'var(--dark-text-muted)' }}>{`ESP: ${streamStatus.label}`}</span>
           </div>
           <span style={{ color: 'var(--dark-border-strong)' }}>|</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--dark-text-muted)' }}>
@@ -301,7 +301,7 @@ export const Overview: React.FC<OverviewProps> = ({
             </thead>
             <tbody>
               {channels.map((ch, idx) => {
-                const s = ch.lastSample;
+                const s = ch.freshness === 'fresh' ? ch.lastSample : null;
                 const isUnconf = ch.freshness === 'unconfigured';
                 return (
                   <tr
@@ -337,7 +337,7 @@ export const Overview: React.FC<OverviewProps> = ({
                       {s?.values.frequency != null ? `${s.values.frequency.toFixed(2)} Hz` : '—'}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <FreshnessLabel freshness={ch.freshness} />
+                      <FreshnessLabel freshness={ch.freshness} lastReceivedAt={ch.lastReceivedAt} />
                     </td>
                   </tr>
                 );

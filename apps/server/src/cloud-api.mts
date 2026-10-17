@@ -36,7 +36,7 @@ app.get('/health/ready', async (_req, res) => {
     if (!(repo instanceof PostgresTelemetryRepository)) throw new Error('DATABASE_UNAVAILABLE');
     await repo.ping();
     const worker = await repo.getWorkerStatus();
-    const active = !!worker && Date.now() - new Date(worker.at).getTime() < 15000;
+    const active = !!worker && Date.now() - new Date(worker.at).getTime() < 6000;
     res.json({ status:'ready',database:'connected',broker:{ connected:active && worker!.connected,subscribed:active && worker!.subscribed },worker:active?'running':'unavailable' });
   } catch { res.status(503).json({ status:'degraded',database:'unavailable' }); }
 });

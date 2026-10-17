@@ -101,6 +101,7 @@ function createMockTelemetryState(deviceId = 'prototype1') {
 
   return {
     connectionState: 'connected' as const,
+    streamStatus: {label:'Live · Partial',tone:'positive'} as const,
     snapshot: null,
     channels,
     health: {
@@ -166,7 +167,7 @@ describe('Monitoring E2E Suite (Phase 4: Five monitoring screens)', () => {
 
     // Header & KPIs
     expect(html).toContain('prototype1');
-    expect(html).toContain('Socket connected');
+    expect(html).toContain('ESP: Live · Partial');
     expect(html).toContain('Active Power Total');
     expect(html).toContain('33.2'); // Active power sum
     expect(html).toContain('Supply Voltage');
@@ -191,6 +192,20 @@ describe('Monitoring E2E Suite (Phase 4: Five monitoring screens)', () => {
     // Real latency probe
     expect(html).toContain('Display ACK:');
     expect(html).toContain('14ms');
+  });
+
+  it('removes expired readings from current cards and rows while keeping historical trends', () => {
+    const telemetry = createMockTelemetryState('prototype1');
+    telemetry.channels = telemetry.channels.map(ch => ({ ...ch,
+      freshness:ch.freshness === 'unconfigured' ? 'unconfigured' : 'offline_inferred',
+    }));
+    telemetry.coverage = { configuredSlots:2,reportingSlots:0,partial:true };
+    const html = renderToString(React.createElement(Overview,{telemetry,selectedDevice:'prototype1'}));
+    expect(html).not.toContain('239.67 V');
+    expect(html).not.toContain('0.14 A');
+    expect(html).toContain('0/2 reporting');
+    expect(html).toContain('Offline');
+    expect(html).toContain('Active Power Trend');
   });
 
   it('renders OverallAnalytics screen with time range picker and verified billing suppression notice', () => {
@@ -253,7 +268,7 @@ describe('Monitoring E2E Suite (Phase 4: Five monitoring screens)', () => {
       })
     );
 
-    expect(html).toContain('Live Ingestion Telemetry Stream');
+    expect(html).toContain('Recent telemetry packets');
     expect(html).toContain('Bounded to last 200 packets');
     expect(html).toContain('Pause View');
     expect(html).toContain('All Channels');

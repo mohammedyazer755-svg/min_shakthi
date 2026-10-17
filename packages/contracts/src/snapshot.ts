@@ -56,6 +56,7 @@ export const SnapshotPayloadSchema = z.object({
   siteId: z.string().min(1),
   deviceId: z.string().min(1),
   mappingVersion: z.number().int().positive(),
+  expectedIntervalMs: z.number().positive().optional(),
   channels: z.array(SnapshotChannelSchema),
   health: SystemHealthSchema,
   coverage: SystemCoverageSchema,

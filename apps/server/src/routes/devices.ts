@@ -6,6 +6,7 @@ import { PostgresTelemetryRepository } from '../storage/postgres.js';
 import { IngestMetrics } from '../observability/metrics.js';
 import {
   UpdateDeviceMappingRequestSchema,
+  readingFreshness,
   type DeviceDiagnostics,
 } from '@minsakthi/contracts';
 
@@ -34,7 +35,7 @@ export function createDevicesRouter(
       const latestMap = await repo.getLatestTelemetry(siteId, deviceId);
       const worker = repo instanceof PostgresTelemetryRepository ? await repo.getWorkerStatus() : null;
       const brokerConnected = repo instanceof PostgresTelemetryRepository
-        ? !!worker && Date.now()-new Date(worker.at).getTime()<15000 && worker.connected
+        ? !!worker && Date.now()-new Date(worker.at).getTime()<6000 && worker.connected && worker.subscribed
         : IngestMetrics.getInstance().brokerConnected;
 
       const diagnostics: DeviceDiagnostics = {
@@ -56,8 +57,10 @@ export function createDevicesRouter(
             displaySlot: c.displaySlot,
             label: c.label,
             enabled: c.enabled,
-            freshness: !c.enabled || !c.displaySlot ? 'unconfigured' : !latest ? 'unseen' : latest.retained ? 'stale'
-              : Date.now()-new Date(latest.receivedAt).getTime()<=5000 ? 'fresh' : 'stale',
+            freshness:readingFreshness({ receivedAt:latest?.receivedAt ?? null,retained:latest?.retained,
+              suspectDuplicate:latest?.quality.includes('SUSPECT_DUPLICATE'),
+              configured:c.enabled && !!c.displaySlot,expectedIntervalMs:dev.expectedIntervalMs,
+              nowMs:Date.now(),transportAvailable:brokerConnected }),
             lastSeenAt: latest?.receivedAt ?? null,
           };
         }),

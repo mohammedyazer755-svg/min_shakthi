@@ -1,4 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { readingFreshness, FRESHNESS_TICK_MS } from '@minsakthi/contracts/freshness';
+import { deviceStreamStatus } from './status';
 import { io, type Socket } from 'socket.io-client';
 import type {
   SnapshotPayload,
@@ -42,9 +44,11 @@ export function useLiveTelemetry(deviceId: string) {
   const { accessToken, user } = useAuth();
 
   const [snapshot, setSnapshot] = useState<SnapshotPayload | null>(null);
-  const [channels, setChannels] = useState<SnapshotChannel[]>([]);
-  const [health, setHealth] = useState<SystemHealth | null>(null);
-  const [coverage, setCoverage] = useState<SystemCoverage | null>(null);
+  const [receivedChannels, setChannels] = useState<SnapshotChannel[]>([]);
+  const [receivedHealth, setHealth] = useState<SystemHealth | null>(null);
+  const [nowMs, setNowMs] = useState(Date.now);
+  const lastSnapshotAt = useRef(0);
+  const serverClockOffset = useRef(0);
   const [connectionState, setConnectionState] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
   const [lastDisplayLatencyMs, setLastDisplayLatencyMs] = useState<number | null>(null);
 
@@ -98,38 +102,39 @@ export function useLiveTelemetry(deviceId: string) {
     });
   }, []);
 
-  // Periodic freshness check (fresh -> stale after 5s, offline after 30s)
+  // Age readings locally even when the open WebSocket stops delivering snapshots.
   useEffect(() => {
-    const timer = setInterval(() => {
-      const nowMs = Date.now();
-      setChannels((prev) =>
-        prev.map((ch) => {
-          if (!ch.lastReceivedAt || ch.freshness === 'unconfigured') {
-            return ch;
-          }
-          const ageMs = nowMs - new Date(ch.lastReceivedAt).getTime();
-          let newFreshness = ch.freshness;
-          if (ageMs > 30000) {
-            newFreshness = 'offline_inferred';
-          } else if (ageMs > 5000) {
-            newFreshness = 'stale';
-          }
-          if (newFreshness !== ch.freshness) {
-            return { ...ch, freshness: newFreshness };
-          }
-          return ch;
-        })
-      );
-    }, 1000);
-
+    if (!accessToken) return;
+    const timer = setInterval(() => setNowMs(Date.now()), FRESHNESS_TICK_MS);
     return () => clearInterval(timer);
-  }, []);
+  }, [accessToken]);
+
+  const health = snapshot?.deviceId === deviceId && connectionState === 'connected' && nowMs - lastSnapshotAt.current < 6000 ? receivedHealth : null;
+  const transportAvailable = !!health && health.process === 'healthy' && health.database === 'healthy'
+    && health.broker === 'connected' && health.brokerSubscribed;
+  const channels = useMemo(() => (snapshot?.deviceId === deviceId ? receivedChannels : []).map((ch) => ({ ...ch,
+    freshness:readingFreshness({ receivedAt:ch.lastReceivedAt,retained:ch.lastSample?.retained,
+      suspectDuplicate:ch.lastSample?.quality.includes('SUSPECT_DUPLICATE'),
+      configured:ch.freshness !== 'unconfigured',expectedIntervalMs:snapshot?.expectedIntervalMs,
+      nowMs:nowMs + serverClockOffset.current,transportAvailable }),
+  })),[receivedChannels,snapshot?.expectedIntervalMs,snapshot?.deviceId,deviceId,nowMs,transportAvailable]);
+  const coverage: SystemCoverage = useMemo(() => {
+    const configuredSlots = channels.filter((ch) => ch.freshness !== 'unconfigured').length;
+    const reportingSlots = channels.filter((ch) => ch.freshness === 'fresh').length;
+    return { configuredSlots,reportingSlots,partial:reportingSlots < configuredSlots };
+  },[channels]);
+  const streamStatus = deviceStreamStatus(channels,connectionState === 'connected',health);
 
   // Main Socket Connection & Device Subscription
   useEffect(() => {
     // Reset device-scoped buffers when deviceId changes (T07)
     setLivePackets([]);
     setPowerHistory({});
+    setSnapshot(null);
+    setChannels([]);
+    setHealth(null);
+    lastSnapshotAt.current = 0;
+    serverClockOffset.current = 0;
     pausedBufferRef.current = [];
     setPausedCatchupCount(0);
 
@@ -157,6 +162,7 @@ export function useLiveTelemetry(deviceId: string) {
 
     const onDisconnect = () => {
       setConnectionState('disconnected');
+      setHealth(null);
     };
 
     const onConnectError = (err: Error) => {
@@ -173,9 +179,11 @@ export function useLiveTelemetry(deviceId: string) {
         return;
       }
       setSnapshot(snap);
+      lastSnapshotAt.current = Date.now();
+      serverClockOffset.current = Date.parse(snap.serverNow) - Date.now();
+      setNowMs(Date.now());
       setChannels(snap.channels);
       setHealth(snap.health);
-      setCoverage(snap.coverage);
 
       // Preload initial history points from snapshot samples
       const initialHist: ChannelHistoryMap = {};
@@ -199,11 +207,11 @@ export function useLiveTelemetry(deviceId: string) {
       setChannels((prev) => {
         return prev.map((ch) => {
           if (ch.rawChannelId === update.channelId) {
+            if (ch.lastReceivedAt && Date.parse(ch.lastReceivedAt) >= Date.parse(update.receivedAt)) return ch;
             return {
               ...ch,
               lastSample: update,
               lastReceivedAt: update.receivedAt,
-              freshness: update.retained ? 'stale' : 'fresh',
             };
           }
           return ch;
@@ -237,6 +245,8 @@ export function useLiveTelemetry(deviceId: string) {
     socket.on('connect_error', onConnectError);
     socket.on('state:snapshot', onSnapshot);
     socket.on('telemetry:update', onTelemetryUpdate);
+    const onResync = () => { setHealth(null); };
+    socket.on('resync:required',onResync);
 
     if (socket.connected) {
       onConnect();
@@ -248,6 +258,7 @@ export function useLiveTelemetry(deviceId: string) {
       socket.off('connect_error', onConnectError);
       socket.off('state:snapshot', onSnapshot);
       socket.off('telemetry:update', onTelemetryUpdate);
+      socket.off('resync:required',onResync);
       socket.disconnect();
     };
   }, [accessToken, user, deviceId, handleDisplayAck]);
@@ -258,6 +269,7 @@ export function useLiveTelemetry(deviceId: string) {
     channels,
     health,
     coverage,
+    streamStatus,
     lastDisplayLatencyMs,
     livePackets,
     powerHistory,

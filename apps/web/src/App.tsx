@@ -49,6 +49,9 @@ export const MainApp: React.FC = () => {
       availableDevices={['prototype1', 'prototype2']}
       activeRoute={activeRoute}
       onNavigate={setActiveRoute}
+      health={telemetry.health}
+      channels={telemetry.channels}
+      socketConnected={telemetry.connectionState === 'connected'}
     >
       {activeRoute === '/overview' && (
         <Overview telemetry={telemetry} selectedDevice={selectedDevice} />

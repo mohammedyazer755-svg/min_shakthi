@@ -15,6 +15,7 @@ registry.clear();
 const metrics = IngestMetrics.getInstance();
 const engines = new Map<string,AlertEngine>();
 let stopping = false;
+let lastConfigRefresh = 0;
 
 async function refreshConfig() {
   const devices = await repo.listDevices();
@@ -51,11 +52,14 @@ const mqtt = new MqttIngestService(env,{
 async function heartbeat() {
   if (stopping) return;
   try {
-    await refreshConfig();
+    if (Date.now() - lastConfigRefresh >= 5000) {
+      await refreshConfig();
+      lastConfigRefresh = Date.now();
+    }
     await repo.saveWorkerStatus({ at:new Date().toISOString(),epoch:mqtt.getEpoch(),connected:metrics.brokerConnected,
       subscribed:metrics.brokerSubscribed,received:metrics.receivedCount,accepted:metrics.totalAccepted,quarantined:metrics.totalQuarantined });
   } catch { console.error('[MQTT WORKER] Database/configuration update unavailable.'); }
-  if (!stopping) setTimeout(() => { void heartbeat(); },5000);
+  if (!stopping) setTimeout(() => { void heartbeat(); },2000);
 }
 void heartbeat();
 void mqtt.start();

@@ -27,6 +27,14 @@ node --env-file=.env.production.local --env-file=.env.bootstrap.local scripts/ve
 
 `verify-cloud.mjs` starts the HTTP server locally unless `CLOUD_BASE_URL` points to a deployed origin. It verifies real login, refresh, logout, tenant denial, device diagnostics, database readiness, and Socket.IO snapshots. It logs no bearer tokens or passwords.
 
+## ESP activity and fast status
+
+The browser's connected socket and the worker's active MQTT subscription do not prove that an ESP is online. The shell derives ESP status and reporting coverage from recent non-retained, non-suspect-duplicate samples. Current-value cards expire locally every 250ms even when snapshots stop. A disconnected monitoring path yields interrupted/unknown status rather than a confirmed physical power failure.
+
+Freshness uses the device's configured publish interval: a five-second publisher becomes stale at six seconds and inferred offline at ten seconds; a one-second publisher becomes stale at 1.5 seconds and inferred offline at five seconds. The API polls shared state every 500ms after each completed poll, and the worker records health every two seconds with a six-second observation lease. Network/database delays still apply; firmware cadence and physical on/off timing require measurement.
+
+The legacy payload has no trusted device event timestamp or physical presence signal. True presence improvements require ESP heartbeat/session messages and an MQTT Last Will, with broker keep-alive timing validated on hardware. See the fast ESP-state requirement in `EXPERIENCE_REDESIGN_PLAN.md`. Test readings must stay isolated from production MQTT.
+
 ## Boundaries
 
 Initial enrollment includes `prototype1` and `prototype2` with raw channels `channel1` through `channel5`, labeled generically. Confirm actual raw IDs and wiring before changing mappings. The device editor updates database configuration; the worker reloads it every five seconds. Unknown devices/channels do not enroll themselves from incoming packets.

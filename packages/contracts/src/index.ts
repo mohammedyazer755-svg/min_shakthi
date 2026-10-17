@@ -1,5 +1,6 @@
 export * from './telemetry.js';
 export * from './snapshot.js';
+export * from './freshness.js';
 export * from './errors.js';
 export * from './identity.js';
 export * from './env.js';

@@ -49,7 +49,7 @@ export const ChannelAnalytics: React.FC<ChannelAnalyticsProps> = ({
     ];
   }, [selectedChannel, powerHistory]);
 
-  const lastSample = selectedChannel?.lastSample;
+  const lastSample = selectedChannel?.freshness === 'fresh' ? selectedChannel.lastSample : null;
   const isUnconfigured = selectedChannel?.freshness === 'unconfigured';
 
   return (

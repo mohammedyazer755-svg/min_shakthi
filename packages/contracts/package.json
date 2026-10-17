@@ -6,6 +6,11 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
+    "./freshness": {
+      "types": "./dist/freshness.d.ts",
+      "import": "./dist/freshness.js",
+      "default": "./dist/freshness.js"
+    },
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",

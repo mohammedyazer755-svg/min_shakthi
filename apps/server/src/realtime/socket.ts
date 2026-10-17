@@ -5,7 +5,7 @@ import {
   type ClientToServerEvents,
   type SnapshotPayload,
   type SnapshotChannel,
-  type ChannelFreshness,
+  readingFreshness,
   type DeviceChannelMapping,
   DeviceSubscribeSchema,
   DisplayAckSchema,
@@ -91,25 +91,29 @@ export class RealtimeSocketServer {
 
       let subscription: { requestId: string; generation: number; deviceId: string; since: string } | null = null;
       let pollTimer: NodeJS.Timeout | undefined;
+      let latestGeneration = -1;
       const seen = new Set<string>();
       const poll = async () => {
         const selected = subscription;
-        if (!socket.connected || !selected || !(this.repo instanceof PostgresTelemetryRepository)) return;
+        if (!socket.connected || !selected) return;
         try {
           const token = socket.handshake.auth?.['token'] as string;
           if (!await this.authService.verifyAccessToken(token)) { socket.disconnect(true); return; }
-          const history = await this.repo.queryTelemetryHistory(session.siteId,selected.deviceId,{ from:selected.since,limit:1000 });
+          const [history,snapshot] = await Promise.all([
+            this.repo instanceof PostgresTelemetryRepository
+              ? this.repo.queryTelemetryHistory(session.siteId,selected.deviceId,{ from:selected.since,limit:1000 }) : Promise.resolve(null),
+            this.generateSnapshot(selected.requestId,selected.generation,session.siteId,selected.deviceId),
+          ]);
           if (subscription !== selected || !socket.connected) return;
-          const snapshot = await this.generateSnapshot(selected.requestId,selected.generation,session.siteId,selected.deviceId);
           socket.emit('state:snapshot',snapshot);
-          for (const sample of [...history.samples].reverse()) {
+          for (const sample of [...(history?.samples ?? [])].reverse()) {
             if (!seen.has(sample.eventId)) { socket.emit('telemetry:update',sample); seen.add(sample.eventId); }
           }
           // Inclusive overlap plus event ID deduplication handles timestamps shared by samples.
-          selected.since = history.cutoff;
+          if (history) selected.since = new Date(Date.parse(history.cutoff)-10000).toISOString();
           if (seen.size>2000) { const retained=[...seen].slice(-1000); seen.clear(); for (const id of retained) seen.add(id); }
         } catch { socket.emit('resync:required','DATABASE_UNAVAILABLE'); }
-        if (socket.connected && subscription === selected) pollTimer=setTimeout(() => { void poll(); },1000);
+        if (socket.connected && subscription === selected) pollTimer=setTimeout(() => { void poll(); },500);
       };
 
       socket.on('device:subscribe', async (payload, callback) => {
@@ -127,6 +131,8 @@ export class RealtimeSocketServer {
           socket.emit('resync:required', 'CROSS_SITE_DENIED');
           return;
         }
+        if (selectionGeneration < latestGeneration) return;
+        latestGeneration = selectionGeneration;
 
         if (this.repo instanceof PostgresTelemetryRepository) {
           try {
@@ -152,15 +158,14 @@ export class RealtimeSocketServer {
           deviceId
         ); } catch { callback?.({ status:'error',error:'DATABASE_UNAVAILABLE' }); return; }
 
+        if (selectionGeneration !== latestGeneration) return;
         socket.emit('state:snapshot', snapshot);
         callback?.({ status: 'ok' });
-        if (this.repo instanceof PostgresTelemetryRepository) {
-          if (pollTimer) clearTimeout(pollTimer);
-          seen.clear();
-          for (const channel of snapshot.channels) if (channel.lastSample) seen.add(channel.lastSample.eventId);
-          subscription={ requestId,generation:selectionGeneration,deviceId,since:new Date().toISOString() };
-          pollTimer=setTimeout(() => { void poll(); },1000);
-        }
+        if (pollTimer) clearTimeout(pollTimer);
+        seen.clear();
+        for (const channel of snapshot.channels) if (channel.lastSample) seen.add(channel.lastSample.eventId);
+        subscription={ requestId,generation:selectionGeneration,deviceId,since:new Date(Date.parse(snapshot.serverNow)-10000).toISOString() };
+        pollTimer=setTimeout(() => { void poll(); },500);
       });
 
       socket.on('display:ack', (ackPayload) => {
@@ -219,20 +224,10 @@ export class RealtimeSocketServer {
 
       // Check cache for latest reading
       const cached = cache.get(deviceId, mapping.rawChannelId);
-      let freshness: ChannelFreshness = 'unseen';
-
-      if (cached) {
-        const ageMs = nowMs - new Date(cached.receivedAt).getTime();
-        if (ageMs <= 5000) {
-          freshness = 'fresh';
-          reportingCount += 1;
-        } else if (ageMs <= 30000) {
-          freshness = 'stale';
-          reportingCount += 1;
-        } else {
-          freshness = 'offline_inferred';
-        }
-      }
+      const freshness = readingFreshness({ receivedAt:cached?.receivedAt ?? null,retained:cached?.isRetained,
+        suspectDuplicate:cached?.telemetry.quality.includes('SUSPECT_DUPLICATE'),
+        nowMs,expectedIntervalMs:device?.expectedIntervalMs,transportAvailable:metrics.brokerConnected && metrics.brokerSubscribed });
+      if (freshness === 'fresh') reportingCount += 1;
 
       channels.push({
         rawChannelId: mapping.rawChannelId,
@@ -257,6 +252,7 @@ export class RealtimeSocketServer {
       siteId,
       deviceId,
       mappingVersion: device?.configVersion ?? 1,
+      expectedIntervalMs:device?.expectedIntervalMs,
       channels,
       health: {
         process: 'healthy',

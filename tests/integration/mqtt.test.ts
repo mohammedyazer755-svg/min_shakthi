@@ -159,19 +159,19 @@ describe('Phase 2 MQTT Ingestion & Connection Monitoring Integration (T01–T05,
     });
     expect(freshState).toBe('fresh');
 
-    // After 5.1s (stale threshold = max(3*1000, 5000) = 5000ms)
+    // Fast policy: stale after 1.5s for a 1s publisher.
     const staleState = evaluateChannelFreshness({
       cached,
       expectedIntervalMs: 1000,
-      nowMs: receivedTimeMs + 5100,
+      nowMs: receivedTimeMs + 1600,
     });
     expect(staleState).toBe('stale');
 
-    // After 30.1s (offline threshold = max(10*1000, 30000) = 30000ms)
+    // Offline is inferred after 5s of silence while the broker remains available.
     const offlineState = evaluateChannelFreshness({
       cached,
       expectedIntervalMs: 1000,
-      nowMs: receivedTimeMs + 30100,
+      nowMs: receivedTimeMs + 5100,
     });
     expect(offlineState).toBe('offline_inferred');
   });

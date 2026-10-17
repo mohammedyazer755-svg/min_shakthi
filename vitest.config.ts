@@ -4,6 +4,7 @@ import * as path from 'node:path';
 export default defineConfig({
   resolve: {
     alias: {
+      '@minsakthi/contracts/freshness': path.resolve(__dirname, 'packages/contracts/src/freshness.ts'),
       '@minsakthi/contracts': path.resolve(__dirname, 'packages/contracts/src/index.ts'),
       '@minsakthi/protocol': path.resolve(__dirname, 'packages/protocol/src/index.ts'),
       '@minsakthi/db': path.resolve(__dirname, 'packages/db/src/index.ts'),

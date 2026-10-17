@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
   return {
     resolve: {
       alias: {
+        '@minsakthi/contracts/freshness': path.resolve(__dirname, '../../packages/contracts/src/freshness.ts'),
         '@minsakthi/contracts': path.resolve(__dirname, '../../packages/contracts/src/index.ts'),
       },
     },

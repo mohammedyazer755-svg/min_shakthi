@@ -1,5 +1,22 @@
 # MIN-SAKTHI V2 Progress and Handover Log
 
+## Fast ESP status correction and revised feature - 17 October 2026
+
+- Replaced header healthy/Live defaults with actual health, connection, and per-channel freshness. Browser connection and broker subscription no longer imply ESP activity. Current cards/rows exclude expired readings; coverage ages locally every 250ms, and historical packet rows say Received rather than Live.
+- Added shared cadence-aware freshness: configured 5s publishers warn at 6s and infer offline at 10s; 1s publishers warn at 1.5s and infer offline at 5s. Broken transport yields interrupted/unknown state, not proof of physical power loss. Retained messages never restore live state.
+- Increased cloud snapshot polling to 500ms, parallelized history/snapshot reads, added a 10s overlap for delayed commits, rejected obsolete device-selection responses, and shortened worker heartbeat/expiry to 2s/6s. No hardware firmware or production MQTT fixtures were changed.
+- Removed simulated public live values and always-active public broker text. Preserved the deployed authentication focus fix.
+- Revised `docs/EXPERIENCE_REDESIGN_PLAN.md` and phase prompts with fast-state acceptance gates, the firmware heartbeat/Last Will prerequisite, and Power Event Investigator in place of the map proposal. The new incident feature is planned, not implemented.
+- Full build, cloud bundle, lint, and 123 software tests passed. An isolated real-Neon/WebSocket regression passed first-packet delivery, silence expiry, retained rejection, transport distinction, recovery, and delayed-commit delivery. From this cross-region local runner, observed first delivery was 4999ms including the database write, 1910ms after commit, and offline inference was observed at 10475ms for the 10s lease; these are not a hosted ESP latency certification.
+- The browser-safe freshness subpath keeps server environment definitions out of frontend assets. Hosted rollout/browser verification is pending; physical ESP power-cycle timing remains unverified.
+
+## Experience redesign planning - 17 October 2026
+
+- Inspected current source at `39216ff`, including the dark landing, application shell, theme tokens, charts, page content, role checks, health defaults, and animation lifecycle. Used the earlier deployment dashboard screenshot as a prior visual baseline; no new browser or hardware verification is claimed here.
+- Added `docs/EXPERIENCE_REDESIGN_PLAN.md`: cinematic dark entrance, light authenticated workspace, role-aware information hierarchy, restrained motion/3D, Live Energy Map feature, seven implementation phases, and measurable acceptance gates.
+- Added `prompts/EXPERIENCE_REDESIGN_PROMPTS.md` with a standalone implementation prompt for every phase; printed the collection in the terminal for copying.
+- Planning only: application source and production deployment are unchanged. All seven redesign implementation phases remain pending.
+
 ## Cloud backend deployment work - 17 October 2026
 
 - Provisioned `minsakthi-db` on Neon's free plan through the authenticated Vercel project after the user accepted provider terms.

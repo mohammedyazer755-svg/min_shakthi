@@ -7,6 +7,8 @@ import { StatusSummary } from './StatusSummary';
 import { useAuth } from '../auth/AuthContext';
 import { LightRays } from './LightRays/LightRays';
 import { ElectricBrandMark } from './ElectricBrandMark';
+import type { SystemHealth, SnapshotChannel } from '@minsakthi/contracts';
+import { deviceStreamStatus } from '../live/status';
 
 export interface AppShellProps {
   children: React.ReactNode;
@@ -15,6 +17,9 @@ export interface AppShellProps {
   availableDevices?: string[];
   activeRoute?: string;
   onNavigate?: (route: string) => void;
+  health?: SystemHealth | null;
+  channels?: SnapshotChannel[];
+  socketConnected?: boolean;
 }
 
 export const AppShell: React.FC<AppShellProps> = ({
@@ -24,8 +29,12 @@ export const AppShell: React.FC<AppShellProps> = ({
   availableDevices = ['prototype1', 'prototype2'],
   activeRoute = '/overview',
   onNavigate,
+  health,
+  channels = [],
+  socketConnected = false,
 }) => {
   const { user, logout } = useAuth();
+  const stream = deviceStreamStatus(channels,socketConnected,health);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [deviceDropdownOpen, setDeviceDropdownOpen] = useState(false);
   const deviceDropdownRef = useRef<HTMLDivElement>(null);
@@ -144,8 +153,9 @@ export const AppShell: React.FC<AppShellProps> = ({
                 aria-expanded={deviceDropdownOpen}
               >
                 <span
-                  className="w-1.5 h-1.5 rounded-full animate-pulse-beacon"
-                  style={{ background: 'var(--dark-status-ok)' }}
+                  className="w-1.5 h-1.5 rounded-full"
+                  aria-label={stream.label}
+                  style={{ background: stream.tone === 'positive' ? 'var(--dark-status-ok)' : stream.tone === 'critical' ? 'var(--dark-status-critical)' : 'var(--dark-status-warn)' }}
                 />
                 <span className="font-mono">{selectedDevice}</span>
                 <ChevronDown className="w-3 h-3 opacity-60" />
@@ -185,7 +195,7 @@ export const AppShell: React.FC<AppShellProps> = ({
 
           {/* Right side controls */}
           <div className="flex items-center gap-3">
-            <StatusSummary className="hidden xl:inline-flex" />
+            <StatusSummary health={health} channels={channels} socketConnected={socketConnected} className="hidden xl:inline-flex" />
 
             {user && (
               <>
@@ -339,7 +349,7 @@ export const AppShell: React.FC<AppShellProps> = ({
               </div>
 
               <div className="p-4" style={{ borderTop: '1px solid var(--dark-border)' }}>
-                <StatusSummary className="w-full" />
+                <StatusSummary health={health} channels={channels} socketConnected={socketConnected} className="w-full" />
               </div>
             </nav>
           </div>

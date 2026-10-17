@@ -55,7 +55,7 @@ export const OverallAnalytics: React.FC<OverallAnalyticsProps> = ({
   // Aggregate channel statistics
   const channelStats = useMemo(() => {
     const totalCurrentPower = channels.reduce((sum, ch) => {
-      return sum + (ch.lastSample?.values.power ?? 0);
+      return sum + (ch.freshness === 'fresh' ? ch.lastSample?.values.power ?? 0 : 0);
     }, 0);
 
     return channels
@@ -63,8 +63,8 @@ export const OverallAnalytics: React.FC<OverallAnalyticsProps> = ({
       .map((ch) => {
         const hist = powerHistory[ch.rawChannelId] || [];
         const sampleCount = hist.length;
-        const currentPower = ch.lastSample?.values.power ?? 0;
-        const pct = totalCurrentPower > 0 ? (currentPower / totalCurrentPower) * 100 : 0;
+        const currentPower = ch.freshness === 'fresh' ? ch.lastSample?.values.power ?? null : null;
+        const pct = currentPower !== null && totalCurrentPower > 0 ? (currentPower / totalCurrentPower) * 100 : null;
 
         let minP = Number.POSITIVE_INFINITY;
         let maxP = Number.NEGATIVE_INFINITY;
@@ -83,7 +83,7 @@ export const OverallAnalytics: React.FC<OverallAnalyticsProps> = ({
           minPower: minP === Number.POSITIVE_INFINITY ? null : minP,
           maxPower: maxP === Number.NEGATIVE_INFINITY ? null : maxP,
           sampleCount,
-          pct: pct.toFixed(1),
+          pct: pct?.toFixed(1) ?? null,
           freshness: ch.freshness,
         };
       });
@@ -192,7 +192,7 @@ export const OverallAnalytics: React.FC<OverallAnalyticsProps> = ({
                     </span>
                   </td>
                   <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
-                    {st.currentPower > 0 ? `${st.currentPower.toFixed(2)} W` : '0.00 W'}
+                    {st.currentPower !== null ? `${st.currentPower.toFixed(2)} W` : '—'}
                   </td>
                   <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', color: 'var(--dark-text-muted)' }}>
                     {st.minPower !== null ? `${st.minPower.toFixed(2)} W` : '—'}
@@ -211,7 +211,7 @@ export const OverallAnalytics: React.FC<OverallAnalyticsProps> = ({
                         fontWeight: 600,
                       }}
                     >
-                      {st.pct}%
+                      {st.pct !== null ? `${st.pct}%` : '—'}
                     </span>
                   </td>
                   <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', color: 'var(--dark-text-muted)' }}>

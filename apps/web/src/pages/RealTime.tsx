@@ -78,7 +78,7 @@ export const RealTime: React.FC<RealTimeProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'pulse 2s infinite' }} />
             <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--dark-text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
-              Live Ingestion Telemetry Stream
+              Recent telemetry packets
             </h2>
           </div>
           <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
@@ -305,7 +305,7 @@ export const RealTime: React.FC<RealTimeProps> = ({
                               border: '1px solid rgba(34,197,94,0.20)',
                             }}
                           >
-                            Live
+                            Received
                           </span>
                         )}
                       </td>
