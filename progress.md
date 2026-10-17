@@ -1,5 +1,12 @@
 # MIN-SAKTHI V2 Progress and Handover Log
 
+## Midnight blue homepage palette - 17 October 2026
+
+- Replaced green/lime surfaces, typography, diagram routes, selected inputs, controls and preview details with charcoal midnight blue, restrained light blue accents and neutral warm white. Kept the current editorial layout and interactions.
+- Renamed the old lime accent/control tokens to palette-independent names. Updated the existing landing palette assertion.
+- Web build, lint and 38 relevant foundation, entrance and release tests passed. Real-browser checks verify the public page at 360/390/768/1440 px, selection, pause, reduced motion, real sign-in, reload and workspace navigation. Evidence: `docs/evidence/midnight-homepage/`.
+
+
 ## Editorial homepage redesign - 17 October 2026
 
 - Rebuilt the public page around deep ink, warm paper and muted lime, large editorial typography and an interactive five-input signal architecture. Removed the pastel aurora, WebGL rays, decorative waves and repeated glass cards.

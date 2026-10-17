@@ -114,7 +114,7 @@ describe('Phase 7 Release Verification & Audit Contract', () => {
     it('verifies public landing page deliberately retains dark theme tokens', () => {
       const landingCssPath = path.join(webSrcDir, 'pages/LandingPage.css');
       const content = fs.readFileSync(landingCssPath, 'utf8');
-      expect(content).toContain('#111c17');
+      expect(content).toContain('#11151b');
     });
   });
 
