@@ -75,26 +75,23 @@
    ═══════════════════════════════════════════════════════════ */
 .overview-metrics {
   display: grid;
-  grid-template-columns: 1.35fr 1fr 1fr;
-  gap: 20px;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 18px;
 }
 .overview-power-panel, .overview-stat-panel {
   position: relative;
   padding: 24px;
   min-width: 0;
-  border-radius: 16px;
+  border-radius: 18px;
   overflow: hidden;
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-card);
-  background: var(--surface);
-  display: flex;
-  flex-direction: column;
 }
 
-/* Primary Card 1: Power Now (Hero Porcelain Metric) */
+/* Primary Card 1: Power Now (Hero Dark Slate Panel) */
 .overview-power-panel {
-  background: linear-gradient(135deg, #FFFFFF 0%, #FDFCF9 60%, #F9F6EE 100%);
-  border-top: 3px solid #C8A96E;
+  color: #fff;
+  background: radial-gradient(ellipse at 100% 0%, #344757 0, transparent 65%), #16191c;
+  box-shadow: 0 8px 24px #16181915;
+  border: 1px solid #303334;
 }
 .overview-card-top {
   display: flex;
@@ -102,55 +99,42 @@
   justify-content: space-between;
   gap: 12px;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
+  font-weight: 600;
+  letter-spacing: .015em;
 }
 .overview-power-panel .overview-card-top {
-  color: var(--text-secondary);
+  color: #d2d5d6;
 }
 .overview-icon-tile {
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
-  background: rgba(163, 132, 69, 0.1);
-  border: 1px solid rgba(163, 132, 69, 0.25);
+  width: 32px;
+  height: 32px;
+  background: #ffffff0d;
+  border: 1px solid #ffffff1c;
   border-radius: 10px;
-  color: #A38445;
+  color: #fff;
   transition: transform var(--motion-duration-normal) var(--motion-ease-out);
-}
-.overview-icon-channels {
-  background: rgba(63, 96, 136, 0.1);
-  border-color: rgba(63, 96, 136, 0.25);
-  color: #3F6088;
-}
-.overview-icon-alerts {
-  background: rgba(163, 132, 69, 0.1);
-  border-color: rgba(163, 132, 69, 0.25);
-  color: #A38445;
 }
 .overview-power-value {
   display: flex;
   align-items: baseline;
-  gap: 10px;
-  margin: 18px 0 16px;
+  gap: 12px;
+  margin: 16px 0 19px;
   position: relative;
   z-index: 1;
 }
 .overview-power-value > span {
-  font-size: 50px;
+  font-size: 54px;
   line-height: 1;
-  font-weight: 800;
-  letter-spacing: -0.05em;
-  color: var(--text-primary);
+  font-weight: 600;
+  letter-spacing: -.055em;
+  color: #fff;
   font-variant-numeric: tabular-nums;
 }
 .overview-power-value small {
-  color: #A38445;
-  font-size: 20px;
-  font-weight: 700;
+  color: #b8bec0;
+  font-size: 19px;
 }
 .overview-power-footer {
   position: relative;
@@ -159,57 +143,57 @@
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  color: var(--text-secondary);
+  color: #c0c6c8;
   font-size: 11px;
-  margin-top: auto;
-  padding-top: 10px;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 .overview-power-tag {
   font-size: 10px;
-  font-weight: 700;
-  background: rgba(23, 99, 68, 0.08);
-  border: 1px solid rgba(23, 99, 68, 0.22);
-  color: #176344;
-  padding: 4px 8px;
+  border: 1px solid #ffffff24;
+  padding: 5px 8px;
   border-radius: 6px;
   white-space: nowrap;
+  color: #fff;
 }
 .overview-power-watermark {
   position: absolute;
-  right: 20px;
-  top: 30px;
-  width: 120px;
-  height: 120px;
-  color: rgba(163, 132, 69, 0.04);
-  transform: rotate(-10deg);
+  right: 40px;
+  top: 49px;
+  width: 110px;
+  height: 110px;
+  color: #ffffff06;
+  transform: rotate(-12deg);
   stroke-width: 1;
   pointer-events: none;
 }
 
-/* Primary Card 2: Channels Reporting */
+/* Primary Cards 2 & 3: Mineral Tinted Panels */
+.overview-stat-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 3px #00000002;
+}
+.overview-stat-panel .overview-card-top {
+  color: var(--text-secondary);
+}
+.overview-stat-panel .overview-card-top svg {
+  color: var(--text-primary);
+  transition: transform var(--motion-duration-normal) var(--motion-ease-out);
+}
 .overview-stat-panel:nth-child(2) {
-  background: linear-gradient(135deg, #FFFFFF 0%, #FAFCFE 100%);
-  border-top: 3px solid #3F6088;
+  background: linear-gradient(135deg, #eaf2fc 0%, #f9fbfe 75%);
+  border-color: #d4e1ef;
+}
+.overview-stat-panel:nth-child(3) {
+  background: linear-gradient(135deg, #f0ecf9 0%, #fcfbfe 75%);
+  border-color: #e1d9ef;
 }
 .overview-stat-panel:nth-child(2) .overview-card-top > svg {
-  color: #3F6088;
-}
-.overview-stat-panel:nth-child(2) .overview-slot-indicators > span {
-  background: #E8ECE6;
-}
-.overview-stat-panel:nth-child(2) .overview-slot-indicators > span[data-reporting="true"] {
-  background: #1C1F1D;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
-}
-
-/* Primary Card 3: Alerts Needing Attention */
-.overview-stat-panel:nth-child(3) {
-  background: linear-gradient(135deg, #FFFFFF 0%, #FCFCFA 100%);
-  border-top: 3px solid #A38445;
+  color: #3f6088;
 }
 .overview-stat-panel:nth-child(3) .overview-card-top > svg {
-  color: #A38445;
+  color: #72598b;
 }
 
 .overview-stat-value {
@@ -218,23 +202,23 @@
   gap: 3px;
   color: var(--text-primary);
   font-size: 42px;
-  letter-spacing: -0.05em;
-  font-weight: 800;
+  letter-spacing: -.05em;
+  font-weight: 650;
   line-height: 1;
-  margin: 18px 0 16px;
+  margin: 22px 0 16px;
   font-variant-numeric: tabular-nums;
 }
 .overview-stat-value > span {
-  font-size: 24px;
+  font-size: 25px;
   color: var(--text-dim);
-  font-weight: 500;
+  font-weight: 400;
 }
 .overview-stat-value > small {
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0;
-  font-weight: 500;
-  margin-left: 8px;
+  font-weight: 400;
+  margin-left: 7px;
 }
 .overview-slot-indicators {
   display: flex;
@@ -243,14 +227,17 @@
 }
 .overview-slot-indicators > span {
   flex: 1;
-  height: 5px;
+  height: 4px;
   background: var(--surface-inset);
   border-radius: 4px;
-  transition: background 0.2s ease;
 }
-.overview-slot-indicators > span[data-reporting="true"] {
-  background: var(--text-primary);
+.overview-stat-panel:nth-child(2) .overview-slot-indicators > span {
+  background: #d8e3f1;
 }
+.overview-stat-panel:nth-child(2) .overview-slot-indicators > span[data-reporting="true"] {
+  background: #3f6088;
+}
+
 .overview-card-bottom {
   display: flex;
   align-items: center;
@@ -259,8 +246,6 @@
   margin-top: auto;
   font-size: 11px;
   color: var(--text-secondary);
-  padding-top: 10px;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 .overview-card-bottom button {
   display: grid;
@@ -272,34 +257,74 @@
   color: var(--text-primary);
   background: var(--surface);
   cursor: pointer;
-  transition: all var(--motion-duration-fast) ease;
+  transition: background var(--motion-duration-fast), transform var(--motion-duration-fast);
 }
 .overview-card-bottom button:hover {
   background: var(--surface-inset);
-  border-color: var(--border-strong);
   transform: translate(1px, -1px);
 }
 
-/* Card Hover Micro-Interactions */
+/* Card Arrival & Shimmer Animations */
 .overview-metrics > article {
-  animation: overview-card-arrive 360ms var(--motion-ease-out) backwards;
+  animation: overview-card-arrive 420ms var(--motion-ease-out) backwards;
   transition: transform var(--motion-duration-normal) var(--motion-ease-out),
-              box-shadow var(--motion-duration-normal) ease,
-              border-color var(--motion-duration-normal) ease;
+              box-shadow var(--motion-duration-normal),
+              border-color var(--motion-duration-normal);
 }
-.overview-metrics > article:nth-child(2) { animation-delay: 50ms; }
-.overview-metrics > article:nth-child(3) { animation-delay: 100ms; }
+.overview-metrics > article:nth-child(2) { animation-delay: 55ms; }
+.overview-metrics > article:nth-child(3) { animation-delay: 110ms; }
 
+.overview-metrics > article::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 25%, #ffffff32 48%, transparent 70%);
+  opacity: 0;
+  transform: translateX(-40%);
+  transition: opacity 250ms, transform 550ms var(--motion-ease-out);
+}
+@keyframes overview-card-arrive {
+  from { opacity: 0; transform: translateY(9px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 @media (hover: hover) and (pointer: fine) {
   .overview-metrics > article:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 28px -4px rgba(27, 31, 29, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 12px 28px #263b5312;
+  }
+  .overview-metrics > article:hover::after {
+    opacity: 1;
+    transform: translateX(25%);
+  }
+  .overview-metrics > article:hover .overview-card-top > svg,
+  .overview-metrics > article:hover .overview-icon-tile {
+    transform: rotate(-7deg);
   }
 }
-
-@keyframes overview-card-arrive {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  .overview-metrics > article,
+  .overview-metrics > article::after,
+  .overview-stat-panel .overview-card-top > svg,
+  .overview-power-panel .overview-icon-tile {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+  .overview-metrics > article::after {
+    display: none;
+  }
+}
+[data-motion="reduce"] .overview-metrics > article,
+[data-motion="reduce"] .overview-metrics > article::after,
+[data-motion="reduce"] .overview-stat-panel .overview-card-top > svg,
+[data-motion="reduce"] .overview-icon-tile {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+}
+[data-motion="reduce"] .overview-metrics > article::after {
+  display: none;
 }
 
 /* ═══════════════════════════════════════════════════════════

@@ -218,10 +218,7 @@ export const Overview: React.FC<OverviewProps> = ({
         </article>
 
         <article className="overview-stat-panel">
-          <div className="overview-card-top">
-            <span>Channels reporting</span>
-            <span className="overview-icon-tile overview-icon-channels"><Cpu size={18} aria-hidden="true" /></span>
-          </div>
+          <div className="overview-card-top"><span>Channels reporting</span><Cpu size={18} aria-hidden="true" /></div>
           <div className="overview-stat-value">{reporting}<span>/{configured}</span></div>
           <div className="overview-slot-indicators" aria-hidden="true">
             {channels.map((ch, index) => <span key={ch.rawChannelId || index} data-reporting={ch.freshness === 'fresh'} />)}
@@ -230,10 +227,7 @@ export const Overview: React.FC<OverviewProps> = ({
         </article>
 
         <article className="overview-stat-panel">
-          <div className="overview-card-top">
-            <span>Alerts needing attention</span>
-            <span className="overview-icon-tile overview-icon-alerts"><Bell size={18} aria-hidden="true" /></span>
-          </div>
+          <div className="overview-card-top"><span>Alerts needing attention</span><Bell size={18} aria-hidden="true" /></div>
           <div className="overview-stat-value">{activeAlertCount ?? '—'}<small>open</small></div>
           <div className="overview-card-bottom"><span>{activeAlertCount === null ? 'Checking recorded alerts' : activeAlertCount === 0 ? 'No open alerts recorded' : 'Open alerts require review'}</span><button type="button" onClick={() => onNavigate?.('/alerts')} aria-label="View alerts"><ArrowUpRight size={18} /></button></div>
         </article>
