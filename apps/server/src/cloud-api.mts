@@ -8,6 +8,7 @@ import { createReportsRouter } from './routes/reports.js';
 import { createAlertsRouter } from './routes/alerts.js';
 import { createDevicesRouter } from './routes/devices.js';
 import { createUsersRouter } from './routes/users.js';
+import { createIncidentsRouter } from './routes/incidents.js';
 import { getTelemetryRepository } from './storage/db.js';
 import { PostgresTelemetryRepository } from './storage/postgres.js';
 import { RealtimeSocketServer } from './realtime/socket.js';
@@ -24,9 +25,13 @@ app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');
   // Cookie endpoints accept same-origin requests; bearer-auth APIs remain usable by devices/tools.
   const origin = req.headers.origin;
-  if (origin && req.method !== 'GET' && new URL(origin).host !== req.headers.host) {
-    res.status(403).json({ error: 'ORIGIN_DENIED' });
-    return;
+  const host = (req.headers['x-forwarded-host'] as string) || req.headers.host;
+  if (origin && req.method !== 'GET') {
+    const originHost = new URL(origin).host;
+    if (originHost !== host && originHost !== req.headers.host) {
+      res.status(403).json({ error: 'ORIGIN_DENIED', message: `Origin ${originHost} does not match host ${host}` });
+      return;
+    }
   }
   next();
 });
@@ -47,6 +52,7 @@ app.use('/api/v1', createTelemetryRouter(auth,repo));
 app.use('/api/v1', createReportsRouter(auth,repo));
 app.use('/api/v1', createAlertsRouter(auth,repo));
 app.use('/api/v1', createDevicesRouter(auth,repo));
+app.use('/api/v1', createIncidentsRouter(auth,repo));
 app.use((_req, res) => { res.status(404).json({ error:'NOT_FOUND' }); });
 
 const server = http.createServer(app);

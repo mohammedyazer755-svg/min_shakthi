@@ -88,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setError(data.message || 'Login failed. Please check credentials.');
+        setError(data.message || data.error || `Login failed (${res.status}: ${res.statusText || 'Unauthorized'})`);
         return false;
       }
 
