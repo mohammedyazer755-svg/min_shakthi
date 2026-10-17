@@ -218,7 +218,10 @@ export const Overview: React.FC<OverviewProps> = ({
         </article>
 
         <article className="overview-stat-panel">
-          <div className="overview-card-top"><span>Channels reporting</span><Cpu size={18} aria-hidden="true" /></div>
+          <div className="overview-card-top">
+            <span>Channels reporting</span>
+            <span className="overview-icon-tile overview-icon-channels"><Cpu size={18} aria-hidden="true" /></span>
+          </div>
           <div className="overview-stat-value">{reporting}<span>/{configured}</span></div>
           <div className="overview-slot-indicators" aria-hidden="true">
             {channels.map((ch, index) => <span key={ch.rawChannelId || index} data-reporting={ch.freshness === 'fresh'} />)}
@@ -227,7 +230,10 @@ export const Overview: React.FC<OverviewProps> = ({
         </article>
 
         <article className="overview-stat-panel">
-          <div className="overview-card-top"><span>Alerts needing attention</span><Bell size={18} aria-hidden="true" /></div>
+          <div className="overview-card-top">
+            <span>Alerts needing attention</span>
+            <span className="overview-icon-tile overview-icon-alerts"><Bell size={18} aria-hidden="true" /></span>
+          </div>
           <div className="overview-stat-value">{activeAlertCount ?? '—'}<small>open</small></div>
           <div className="overview-card-bottom"><span>{activeAlertCount === null ? 'Checking recorded alerts' : activeAlertCount === 0 ? 'No open alerts recorded' : 'Open alerts require review'}</span><button type="button" onClick={() => onNavigate?.('/alerts')} aria-label="View alerts"><ArrowUpRight size={18} /></button></div>
         </article>
@@ -277,21 +283,31 @@ export const Overview: React.FC<OverviewProps> = ({
         style={{
           background: 'var(--surface)',
           border: '1px solid var(--border)',
-          borderRadius: 12,
+          borderRadius: 16,
           boxShadow: 'var(--shadow-card)',
-          padding: '20px 24px',
+          padding: '22px 24px',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
-            <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 750, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
               Hardware Channel Mappings (CH01–CH05)
             </h3>
-            <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 3 }}>
               Live electrical readings for each mapped channel.
             </p>
           </div>
-          <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
+          <span
+            style={{
+              fontSize: 11,
+              color: 'var(--text-secondary)',
+              fontWeight: 700,
+              background: 'var(--surface-inset)',
+              padding: '4px 10px',
+              borderRadius: 6,
+              border: '1px solid var(--border)',
+            }}
+          >
             Slots reporting: {activeCount}/{configuredCount}
           </span>
         </div>
@@ -329,14 +345,30 @@ export const Overview: React.FC<OverviewProps> = ({
                       borderBottom: '1px solid var(--border)',
                       opacity: isUnconf ? 0.5 : 1,
                       color: 'var(--text-primary)',
+                      transition: 'background 0.15s ease',
                     }}
                   >
-                    <td style={{ padding: '12px', fontWeight: 700, color: 'var(--accent-text)', fontFamily: 'monospace' }}>
-                      {`CH0${ch.displaySlot ?? idx + 1}`}
+                    <td style={{ padding: '12px' }}>
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          padding: '2px 8px',
+                          borderRadius: 6,
+                          background: 'rgba(163, 132, 69, 0.08)',
+                          border: '1px solid rgba(163, 132, 69, 0.25)',
+                          color: '#A38445',
+                          fontWeight: 800,
+                          fontFamily: 'monospace',
+                          fontSize: 11,
+                        }}
+                      >
+                        {`CH0${ch.displaySlot ?? idx + 1}`}
+                      </span>
                     </td>
-                    <td style={{ padding: '12px', fontWeight: 500, color: 'var(--text-primary)' }}>
+                    <td style={{ padding: '12px', fontWeight: 600, color: 'var(--text-primary)' }}>
                       {ch.label}
-                      <span style={{ display: 'block', fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
+                      <span style={{ display: 'block', fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'monospace', fontWeight: 400 }}>
                         {ch.rawChannelId}
                       </span>
                     </td>
@@ -346,7 +378,7 @@ export const Overview: React.FC<OverviewProps> = ({
                     <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }}>
                       {s?.values.current != null ? `${s.values.current.toFixed(2)} A` : '—'}
                     </td>
-                    <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
+                    <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', fontWeight: 700, color: 'var(--text-primary)' }}>
                       {s?.values.power != null ? `${s.values.power.toFixed(2)} W` : '—'}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', color: 'var(--text-secondary)' }}>
