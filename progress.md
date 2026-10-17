@@ -1,5 +1,13 @@
 # MIN-SAKTHI V2 Progress and Handover Log
 
+## Editorial homepage redesign - 17 October 2026
+
+- Rebuilt the public page around deep ink, warm paper and muted lime, large editorial typography and an interactive five-input signal architecture. Removed the pastel aurora, WebGL rays, decorative waves and repeated glass cards.
+- Added native keyboard-accessible channel selection with a matching highlighted SVG route. Motion follows the selected illustrative input and can be paused; OS/in-app reduced-motion preferences, hidden tabs and the sign-in dialog pause it. The graphic explicitly states that it is illustrative and contains no live readings.
+- Simplified benefits to three practical tasks and replaced repeated channel cards with a compact preview that opens the existing sign-in. Preserved current authentication and the authenticated workspace.
+- Web build, lint and all 221 automated checks passed. Browser verification passed selection, motion pause, reduced motion, existing admin sign-in, reload, navigation, incident loading and layouts at 360/390/768/1440 px. Desktop/mobile evidence is in `docs/evidence/editorial-homepage/`. Main JavaScript fell from approximately 460 KB to 407 KB before gzip.
+
+
 ## Landing background motion refinement - 17 October 2026
 
 - Enhanced the existing pastel aurora with shorter staggered drift cycles, a gentle wave sway and two travelling decorative light trails. Preserved the current light landing design, content and overview card.
