@@ -14,21 +14,156 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* Ambient Pastel Aura & Light Rays Layer */
+/* Ambient Animated Pastel Aurora & Light Rays Layer */
 .landing-ambient-layer {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 980px;
+  height: 1040px;
   overflow: hidden;
   pointer-events: none;
   z-index: 1;
-  background:
-    radial-gradient(circle at 18% 12%, rgba(224, 231, 255, 0.8) 0%, transparent 45%),
-    radial-gradient(circle at 82% 16%, rgba(237, 233, 254, 0.8) 0%, transparent 50%),
-    radial-gradient(circle at 50% 28%, rgba(254, 243, 199, 0.7) 0%, transparent 55%),
-    radial-gradient(circle at 35% 58%, rgba(220, 252, 231, 0.55) 0%, transparent 45%);
+}
+
+/* 4 Smoothly Drifting & Pulsing Pastel Aurora Orbs */
+.landing-aurora-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  filter: blur(85px);
+  -webkit-filter: blur(85px);
+  opacity: 0.85;
+}
+
+.landing-aurora-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.landing-orb-1 {
+  width: 580px;
+  height: 580px;
+  top: -80px;
+  left: -80px;
+  background: radial-gradient(circle, #93C5FD 0%, #C7D2FE 55%, transparent 75%);
+  animation: auroraDrift1 22s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+}
+
+.landing-orb-2 {
+  width: 620px;
+  height: 620px;
+  top: 40px;
+  right: -100px;
+  background: radial-gradient(circle, #DDD6FE 0%, #F5D0FE 55%, transparent 75%);
+  animation: auroraDrift2 26s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+}
+
+.landing-orb-3 {
+  width: 520px;
+  height: 520px;
+  top: 240px;
+  left: 28%;
+  background: radial-gradient(circle, #FDE68A 0%, #FED7AA 55%, transparent 75%);
+  animation: auroraDrift3 19s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+}
+
+.landing-orb-4 {
+  width: 560px;
+  height: 560px;
+  top: 450px;
+  left: 8%;
+  background: radial-gradient(circle, #A7F3D0 0%, #BAE6FD 55%, transparent 75%);
+  animation: auroraDrift4 28s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
+}
+
+@keyframes auroraDrift1 {
+  0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 0.75; }
+  50% { transform: translate3d(90px, 60px, 0) scale(1.18) rotate(45deg); opacity: 0.95; }
+  100% { transform: translate3d(40px, 120px, 0) scale(0.92) rotate(90deg); opacity: 0.8; }
+}
+
+@keyframes auroraDrift2 {
+  0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 0.8; }
+  50% { transform: translate3d(-80px, 80px, 0) scale(1.15) rotate(-40deg); opacity: 0.95; }
+  100% { transform: translate3d(-120px, 30px, 0) scale(0.9) rotate(-85deg); opacity: 0.7; }
+}
+
+@keyframes auroraDrift3 {
+  0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 0.7; }
+  50% { transform: translate3d(60px, -50px, 0) scale(1.22) rotate(35deg); opacity: 0.92; }
+  100% { transform: translate3d(-50px, 60px, 0) scale(0.95) rotate(-30deg); opacity: 0.75; }
+}
+
+@keyframes auroraDrift4 {
+  0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 0.65; }
+  50% { transform: translate3d(100px, -70px, 0) scale(1.12) rotate(50deg); opacity: 0.88; }
+  100% { transform: translate3d(50px, -110px, 0) scale(0.88) rotate(100deg); opacity: 0.7; }
+}
+
+/* Architectural Subtle Grid Overlay with Atmospheric Scan */
+.landing-grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.032) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.032) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at 50% 32%, black 45%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 32%, black 45%, transparent 80%);
+  pointer-events: none;
+}
+
+.landing-grid-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle 380px at 50% 28%, rgba(255, 255, 255, 0.65), transparent 70%);
+  animation: gridGlowPulse 9s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes gridGlowPulse {
+  0% { transform: scale(0.92) translate(-60px, -20px); opacity: 0.4; }
+  50% { transform: scale(1.12) translate(50px, 30px); opacity: 0.85; }
+  100% { transform: scale(0.98) translate(-30px, 15px); opacity: 0.45; }
+}
+
+/* Flowing Electrical Signal Wave Backdrop */
+.landing-wave-backdrop {
+  position: absolute;
+  top: 180px;
+  left: 0;
+  right: 0;
+  height: 280px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.landing-wave-flow {
+  width: 100%;
+  height: 100%;
+}
+
+.landing-wave-path-1 {
+  animation: waveTravel1 32s linear infinite;
+}
+
+.landing-wave-path-2 {
+  animation: waveTravel2 24s linear infinite;
+}
+
+@keyframes waveTravel1 {
+  from { stroke-dashoffset: 720; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes waveTravel2 {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: 640; }
 }
 
 .landing-rays-canvas {
@@ -36,7 +171,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.38;
+  opacity: 0.32;
   mix-blend-mode: overlay;
 }
 

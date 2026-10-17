@@ -60,18 +60,56 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
   return (
     <div className="landing-container">
-      {/* ── Volumetric Light Rays (reacts to mouse position) ── */}
+      {/* ── Ambient Layer: Animated Pastel Aurora Orbs + Grid Flow + Light Rays ── */}
       <div className="landing-ambient-layer" aria-hidden="true">
+        <div className="landing-aurora-container">
+          <div className="landing-aurora-orb landing-orb-1" />
+          <div className="landing-aurora-orb landing-orb-2" />
+          <div className="landing-aurora-orb landing-orb-3" />
+          <div className="landing-aurora-orb landing-orb-4" />
+        </div>
+        <div className="landing-grid-overlay" />
+        <div className="landing-wave-backdrop">
+          <svg viewBox="0 0 1440 320" fill="none" xmlns="http://www.w3.org/2000/svg" className="landing-wave-flow" preserveAspectRatio="none">
+            <path
+              d="M-100 160 C 200 60, 420 260, 720 160 C 1020 60, 1240 260, 1540 160"
+              stroke="url(#pastelWave1)"
+              strokeWidth="2.5"
+              strokeDasharray="12 12"
+              className="landing-wave-path-1"
+            />
+            <path
+              d="M-100 190 C 260 270, 460 110, 720 190 C 980 270, 1180 110, 1540 190"
+              stroke="url(#pastelWave2)"
+              strokeWidth="2"
+              strokeDasharray="8 8"
+              className="landing-wave-path-2"
+            />
+            <defs>
+              <linearGradient id="pastelWave1" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#93C5FD" stopOpacity="0.05" />
+                <stop offset="25%" stopColor="#818CF8" stopOpacity="0.4" />
+                <stop offset="65%" stopColor="#C084FC" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#FBBF24" stopOpacity="0.05" />
+              </linearGradient>
+              <linearGradient id="pastelWave2" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#34D399" stopOpacity="0.05" />
+                <stop offset="50%" stopColor="#38BDF8" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#A78BFA" stopOpacity="0.05" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
         <LightRays
           raysOrigin="top-center"
-          raysSpeed={0.5}
-          lightSpread={0.5}
-          rayLength={2.4}
-          pulsating={false}
-          fadeDistance={1.15}
+          raysSpeed={0.55}
+          lightSpread={0.55}
+          rayLength={2.6}
+          pulsating={true}
+          fadeDistance={1.2}
           followMouse={true}
-          mouseInfluence={0.06}
-          distortion={0}
+          mouseInfluence={0.08}
+          distortion={0.04}
           className="landing-rays-canvas"
         />
       </div>
