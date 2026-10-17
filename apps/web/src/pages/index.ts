@@ -12,3 +12,4 @@ export * from './Settings';
 export * from './IntegrationView';
 export * from './Insights';
 export * from './Manage';
+export * from './EnergyUsage';

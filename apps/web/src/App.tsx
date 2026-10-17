@@ -12,6 +12,7 @@ import {
   Settings,
   Insights,
   Manage,
+  EnergyUsage,
 } from './pages';
 
 export const MainAppContent: React.FC = () => {
@@ -133,6 +134,10 @@ export const MainAppContent: React.FC = () => {
           onNavigateSubTab={(tab) => navigate(`/insights/${tab}`)}
         />
       );
+    }
+
+    if (canonicalPath === '/energy' || canonicalPath === '/consumption') {
+      return <EnergyUsage telemetry={telemetry} selectedDevice={selectedDevice} onNavigate={navigate} />;
     }
 
     if (canonicalPath === '/alerts') {

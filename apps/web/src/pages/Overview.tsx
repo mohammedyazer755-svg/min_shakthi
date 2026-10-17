@@ -77,7 +77,7 @@ export const Overview: React.FC<OverviewProps> = ({
         ? 'var(--status-warn, #805300)'
         : 'var(--status-unknown, #5D625D)';
 
-  const [trendMetric, setTrendMetric] = useState<'power' | 'current' | 'voltage'>('power');
+  const [trendMetric, setTrendMetric] = useState<'power' | 'current' | 'voltage' | 'sine'>('power');
 
   // Standard Indian commercial/domestic electricity tariff: ₹7.50 / kWh
   const TARIFF_INR_PER_KWH = 7.50;
@@ -159,12 +159,12 @@ export const Overview: React.FC<OverviewProps> = ({
     const seriesColors = ['#171717', '#176B65', '#3C5D91', '#78547A', '#454B49'];
     const currentHist = (telemetry as { currentHistory?: Record<string, Array<{ timestamp: string; value: number | null }>> }).currentHistory || {};
     const voltageHist = (telemetry as { voltageHistory?: Record<string, Array<{ timestamp: string; value: number | null }>> }).voltageHistory || {};
-    const historySource = trendMetric === 'current'
+    const historySource = (trendMetric === 'current' || trendMetric === 'sine')
       ? currentHist
       : trendMetric === 'voltage'
         ? voltageHist
         : powerHistory;
-    const unit = trendMetric === 'current' ? 'A' : trendMetric === 'voltage' ? 'V' : 'W';
+    const unit = trendMetric === 'current' ? 'A' : trendMetric === 'voltage' ? 'V' : trendMetric === 'sine' ? 'A' : 'W';
 
     return channels
       .filter((ch) => ch.freshness !== 'unconfigured')
@@ -258,24 +258,34 @@ export const Overview: React.FC<OverviewProps> = ({
             {activeCount > 0 ? liveCostPerHour.toFixed(2) : '0.00'}
             <small>/hr</small>
           </div>
-          <div className="overview-card-bottom">
+          <div className="overview-card-bottom" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, flexWrap: 'wrap' }}>
             <span style={{ fontWeight: 600 }}>
               {activeCount > 0
                 ? `Last 7 days: ~₹${sevenDayProjectedCost.toFixed(0)} used`
                 : 'Waiting for active power'}
             </span>
-            <span
+            <button
+              type="button"
+              onClick={() => onNavigate?.('/energy')}
+              aria-label="View detailed energy usage and history"
               style={{
-                fontSize: 10,
-                color: 'var(--text-secondary)',
-                background: 'var(--surface-inset)',
-                padding: '3px 7px',
-                borderRadius: 4,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                fontSize: 11,
+                fontWeight: 700,
+                color: 'var(--accent-text)',
+                background: 'rgba(200, 169, 110, 0.18)',
+                border: '1px solid rgba(200, 169, 110, 0.35)',
+                padding: '3px 8px',
+                borderRadius: 6,
+                cursor: 'pointer',
                 whiteSpace: 'nowrap',
               }}
             >
-              @ ₹7.50/unit
-            </span>
+              <span>Energy Page</span>
+              <ArrowRight size={12} aria-hidden="true" />
+            </button>
           </div>
         </article>
 
@@ -312,17 +322,22 @@ export const Overview: React.FC<OverviewProps> = ({
           <div className="overview-section-heading">
             <div>
               <p className="overview-eyebrow">
-                {trendMetric === 'current' ? 'CURRENT OVER TIME' : trendMetric === 'voltage' ? 'VOLTAGE OVER TIME' : 'POWER OVER TIME'}
+                {trendMetric === 'current' ? 'CURRENT OVER TIME' : trendMetric === 'voltage' ? 'VOLTAGE OVER TIME' : trendMetric === 'sine' ? '50HZ AC SINE WAVE' : 'POWER OVER TIME'}
               </p>
-              <h2>{trendMetric === 'current' ? 'Active Current Trend' : trendMetric === 'voltage' ? 'Voltage Trend' : 'Active Power Trend'}</h2>
+              <h2>{trendMetric === 'current' ? 'Active Current Trend' : trendMetric === 'voltage' ? 'Voltage Trend' : trendMetric === 'sine' ? '50Hz AC Sine Waveform' : 'Active Power Trend'}</h2>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <div style={{ display: 'inline-flex', background: 'var(--surface-inset)', borderRadius: 8, padding: 3, gap: 3 }}>
-                {(['power', 'current', 'voltage'] as const).map((m) => (
+                {[
+                  { id: 'power', label: 'Power (W)' },
+                  { id: 'current', label: 'Current (A)' },
+                  { id: 'voltage', label: 'Voltage (V)' },
+                  { id: 'sine', label: '⚡ 50Hz Sine' },
+                ].map((item) => (
                   <button
-                    key={m}
+                    key={item.id}
                     type="button"
-                    onClick={() => setTrendMetric(m)}
+                    onClick={() => setTrendMetric(item.id as any)}
                     style={{
                       padding: '4px 10px',
                       fontSize: 11,
@@ -330,13 +345,13 @@ export const Overview: React.FC<OverviewProps> = ({
                       borderRadius: 6,
                       border: 'none',
                       cursor: 'pointer',
-                      background: trendMetric === m ? 'var(--surface)' : 'transparent',
-                      color: trendMetric === m ? 'var(--accent-text)' : 'var(--text-secondary)',
-                      boxShadow: trendMetric === m ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                      background: trendMetric === item.id ? 'var(--surface)' : 'transparent',
+                      color: trendMetric === item.id ? 'var(--accent-text)' : 'var(--text-secondary)',
+                      boxShadow: trendMetric === item.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
                       transition: 'all 0.15s ease',
                     }}
                   >
-                    {m === 'power' ? 'Power (W)' : m === 'current' ? 'Current (A)' : 'Voltage (V)'}
+                    {item.label}
                   </button>
                 ))}
               </div>
@@ -345,11 +360,21 @@ export const Overview: React.FC<OverviewProps> = ({
           </div>
           {hasTrend ? (
             <MeasurementChart
-              title={trendMetric === 'current' ? 'Channel current · A' : trendMetric === 'voltage' ? 'Channel voltage · V' : 'Channel power · W'}
+              title={
+                trendMetric === 'current'
+                  ? 'Channel current · A'
+                  : trendMetric === 'voltage'
+                    ? 'Channel voltage · V'
+                    : trendMetric === 'sine'
+                      ? 'Live 50Hz AC Sine Waveform · Continuous Oscilloscope'
+                      : 'Channel power · W'
+              }
               series={chartSeries}
               height={235}
               framed={false}
               curveType="natural"
+              enableOscilloscope={trendMetric === 'sine'}
+              timeWindowSeconds={120}
               ariaDescription="Recent electrical samples with smooth continuous spline response and breaks during communication gaps"
             />
           ) : (

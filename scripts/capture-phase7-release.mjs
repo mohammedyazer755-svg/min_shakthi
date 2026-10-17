@@ -87,6 +87,18 @@ server.listen(PORT, '127.0.0.1', async () => {
       height: 900,
     },
     {
+      name: 'phase7-energy-usage.png',
+      url: `http://127.0.0.1:${PORT}/energy?view=workspace`,
+      width: 1440,
+      height: 900,
+    },
+    {
+      name: 'phase7-energy-usage-mobile.png',
+      url: `http://127.0.0.1:${PORT}/energy?view=workspace`,
+      width: 390,
+      height: 844,
+    },
+    {
       name: 'phase7-incident-investigator.png',
       url: `http://127.0.0.1:${PORT}/insights/incidents?view=workspace`,
       width: 1440,

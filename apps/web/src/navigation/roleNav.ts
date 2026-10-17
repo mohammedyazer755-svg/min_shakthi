@@ -101,6 +101,10 @@ export function normalizeRoute(path: string): string {
       return '/insights/trends';
     case '/manage':
       return '/manage/devices';
+    case '/consumption':
+    case '/billing':
+    case '/insights/energy':
+      return '/energy';
     case '/':
       return '/overview';
     default:
