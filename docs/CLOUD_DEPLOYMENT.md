@@ -3,7 +3,7 @@
 The Vercel project `min-shakthi` deploys directly from `mohammedyazer755-svg/min_shakthi`.
 
 - Vite builds the existing frontend as static assets.
-- The `api/cloud.cjs` function exports a bundled HTTP server for Express authentication, reports, configuration, and Socket.IO. Public API, health, and socket paths route to this function on the same origin as the frontend.
+- The `api/cloud.js` function exports a bundled HTTP server for Express authentication, reports, configuration, and Socket.IO. Public API, health, and socket paths route to this function on the same origin as the frontend.
 - The `mqtt` daemon maintains a continuous outbound subscription to the configured broker. It acknowledges QoS 1 deliveries after database commit. Its stable client ID and persistent MQTT session support broker redelivery when available. Malformed, unregistered, and unmapped packets remain rejected or quarantined.
 - The Neon free-plan database stores sessions, telemetry, device mappings, preferences, alert rules/records, worker heartbeat, and audit entries. The API reads the worker's database heartbeat rather than claiming a broker connection from its own process.
 - WebSockets and Daemons currently use Vercel's beta capabilities. Daemons run in production only. Preview environments have no production database credentials.

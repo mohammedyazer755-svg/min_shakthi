@@ -46,11 +46,6 @@ export default tseslint.config(
     },
   },
   {
-    files: ['api/**/*.cjs'],
-    languageOptions: { sourceType: 'commonjs' },
-    rules: { '@typescript-eslint/no-require-imports': 'off' },
-  },
-  {
     files: ['scripts/**/*.js'],
     rules: {
       'no-console': 'off',
