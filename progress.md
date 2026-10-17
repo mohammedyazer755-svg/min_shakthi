@@ -1,5 +1,11 @@
 # MIN-SAKTHI V2 Progress and Handover Log
 
+## Overview dashboard refinement - 17 October 2026
+
+- Added a clear workspace heading and compact connection context, a charcoal power panel, quieter supporting cards, channel coverage indicators, and direct links to channels and alerts. The public home page and existing authentication remain unchanged.
+- Condensed secondary measurements and placed a compact channel list beside the power trend. Added an explanatory waiting state when no historical samples exist; current values still use only fresh telemetry and measured zero remains valid.
+- Removed nested chart framing on Overview. Made isolated historical samples visible as dots and expanded a single receipt timestamp to a usable 30-second axis without joining gaps.
+- Added regression coverage for the empty dashboard and isolated zero sample. Web build and lint passed; all 221 automated checks passed. Browser verification uses the new built frontend with the existing production API, real admin sign-in, no local MQTT worker, and no fabricated telemetry. Captures are in `docs/evidence/overview-refresh/`.
 ## Final visual polish and main release - 17 October 2026
 
 - Replaced the landing's 3D meter with the requested dark glass 01 / OVERVIEW card, matching its heading, proportions, Live Stream action, and Architecture link. Removed the unused meter chunk from the production build.
@@ -8,7 +14,7 @@
 - Corrected bearer authentication for configured devices, incident lists, acknowledgement, and report downloads. Preserved the existing admin credentials and cookie session behavior. Restricted visual workspace shortcuts to development builds; production requires sign-in.
 - Removed hard-coded zero/nominal alert claims from Overview and loaded the current user's recorded alerts instead. Unavailable current readings are labeled accordingly.
 - Full build and lint passed; all 219 automated checks passed, including existing integration, security, and accessibility/documentation checks. Real-browser sign-in, reload, black theme, navigation, reduced-motion navigation, incident loading, and desktop/mobile captures passed against the real backend. No physical hardware verification is claimed.
-- Release from GitHub main is pending verification. Local captures are in `docs/evidence/final-polish-review/`; no fabricated telemetry or production mappings were introduced.
+- Released to GitHub main as 3dd074f; production sign-in, session refresh, API health, desktop/mobile navigation and screenshots verified. Local captures are in `docs/evidence/final-polish-review/`; no fabricated telemetry or production mappings were introduced.
 
 ## Authenticated branch design review - 17 October 2026
 
