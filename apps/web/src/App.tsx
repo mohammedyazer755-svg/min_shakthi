@@ -83,7 +83,7 @@ export const MainAppContent: React.FC = () => {
     );
   }
 
-  const isWorkspacePreview = typeof window !== 'undefined' && (
+  const isWorkspacePreview = import.meta.env.DEV && typeof window !== 'undefined' && (
     window.location.search.includes('view=workspace') ||
     window.location.hash === '#workspace'
   );
@@ -214,7 +214,7 @@ export const MainAppContent: React.FC = () => {
 
 export const MainApp: React.FC = () => {
   const { user } = useAuth();
-  const isWorkspacePreview = typeof window !== 'undefined' && (
+  const isWorkspacePreview = import.meta.env.DEV && typeof window !== 'undefined' && (
     window.location.search.includes('view=workspace') ||
     window.location.hash === '#workspace'
   );

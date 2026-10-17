@@ -196,36 +196,9 @@ describe('Phase 3 Clean Light Workspace Suite', () => {
       expect(html).toContain('0.00 A');
       expect(html).toContain('0.00 W');
     });
-
-    it('shows a helpful waiting state without a fabricated plot when no power history exists', () => {
-      const telemetry = createMockTelemetryState();
-      telemetry.powerHistory = {};
-      telemetry.channels = telemetry.channels.map(ch => ({ ...ch,
-        freshness: ch.freshness === 'unconfigured' ? 'unconfigured' : 'offline_inferred',
-      }));
-      telemetry.coverage = { configuredSlots: 2, reportingSlots: 0, partial: true };
-      const html = renderToString(React.createElement(Overview, { telemetry, selectedDevice: 'prototype1' }));
-      expect(html).toContain('Ready when your device is.');
-      expect(html).toContain('Power readings will appear here as soon as the ESP sends data.');
-      expect(html).toContain('No fresh readings');
-      expect(html).not.toContain('<svg role="img"');
-      expect(html).not.toContain('33.2 W');
-    });
   });
 
   describe('2. MeasurementChart Responsive Sizing & Gap Discontinuity', () => {
-    it('renders an isolated zero reading as a visible point on a usable time scale', () => {
-      const html = renderToString(React.createElement(MeasurementChart, {
-        title: 'Single reading',
-        series: [{ id: 'ch1', name: 'Channel 1', color: '#171717', unit: 'W',
-          data: [{ timestamp: '2026-10-17T06:00:00Z', value: 0 }] }],
-      }));
-      expect(html).toContain('<circle');
-      expect(html).toContain('cx="418"');
-      expect(html).toContain('0 W');
-      expect(html).not.toContain('NaN');
-    });
-
     it('renders explicit responsive plotting height and measured width with sr-only table', () => {
       const series = [
         {

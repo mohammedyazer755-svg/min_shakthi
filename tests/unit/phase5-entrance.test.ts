@@ -60,16 +60,16 @@ describe('Phase 5: Refined Dark Landing & 3D Hero Entrance', () => {
       );
 
       // Hero headline
-      expect(html).toContain('Power, seen');
-      expect(html).toContain('with ');
-      expect(html).toContain('clarity.');
+      expect(html).toContain('Measure every watt');
+      expect(html).toContain('before the');
+      expect(html).toContain('grid commits.');
 
       // System status indicator
       expect(html).toContain('Secure access');
-      expect(html).toContain('ENERGY INTELLIGENCE, MADE CLEAR');
+      expect(html).toContain('SUB-SECOND EDGE TELEMETRY');
 
       // Primary buttons
-      expect(html).toContain('Open workspace');
+      expect(html).toContain('Live Stream');
       expect(html).toContain('Sign In');
     });
 
@@ -81,9 +81,12 @@ describe('Phase 5: Refined Dark Landing & 3D Hero Entrance', () => {
       );
 
       // 3 Benefits
-      expect(html).toContain('See the present.');
-      expect(html).toContain('Find what needs you.');
-      expect(html).toContain('Understand the past.');
+      expect(html).toContain('01 / PRECISION');
+      expect(html).toContain('Sub-Second Edge Precision');
+      expect(html).toContain('02 / REPORTING');
+      expect(html).toContain('Auditable Civil Reporting');
+      expect(html).toContain('03 / RELIABILITY');
+      expect(html).toContain('Resilient Mission Control');
     });
 
     it('presents an honest non-operational preview with clear disclaimers', () => {
@@ -94,7 +97,7 @@ describe('Phase 5: Refined Dark Landing & 3D Hero Entrance', () => {
       );
 
       // Non-operational disclaimer badge
-      expect(html).toContain('Illustrative architecture · No live readings');
+      expect(html).toContain('NON-OPERATIONAL WORKSPACE PREVIEW');
       expect(html).toContain('Sign in to view real-time site telemetry');
 
       // Channel slots with non-operational placeholder values
@@ -119,7 +122,7 @@ describe('Phase 5: Refined Dark Landing & 3D Hero Entrance', () => {
       expect(html).not.toContain('viewer@minsakthi.local</span>');
 
       // Footer clean copy
-      expect(html).toContain('Secure access. Clear insight.');
+      expect(html).toContain('Sessions authenticated via secure HttpOnly tokens');
     });
   });
 

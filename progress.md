@@ -1,5 +1,12 @@
 # MIN-SAKTHI V2 Progress and Handover Log
 
+## Restore the screenshot version from 3dd074f - 17 October 2026
+
+- Restored `apps/web/src` and its regression tests exactly from commit `3dd074f`, as requested by the user's reference screenshot. This restores the original black-and-gold “Measure every watt” homepage, overview card, light workspace and authentication behavior from that revision.
+- Confirmed the landing TSX and CSS Git blob hashes match `3dd074f`; the entire restored source/test directories have no diff against that commit. Removed later workspace and homepage redesign files through the restore.
+- Web build, lint and all 219 tests passed. Releasing as a new commit on main preserves shared Git history and unrelated local documentation/screenshots.
+
+
 ## Restore the black public website - 17 October 2026
 
 - Discarded the unfinished workspace-wide redesign after the user's request to revert. Restored those working files to the last published revision while preserving unrelated documentation and screenshot edits.

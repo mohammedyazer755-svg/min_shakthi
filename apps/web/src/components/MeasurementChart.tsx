@@ -20,7 +20,6 @@ export interface MeasurementChartProps {
   maxPoints?: number;
   className?: string;
   ariaDescription?: string;
-  framed?: boolean;
 }
 
 export const MeasurementChart: React.FC<MeasurementChartProps> = ({
@@ -30,7 +29,6 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
   maxPoints = 600,
   className = '',
   ariaDescription,
-  framed = true,
 }) => {
   const chartId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -103,8 +101,6 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
     minV = minV > 0 ? 0 : minV * 1.05;
     maxV = maxV === 0 ? 10 : maxV * 1.08;
 
-    // A single receipt time still needs a meaningful horizontal scale.
-    if (minT === maxT) { minT -= 15000; maxT += 15000; }
     return { minVal: minV, maxVal: maxV, minTime: minT, maxTime: maxT, hasData: true };
   }, [processedSeries]);
 
@@ -169,16 +165,6 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
         color: s.color,
         name: s.name,
         d: segments.join(' '),
-        isolatedPoints: s.data.flatMap((point, index) => {
-          if (point.value === null || !Number.isFinite(point.value)) return [];
-          const time = new Date(point.timestamp).getTime();
-          if (!Number.isFinite(time)) return [];
-          const previous = s.data[index - 1];
-          const next = s.data[index + 1];
-          const connectsPrevious = previous?.value != null && time - new Date(previous.timestamp).getTime() <= 30000;
-          const connectsNext = next?.value != null && new Date(next.timestamp).getTime() - time <= 30000;
-          return connectsPrevious || connectsNext ? [] : [{ x: getX(time), y: getY(point.value) }];
-        }),
       };
     });
   }, [processedSeries, minTime, timeRange, minVal, valRange, plotWidth, plotHeight]);
@@ -208,11 +194,11 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
 
   return (
     <div
-      className={`relative ${framed ? 'rounded-xl p-4 md:p-6' : ''} ${className}`}
+      className={`relative rounded-xl p-4 md:p-6 ${className}`}
       style={{
         background: 'var(--surface)',
-        border: framed ? '1px solid var(--border)' : undefined,
-        boxShadow: framed ? 'var(--shadow-card)' : undefined,
+        border: '1px solid var(--border)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
       {/* Header & Legend */}
@@ -317,9 +303,6 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
                 strokeLinejoin="round"
               />
             ))}
-            {paths.flatMap(p => p.isolatedPoints.map((point, index) => (
-              <circle key={`${p.id}-${index}`} cx={point.x} cy={point.y} r="3.5" fill={p.color} />
-            )))}
           </svg>
         </div>
       )}

@@ -1,8 +1,8 @@
-import React, { useState, useCallback, useEffect, useId } from 'react';
-import { ArrowRight, ArrowUpRight, Activity, Bell, History, Pause, Play, LockKeyhole, Zap } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { ArrowRight, Activity, ShieldCheck, Zap, BarChart3, ChevronRight } from 'lucide-react';
 import { ElectricBrandMark } from '../components/ElectricBrandMark';
+import { LightRays } from '../components/LightRays/LightRays';
 import { AuthModal } from '../components/Auth/AuthModal';
-import { useReducedMotion } from '../motion/useReducedMotion';
 import './LandingPage.css';
 
 export interface LandingPageProps {
@@ -11,128 +11,288 @@ export interface LandingPageProps {
   initialAuthOpen?: boolean;
 }
 
-const inputPaths = [
-  'M72 100H162Q202 100 202 140V220Q202 250 242 250H274',
-  'M72 190H154Q182 190 182 218V252Q182 270 222 270H274',
-  'M72 280H274',
-  'M72 370H154Q182 370 182 342V308Q182 290 222 290H274',
-  'M72 460H162Q202 460 202 420V340Q202 310 242 310H274',
-];
-const channelSlots = ['CH01', 'CH02', 'CH03', 'CH04', 'CH05'];
-
-function EnergyDiagram({ selected }: { selected: number }) {
-  const titleId = useId();
-  return <svg className="energy-diagram" viewBox="0 0 680 560" role="img" aria-labelledby={titleId}>
-    <title id={titleId}>Five physical channel inputs connected to one energy workspace. Illustrative architecture.</title>
-    <defs>
-      <radialGradient id={`${titleId}-wash`}><stop stopColor="#AAAAAA" stopOpacity=".1"/><stop offset="1" stopColor="#AAAAAA" stopOpacity="0"/></radialGradient>
-    </defs>
-    <circle cx="350" cy="280" r="240" fill={`url(#${titleId}-wash)`}/>
-    <g fill="none" stroke="#303030" strokeWidth="1">
-      <circle cx="350" cy="280" r="178" strokeDasharray="2 9"/>
-      <circle cx="350" cy="280" r="126"/>
-      <path d="M350 56V78M350 482V504M126 280H148M552 280H574"/>
-      <path d="M232 79L242 96M458 464L468 481M126 154L143 164M557 398L574 408"/>
-    </g>
-    <text className="diagram-label" x="350" y="38" textAnchor="middle">A SINGLE POINT OF VIEW</text>
-    {inputPaths.map((d, index) => <g key={d} data-selected={selected === index} className="diagram-input">
-      <path d={d} className="diagram-route" fill="none"/>
-      {selected === index && <path d={d} className="diagram-flow" pathLength="100" fill="none"/>}
-      <circle cx="52" cy={100 + index * 90} r="21" className="diagram-node"/>
-      <text x="52" y={104 + index * 90} textAnchor="middle" className="diagram-number">{String(index + 1).padStart(2, '0')}</text>
-      <text x="94" y={85 + index * 90} className="diagram-label">{channelSlots[index]}</text>
-    </g>)}
-    <path d="M430 280H602" fill="none" stroke="#777777" strokeWidth="1.5"/>
-    <circle cx="608" cy="280" r="5" fill="#EFEFEF"/>
-    <text x="548" y="253" className="diagram-label" textAnchor="middle">WORKSPACE</text>
-    <text x="548" y="309" className="diagram-label" textAnchor="middle">ONE CLEAR PICTURE</text>
-    <circle cx="350" cy="280" r="86" fill="#171717" stroke="#858585"/>
-    <circle cx="350" cy="280" r="76" fill="none" stroke="#3B3B3B"/>
-    <text x="350" y="292" textAnchor="middle" className="diagram-core-number">05</text>
-    <text x="350" y="318" textAnchor="middle" className="diagram-core-label">CHANNEL INPUTS</text>
-    <path d="M338 223L350 204L347 218H362L350 237L353 223Z" fill="#EFEFEF"/>
-    <text x="350" y="530" textAnchor="middle" className="diagram-label">ELECTRICAL SIGNAL → USEFUL INSIGHT</text>
-  </svg>;
-}
-
-export const LandingPage: React.FC<LandingPageProps> = ({ onSignIn, onSuccess, initialAuthOpen = false }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({
+  onSignIn,
+  onSuccess,
+  initialAuthOpen = false,
+}) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(initialAuthOpen);
   const [prefillEmail, setPrefillEmail] = useState('admin@minsakthi.local');
-  const [ambientPaused, setAmbientPaused] = useState(false);
-  const [selectedInput, setSelectedInput] = useState(0);
-  const [pageVisible, setPageVisible] = useState(() => typeof document === 'undefined' || !document.hidden);
-  const { isReducedMotion } = useReducedMotion();
-  const backgroundPaused = ambientPaused || isReducedMotion || !pageVisible || isAuthModalOpen;
-  useEffect(() => {
-    const updateVisibility = () => setPageVisible(!document.hidden);
-    document.addEventListener('visibilitychange', updateVisibility);
-    return () => document.removeEventListener('visibilitychange', updateVisibility);
+
+  const handleCloseAuth = useCallback(() => {
+    setIsAuthModalOpen(false);
   }, []);
-  const handleCloseAuth = useCallback(() => setIsAuthModalOpen(false), []);
+
   const handleOpenAuth = (email = 'admin@minsakthi.local') => {
-    setPrefillEmail(email); setIsAuthModalOpen(true); onSignIn?.(email);
+    setPrefillEmail(email);
+    setIsAuthModalOpen(true);
+    if (onSignIn) onSignIn(email);
   };
 
-  return <div className="landing-container" data-ambient-paused={backgroundPaused}>
-    <div className="home-dark-stage">
-      <header className="landing-navbar home-wrap">
-        <a href="/" className="landing-brand" aria-label="MIN-SAKTHI Home">
-          <ElectricBrandMark size={32}/><span>MIN-SAKTHI<small>ENERGY INTELLIGENCE</small></span>
-        </a>
-        <nav className="home-nav" aria-label="Main Navigation"><a href="#benefits">The platform</a><a href="#preview">Inside the workspace</a></nav>
-        <button type="button" onClick={() => handleOpenAuth()} className="landing-signin-btn">Sign In<ArrowUpRight size={15} aria-hidden="true"/></button>
+  const channels = [
+    { slot: 'CH01', name: 'Main Phase A', status: 'Sign in to view', voltage: '— V', current: '— A' },
+    { slot: 'CH02', name: 'Chiller Compressors', status: 'Sign in to view', voltage: '— V', current: '— A' },
+    { slot: 'CH03', name: 'Server Rack Feed A', status: 'Sign in to view', voltage: '— V', current: '— A' },
+    { slot: 'CH04', name: 'HVAC Air Handlers', status: 'Sign in to view', voltage: '— V', current: '— A' },
+    { slot: 'CH05', name: 'Emergency Backup Inverter', status: 'Sign in to view', voltage: '— V', current: '— A' },
+  ];
+
+  const benefits = [
+    {
+      icon: Zap,
+      badge: '01 / PRECISION',
+      title: 'Sub-Second Edge Precision',
+      desc: '5-channel electrical tracking with CRC32 integrity framing and cadence-aware freshness. Discards retained broker silence without false online claims.',
+    },
+    {
+      icon: BarChart3,
+      badge: '02 / REPORTING',
+      title: 'Auditable Civil Reporting',
+      desc: 'Deterministic energy aggregation bounded in civil timezones (Asia/Kolkata). Continuous gap and counter reset tracking with zero unverified billing claims.',
+    },
+    {
+      icon: ShieldCheck,
+      badge: '03 / RELIABILITY',
+      title: 'Resilient Mission Control',
+      desc: 'Persistent disk-buffered spooling with SQLite/Postgres reconciliation, multi-tenant site isolation, and real-time socket diagnostics.',
+    },
+  ];
+
+  return (
+    <div className="landing-container">
+      {/* ── Volumetric Light Rays (reacts to mouse position) ── */}
+      <div className="landing-ambient-layer" aria-hidden="true">
+        <LightRays
+          raysOrigin="top-center"
+          raysSpeed={0.5}
+          lightSpread={0.5}
+          rayLength={2.4}
+          pulsating={false}
+          fadeDistance={1.15}
+          followMouse={true}
+          mouseInfluence={0.06}
+          distortion={0}
+          className="landing-rays-canvas"
+        />
+      </div>
+
+      {/* ── Sticky Frosted Navigation Bar ── */}
+      <header className="landing-navbar">
+        <div className="landing-navbar-inner">
+          <a href="/" className="landing-brand" aria-label="MIN-SAKTHI Home">
+            <ElectricBrandMark size={30} />
+            <div>
+              <div className="landing-brand-title">MIN-SAKTHI</div>
+              <div className="landing-brand-sub">ENERGY INTELLIGENCE V2</div>
+            </div>
+          </a>
+
+          <nav className="landing-nav-links hidden md:flex" aria-label="Main Navigation">
+            <a href="#benefits" className="landing-nav-link">Platform Capabilities</a>
+            <a href="#preview" className="landing-nav-link">Workspace Preview</a>
+          </nav>
+
+          <div className="landing-nav-actions">
+            <div className="landing-status-badge hidden sm:inline-flex">
+              <span className="landing-live-dot" aria-hidden="true" style={{ background: '#c8a96e', boxShadow: '0 0 10px rgba(200, 169, 110, 0.5)' }} />
+              <span>Secure access</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleOpenAuth()}
+              className="landing-signin-btn motion-interactive motion-btn-press"
+            >
+              Sign In
+            </button>
+          </div>
+        </div>
       </header>
 
-      <main>
-        <section className="landing-hero home-wrap" id="overview" aria-labelledby="home-title">
-          <div className="home-hero-copy">
-            <p className="home-eyebrow"><span className="home-small-line"/>ENERGY INTELLIGENCE, MADE CLEAR</p>
-            <h1 id="home-title">Power, seen<br/>with <em>clarity.</em></h1>
-            <p className="home-hero-description">From the circuit to the complete picture. Understand your electrical loads, spot what needs attention, and make every reading count.</p>
-            <div className="home-hero-actions">
-              <button type="button" onClick={() => handleOpenAuth()} className="home-button home-button-primary">Open workspace<ArrowUpRight size={18} aria-hidden="true"/></button>
-              <a href="#preview" className="home-quiet-link">Take a closer look<ArrowRight size={16} aria-hidden="true"/></a>
-            </div>
-            <p className="home-access-note"><LockKeyhole size={12} aria-hidden="true"/>Secure access · Your site. Your data.</p>
-          </div>
-          <figure className="home-instrument" aria-label="Interactive channel architecture">
-            <div className="home-instrument-top"><span>MIN-SAKTHI / SIGNAL ARCHITECTURE</span><span>01—05</span></div>
-            <EnergyDiagram selected={selectedInput}/>
-            <figcaption className="home-instrument-caption">
-              <span>Explore an input</span>
-              <div className="home-input-controls" role="group" aria-label="Explore channel inputs">
-                {channelSlots.map((slot, index) => <button key={slot} type="button" aria-label={`Explore ${slot}`} aria-pressed={selectedInput === index} onClick={() => setSelectedInput(index)}>{String(index + 1).padStart(2, '0')}</button>)}
-              </div>
-            </figcaption>
-            <div className="home-diagram-foot"><span>Illustrative architecture · No live readings</span>{!isReducedMotion && <button type="button" className="landing-ambient-toggle" onClick={() => setAmbientPaused(paused => !paused)} aria-pressed={ambientPaused} aria-label={ambientPaused ? 'Resume background animation' : 'Pause background animation'}>{ambientPaused ? <Play size={11} aria-hidden="true"/> : <Pause size={11} aria-hidden="true"/>}<span>{ambientPaused ? 'Resume' : 'Pause'}</span></button>}</div>
-          </figure>
-          <div className="home-spec-strip"><span><strong>05</strong> Physical channels</span><span><Activity size={15} aria-hidden="true"/>Live electrical readings</span><span><History size={15} aria-hidden="true"/>A searchable history</span><a href="#benefits">Discover the platform<span aria-hidden="true">↓</span></a></div>
-        </section>
-      </main>
-    </div>
-
-    <section className="home-platform" id="benefits" aria-labelledby="platform-title">
-      <div className="home-wrap">
-        <div className="home-section-intro"><div><p className="home-eyebrow">BUILT AROUND WHAT MATTERS</p><h2 id="platform-title">A better view.<br/>A clearer decision.</h2></div><p>Bring the readings, the context, and the next step together. One focused workspace for the people who keep things running.</p></div>
-        <div className="home-principles">
-          {[{icon: Activity, no:'01', name:'See the present.', text:'Voltage, current, power and frequency, together. Know which channels are reporting and when the last reading arrived.'}, {icon: Bell, no:'02', name:'Find what needs you.', text:'Review recorded alerts and channel conditions without digging through a wall of numbers.'}, {icon: History, no:'03', name:'Understand the past.', text:'Explore previous readings, trace changes over time, and keep the context behind your energy use.'}].map(({icon: Icon, no, name, text}) => <article key={no} className="home-principle"><div><span>{no} /</span><Icon size={22} strokeWidth={1.5} aria-hidden="true"/></div><h3>{name}</h3><p>{text}</p></article>)}
+      {/* ── Hairline Sub-Header ── */}
+      <div className="landing-hairline">
+        <div className="landing-hairline-inner">
+          <span>ENERGY INTELLIGENCE WORKSPACE</span>
+          <span className="hidden sm:inline">FOR INDUSTRIAL &amp; COMMERCIAL GRIDS</span>
         </div>
       </div>
-    </section>
 
-    <section className="home-preview-section home-wrap" id="preview" aria-labelledby="preview-title">
-      <div className="home-preview-copy"><p className="home-eyebrow">INSIDE THE WORKSPACE</p><h2 id="preview-title">Less noise.<br/><em>More understanding.</em></h2><p>Five channels. A focused overview. The detail you need, exactly when you need it.</p><button type="button" className="home-quiet-link" onClick={() => handleOpenAuth()}>Step into your workspace<ArrowUpRight size={18} aria-hidden="true"/></button></div>
-      <div className="home-product-preview">
-        <div className="home-preview-bar"><span><Zap size={15} aria-hidden="true"/>Channel overview</span><span className="home-preview-badge">Preview</span></div>
-        <div className="home-preview-columns"><span>CHANNEL</span><span>VOLTAGE</span><span>CURRENT</span></div>
-        {channelSlots.map((slot, index) => <button type="button" className="home-preview-row" key={slot} onClick={() => handleOpenAuth()} aria-label={`Sign in to view ${slot}`}><span><span className="home-preview-slot">{String(index + 1).padStart(2, '0')}</span>{slot}</span><span>— V</span><span>— A</span></button>)}
-        <div className="home-preview-note"><LockKeyhole size={12} aria-hidden="true"/><span>Sign in to view real-time site telemetry</span></div>
-      </div>
-    </section>
+      {/* ── Hero Section with Dimensional 3D Assembly ── */}
+      <section className="landing-hero" id="overview">
+        <div className="landing-hero-grid items-center">
+          {/* Left: Editorial Headline & Actions */}
+          <div className="landing-hero-left">
+            <div className="landing-hero-badge">
+              <Activity className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>SUB-SECOND EDGE TELEMETRY</span>
+            </div>
 
-    <section className="home-bottom-cta home-wrap"><p>Your energy.<br/><em>In clear sight.</em></p><button type="button" onClick={() => handleOpenAuth()} aria-label="Open dashboard"><ArrowUpRight strokeWidth={1.2} aria-hidden="true"/></button></section>
-    <footer className="landing-footer home-wrap"><span>MIN-SAKTHI <span> / Energy Intelligence V2</span></span><span>Secure access. Clear insight.</span></footer>
-    <AuthModal isOpen={isAuthModalOpen} onClose={handleCloseAuth} onSuccess={onSuccess} initialEmail={prefillEmail}/>
-  </div>;
+            <h1 className="landing-headline">
+              Measure every watt<br />
+              before the <span className="landing-headline-accent">grid commits.</span>
+            </h1>
+
+            <p className="landing-hero-description">
+              Industrial-grade electrical monitoring engineered for mission-critical facilities.
+              Continuous hardware telemetry, verified civil reporting, and high-integrity historical records.
+            </p>
+
+          </div>
+
+          <div className="landing-index-card">
+            <div className="landing-card-header">
+              <span className="landing-card-tag">01 / OVERVIEW</span>
+              <span className="text-xs font-bold text-neutral-400">ESP32 PROTO</span>
+            </div>
+            <h2 className="landing-card-title">Multi-Channel Edge Ingestion</h2>
+            <p className="landing-card-text">
+              Monitor five electrical channels in one workspace. Live voltage, current,
+              active power, and grid frequency, with clear device status and searchable history.
+            </p>
+            <div className="landing-card-actions">
+              <button type="button" onClick={() => handleOpenAuth()} className="landing-primary-btn motion-interactive motion-btn-press">
+                Live Stream <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </button>
+              <a href="#benefits" className="landing-secondary-btn motion-interactive motion-btn-press">Architecture</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Three Short Benefits ── */}
+      <section className="landing-benefits-section" id="benefits">
+        <div className="landing-section-header">
+          <div className="landing-section-title-wrap">
+            <span className="landing-section-tag">ENGINEERING PILLARS</span>
+            <h2 className="landing-section-heading">Designed for Mission-Critical Clarity</h2>
+          </div>
+        </div>
+
+        <div className="landing-benefits-grid">
+          {benefits.map((b) => {
+            const Icon = b.icon;
+            return (
+              <div key={b.title} className="landing-benefit-card motion-clickable-card">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-2.5 rounded-lg bg-neutral-900 border border-neutral-800 text-amber-400">
+                    <Icon className="w-5 h-5" aria-hidden="true" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 font-mono">
+                    {b.badge}
+                  </span>
+                </div>
+                <h3 className="text-base font-bold text-white mb-2">{b.title}</h3>
+                <p className="text-xs leading-relaxed text-neutral-400">{b.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── Honest Non-Operational Product Preview ── */}
+      <section className="landing-channels-section" id="preview">
+        <div className="landing-section-header">
+          <div className="landing-section-title-wrap">
+            <span className="landing-section-tag">WORKPLACE PREVIEW</span>
+            <h2 className="landing-section-heading">5-Channel Composite Tracking</h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span
+                className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded"
+                style={{ background: 'rgba(200, 169, 110, 0.15)', color: '#c8a96e', border: '1px solid rgba(200, 169, 110, 0.3)' }}
+              >
+                NON-OPERATIONAL WORKSPACE PREVIEW
+              </span>
+              <span className="text-xs text-neutral-400">Sign in to view real-time site telemetry</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => handleOpenAuth()}
+            className="text-xs font-bold text-amber-300 hover:text-white flex items-center gap-1 transition-colors"
+          >
+            <span>Authorize workspace access</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <div className="landing-channel-cards-grid">
+          {channels.map((ch) => (
+            <div
+              key={ch.slot}
+              className="landing-channel-card motion-clickable-card"
+              onClick={() => handleOpenAuth()}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleOpenAuth(); }}
+            >
+              <div className="landing-channel-card-top">
+                <span className="landing-channel-slot">{ch.slot}</span>
+                <span className="landing-channel-status-pill">{ch.status}</span>
+              </div>
+              <div className="landing-channel-name">{ch.name}</div>
+              <div className="landing-channel-stats">
+                <span>{ch.voltage}</span>
+                <span>{ch.current}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Final Call to Action ── */}
+      <section className="landing-cta-section max-w-7xl mx-auto px-6 py-16">
+        <div
+          className="p-8 sm:p-12 rounded-2xl border text-center flex flex-col items-center justify-center relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(180deg, #0d0d12 0%, #050508 100%)',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+          }}
+        >
+          <ElectricBrandMark size={40} className="mb-4" />
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            Authorize Mission-Control Access
+          </h2>
+          <p className="text-xs sm:text-sm text-neutral-400 max-w-lg mt-3 leading-relaxed">
+            Sign in to access your site&apos;s real-time power telemetry cockpit, multi-channel diagnostics,
+            automated alert evaluations, and historical event logs.
+          </p>
+          <button
+            type="button"
+            onClick={() => handleOpenAuth()}
+            className="landing-primary-btn motion-interactive motion-btn-press mt-6"
+            style={{ padding: '12px 32px', fontSize: '14px' }}
+          >
+            <span>Open Dashboard</span>
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </button>
+        </div>
+      </section>
+
+      {/* ── Clean Footer (Zero public role shortcuts) ── */}
+      <footer className="landing-footer">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <ElectricBrandMark size={20} />
+            <span className="font-bold text-neutral-300">MIN-SAKTHI V2</span>
+            <span>— Energy Intelligence Platform</span>
+          </div>
+
+          <div className="text-xs text-neutral-500">
+            Sessions authenticated via secure HttpOnly tokens. All rights reserved.
+          </div>
+        </div>
+      </footer>
+
+      {/* ── Glassmorphism Auth Modal ── */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={handleCloseAuth}
+        onSuccess={onSuccess}
+        initialEmail={prefillEmail}
+      />
+    </div>
+  );
 };
+
 export default LandingPage;

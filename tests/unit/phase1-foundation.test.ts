@@ -268,8 +268,8 @@ describe('Phase 1 Foundation & Truthful States Suite', () => {
           React.createElement(LandingPage, null)
         )
       );
-      expect(html).toContain('Five physical channel inputs connected to one energy workspace');
-      expect(html).toContain('Illustrative architecture · No live readings');
+      expect(html).toContain('Multi-Channel Edge Ingestion');
+      expect(html).toContain('01 / OVERVIEW');
       expect(html).not.toContain('50.00 Hz Pure Sine Grid Reference');
       expect(html).toContain('Secure access');
       // No synthetic live telemetry claims
