@@ -68,6 +68,48 @@
 .overview-channel-reading { margin-left: auto; color: var(--text-primary); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .overview-text-action { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 42px; margin-top: 8px; color: var(--text-primary); background: transparent; border: 0; cursor: pointer; font-size: 11px; font-weight: 600; }
 .overview-text-action:hover { text-decoration: underline; text-underline-offset: 4px; }
+/* Soft mineral tints give supporting cards their own identity. */
+.overview-stat-panel:nth-child(2) { background: linear-gradient(135deg, #eaf2fc 0%, #f9fbfe 75%); border-color: #d4e1ef; }
+.overview-stat-panel:nth-child(3) { background: linear-gradient(135deg, #f0ecf9 0%, #fcfbfe 75%); border-color: #e1d9ef; }
+.overview-stat-panel:nth-child(2) .overview-card-top > svg { color: #3f6088; }
+.overview-stat-panel:nth-child(3) .overview-card-top > svg { color: #72598b; }
+.overview-stat-panel:nth-child(2) .overview-slot-indicators > span { background: #d8e3f1; }
+.overview-stat-panel:nth-child(2) .overview-slot-indicators > span[data-reporting="true"] { background: #3f6088; }
+.overview-power-panel { background: radial-gradient(ellipse at 100% 0%, #344757 0, transparent 65%), #16191c; }
+.overview-metrics > article {
+  animation: overview-card-arrive 420ms var(--motion-ease-out) backwards;
+  transition: transform var(--motion-duration-normal) var(--motion-ease-out), box-shadow var(--motion-duration-normal), border-color var(--motion-duration-normal);
+}
+.overview-metrics > article:nth-child(2) { animation-delay: 55ms; }
+.overview-metrics > article:nth-child(3) { animation-delay: 110ms; }
+.overview-stat-panel .overview-card-top > svg, .overview-power-panel .overview-icon-tile {
+  transition: transform var(--motion-duration-normal) var(--motion-ease-out);
+}
+.overview-metrics > article::after {
+  content: ''; position: absolute; pointer-events: none; inset: 0;
+  background: linear-gradient(120deg, transparent 25%, #ffffff32 48%, transparent 70%);
+  opacity: 0; transform: translateX(-40%);
+  transition: opacity 250ms, transform 550ms var(--motion-ease-out);
+}
+@keyframes overview-card-arrive { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: translateY(0); } }
+@media (hover: hover) and (pointer: fine) {
+  .overview-metrics > article:hover { transform: translateY(-3px); box-shadow: 0 12px 28px #263b5312; }
+  .overview-metrics > article:hover::after { opacity: 1; transform: translateX(25%); }
+  .overview-metrics > article:hover .overview-card-top > svg,
+  .overview-metrics > article:hover .overview-icon-tile { transform: rotate(-7deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .overview-metrics > article, .overview-metrics > article::after,
+  .overview-stat-panel .overview-card-top > svg, .overview-power-panel .overview-icon-tile {
+    animation: none !important; transition: none !important; transform: none !important;
+  }
+  .overview-metrics > article::after { display: none; }
+}
+[data-motion="reduce"] .overview-metrics > article, [data-motion="reduce"] .overview-metrics > article::after,
+[data-motion="reduce"] .overview-stat-panel .overview-card-top > svg, [data-motion="reduce"] .overview-icon-tile {
+  animation: none !important; transition: none !important; transform: none !important;
+}
+[data-motion="reduce"] .overview-metrics > article::after { display: none; }
 @media (min-width: 1000px) { .overview-dashboard { gap: 20px; } }
 @media (max-width: 1100px) {
   .overview-metrics { grid-template-columns: 1.2fr 1fr 1fr; gap: 12px; }

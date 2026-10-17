@@ -1,5 +1,10 @@
 # MIN-SAKTHI V2 Progress and Handover Log
 
+## Workspace colour and motion refinement - 17 October 2026
+
+- Added pale blue and lavender gradients to the supporting overview cards, a slate highlight to the charcoal power card, staggered entrance, subtle hover lift and a moving surface highlight. All hover effects are limited to precise pointers; OS and in-app reduced-motion preferences disable the movement.
+- Refined the workspace header with cool tinted device/account controls, distinct semantic health chips, a soft background, rounded navigation and an animated active indicator. Device/account chevrons rotate with their menus. Existing telemetry status and sign-in behavior remain unchanged.
+- Web build, lint and all 221 automated checks passed. Browser checks verify the card hover, tinted surface, device selector, real login, reduced-motion behavior, navigation and mobile overflow. Evidence is saved in `docs/evidence/workspace-motion/`.
 ## Overview dashboard refinement - 17 October 2026
 
 - Added a clear workspace heading and compact connection context, a charcoal power panel, quieter supporting cards, channel coverage indicators, and direct links to channels and alerts. The public home page and existing authentication remain unchanged.

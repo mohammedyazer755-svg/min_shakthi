@@ -9,6 +9,7 @@ import { ElectricBrandMark } from './ElectricBrandMark';
 import type { SystemHealth, SnapshotChannel } from '@minsakthi/contracts';
 import { deviceStreamStatus } from '../live/status';
 import { normalizeRoute, getVisiblePrimaryNav, getVisibleManageNav } from '../navigation/roleNav';
+import './workspace-shell.css';
 
 export interface AppShellProps {
   children: React.ReactNode;
@@ -144,7 +145,7 @@ export const AppShell: React.FC<AppShellProps> = ({
 
   return (
     <div
-      className="min-h-screen flex flex-col"
+      className="workspace-shell min-h-screen flex flex-col"
       style={{ background: 'var(--canvas)', color: 'var(--text-primary)' }}
     >
       {/* Skip to main content accessibility link */}
@@ -158,7 +159,7 @@ export const AppShell: React.FC<AppShellProps> = ({
 
       {/* Header — clean workspace header */}
       <header
-        className="sticky top-0 z-30 flex flex-col"
+        className="workspace-header sticky top-0 z-30 flex flex-col"
         style={{
           background: 'var(--header-bg)',
           borderBottom: '1px solid var(--header-border)',
@@ -205,7 +206,7 @@ export const AppShell: React.FC<AppShellProps> = ({
               <button
                 type="button"
                 onClick={() => setDeviceDropdownOpen((v) => !v)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-all hover:border-[var(--accent)]"
+                className="workspace-device-control flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
                 style={{
                   background: 'var(--surface)',
                   border: '1px solid var(--border-strong)',
@@ -291,7 +292,7 @@ export const AppShell: React.FC<AppShellProps> = ({
               health={health}
               channels={channels}
               socketConnected={socketConnected}
-              className="hidden xl:inline-flex"
+              className="workspace-health hidden xl:inline-flex"
             />
 
             {/* Account Menu */}
@@ -300,7 +301,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                 <button
                   type="button"
                   onClick={() => setAccountMenuOpen((v) => !v)}
-                  className="flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-medium transition-all hover:border-[var(--border-strong)]"
+                  className="workspace-account-control flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-medium"
                   style={{
                     background: 'var(--surface)',
                     border: '1px solid var(--border)',
@@ -391,7 +392,7 @@ export const AppShell: React.FC<AppShellProps> = ({
 
         {/* Desktop Primary Navigation Tabs */}
         <nav
-          className="hidden lg:flex items-center px-6 relative overflow-x-auto"
+          className="workspace-primary-nav hidden lg:flex items-center px-6 relative overflow-x-auto"
           style={{ zIndex: 1, borderTop: '1px solid var(--border)' }}
           aria-label="Primary Navigation"
         >
