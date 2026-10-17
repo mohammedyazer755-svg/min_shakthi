@@ -52,13 +52,15 @@ export const StatusSummary: React.FC<StatusSummaryProps> = ({
 
   return (
     <div
-      className={`inline-flex flex-wrap items-center gap-3 px-3 py-1.5 rounded-lg text-[10px] ${className}`}
+      className={`inline-flex flex-wrap items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] ${className}`}
       role="status"
       aria-label="System Health Status Summary"
       style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        boxShadow: 'var(--shadow-card)',
+        background: 'rgba(255, 255, 255, 0.72)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid rgba(0, 0, 0, 0.07)',
+        boxShadow: '0 1px 4px rgba(0, 0, 0, 0.03)',
       }}
     >
       {layers.map((layer) => (
@@ -68,12 +70,12 @@ export const StatusSummary: React.FC<StatusSummaryProps> = ({
           ) : (
             getStatusIcon(layer.isGood, layer.isDegraded)
           )}
-          <span className="font-bold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>{layer.name}</span>
-          <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{layer.stateText}</span>
+          <span className="font-extrabold uppercase tracking-wide text-[9px]" style={{ color: 'var(--text-secondary)' }}>{layer.name}</span>
+          <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{layer.stateText}</span>
         </div>
       ))}
       {health && health.persistenceLagMs > 1000 && (
-        <div className="inline-flex items-center gap-1 font-bold" style={{ color: 'var(--status-warn)' }}>
+        <div className="inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-full" style={{ color: 'var(--status-warn)', background: 'rgba(245, 158, 11, 0.1)' }}>
           <AlertTriangle className="w-3 h-3" aria-hidden="true" />
           <span>Lag: {Math.round(health.persistenceLagMs / 1000)}s</span>
         </div>

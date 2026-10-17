@@ -158,14 +158,7 @@ export const AppShell: React.FC<AppShellProps> = ({
       </a>
 
       {/* Header — clean workspace header */}
-      <header
-        className="workspace-header sticky top-0 z-30 flex flex-col"
-        style={{
-          background: 'var(--header-bg)',
-          borderBottom: '1px solid var(--header-border)',
-          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.03)',
-        }}
-      >
+      <header className="workspace-header sticky top-0 z-30 flex flex-col">
         {/* Top bar */}
         <div className="relative h-14 sm:h-16 px-4 sm:px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -174,8 +167,8 @@ export const AppShell: React.FC<AppShellProps> = ({
               ref={mobileTriggerRef}
               type="button"
               onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
-              className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] rounded-lg flex items-center justify-center transition-colors"
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-primary)' }}
+              className="lg:hidden p-2.5 min-w-[44px] min-h-[44px] rounded-full flex items-center justify-center transition-colors"
+              style={{ background: 'rgba(255, 255, 255, 0.8)', border: '1px solid rgba(0, 0, 0, 0.08)', color: 'var(--text-primary)' }}
               aria-label={mobileDrawerOpen ? 'Close navigation drawer' : 'Open navigation drawer'}
               aria-expanded={mobileDrawerOpen}
               aria-controls="mobile-navigation-drawer"
@@ -187,7 +180,7 @@ export const AppShell: React.FC<AppShellProps> = ({
             <button
               type="button"
               onClick={() => handleNavClick('/overview')}
-              className="flex items-center gap-2.5 text-left focus-visible:outline-hidden"
+              className="flex items-center gap-2.5 text-left focus-visible:outline-hidden group"
               aria-label="MIN-SAKTHI Home"
             >
               <ElectricBrandMark size={32} />
@@ -195,7 +188,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                 <div className="text-sm font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
                   MIN-SAKTHI
                 </div>
-                <div className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: 'var(--accent-text)' }}>
+                <div className="text-[10px] font-semibold uppercase tracking-widest mt-0.5" style={{ color: 'var(--accent-text)' }}>
                   Energy Intelligence V2
                 </div>
               </div>
@@ -206,26 +199,21 @@ export const AppShell: React.FC<AppShellProps> = ({
               <button
                 type="button"
                 onClick={() => setDeviceDropdownOpen((v) => !v)}
-                className="workspace-device-control flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold"
-                style={{
-                  background: 'var(--surface)',
-                  border: '1px solid var(--border-strong)',
-                  color: 'var(--text-primary)',
-                }}
+                className="workspace-device-control flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold"
                 aria-haspopup="listbox"
                 aria-expanded={deviceDropdownOpen}
                 aria-label={`Active Device: ${selectedDevice}, Status: ${stream.label}`}
               >
                 <span
                   className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ background: dotColor }}
+                  style={{ background: dotColor, boxShadow: `0 0 0 3px ${dotColor}22` }}
                   aria-hidden="true"
                 />
-                <span className="font-mono">{selectedDevice}</span>
+                <span className="font-mono text-[11.5px] font-bold">{selectedDevice}</span>
                 <span
-                  className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded"
+                  className="text-[9.5px] uppercase font-extrabold tracking-wider px-2 py-0.5 rounded-full"
                   style={{
-                    background: 'var(--surface-raised)',
+                    background: 'rgba(0, 0, 0, 0.04)',
                     color: 'var(--text-secondary)',
                   }}
                 >
@@ -301,27 +289,26 @@ export const AppShell: React.FC<AppShellProps> = ({
                 <button
                   type="button"
                   onClick={() => setAccountMenuOpen((v) => !v)}
-                  className="workspace-account-control flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-medium"
-                  style={{
-                    background: 'var(--surface)',
-                    border: '1px solid var(--border)',
-                    color: 'var(--text-primary)',
-                  }}
+                  className="workspace-account-control flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1 rounded-full text-xs font-medium"
                   aria-haspopup="menu"
                   aria-expanded={accountMenuOpen}
                   aria-label={`User account menu for ${user.displayName}`}
                 >
                   <div
                     className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px]"
-                    style={{ background: 'var(--accent)', color: '#FFFFFF' }}
+                    style={{
+                      background: 'linear-gradient(135deg, #1e293b, #0f172a)',
+                      color: '#FFFFFF',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)',
+                    }}
                   >
                     {userInitials}
                   </div>
                   <div className="hidden sm:flex flex-col items-start leading-tight">
-                    <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>
                       {user.displayName}
                     </span>
-                    <span className={`text-[9px] font-bold uppercase tracking-wider px-1 rounded border ${roleBadgeColor}`}>
+                    <span className={`text-[8.5px] font-extrabold uppercase tracking-wider px-1.5 py-0.2 rounded-full border ${roleBadgeColor}`}>
                       {user.role}
                     </span>
                   </div>
@@ -393,53 +380,41 @@ export const AppShell: React.FC<AppShellProps> = ({
         {/* Desktop Primary Navigation Tabs */}
         <nav
           className="workspace-primary-nav hidden lg:flex items-center px-6 relative overflow-x-auto"
-          style={{ zIndex: 1, borderTop: '1px solid var(--border)' }}
           aria-label="Primary Navigation"
         >
-          {primaryNavItems.map((item) => {
-            const Icon = getIcon(item.iconName);
-            const isSelected = normalizedActive === item.route || (item.route !== '/overview' && normalizedActive.startsWith(item.route));
+          <div className="workspace-nav-track">
+            {primaryNavItems.map((item) => {
+              const Icon = getIcon(item.iconName);
+              const isSelected = normalizedActive === item.route || (item.route !== '/overview' && normalizedActive.startsWith(item.route));
 
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handleNavClick(item.route)}
-                className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold motion-interactive relative ${
-                  isSelected ? 'nav-active' : ''
-                }`}
-                style={{
-                  color: isSelected ? 'var(--text-primary)' : 'var(--text-secondary)',
-                  background: isSelected ? 'var(--accent-dim)' : 'transparent',
-                  borderBottom: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
-                }}
-                aria-current={isSelected ? 'page' : undefined}
-              >
-                <Icon className="w-3.5 h-3.5" aria-hidden="true" style={{ color: isSelected ? 'var(--accent)' : 'inherit' }} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleNavClick(item.route)}
+                  className={`workspace-nav-item motion-interactive ${isSelected ? 'nav-active' : ''}`}
+                  aria-current={isSelected ? 'page' : undefined}
+                >
+                  <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
 
           {/* Manage Area for Admin / Diagnostics for Operator */}
           {manageNavItems.length > 0 && (
-            <div className="ml-4 pl-4 border-l flex items-center gap-1" style={{ borderColor: 'var(--border)' }}>
+            <div className="ml-2 pl-3 border-l flex items-center gap-1.5" style={{ borderColor: 'rgba(0, 0, 0, 0.08)' }}>
               {user?.role === 'admin' ? (
                 <button
                   type="button"
                   onClick={() => handleNavClick('/manage/devices')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold motion-interactive ${
-                    normalizedActive.startsWith('/manage') ? 'border border-[var(--accent)] font-bold' : ''
-                  }`}
-                  style={{
-                    color: normalizedActive.startsWith('/manage') ? 'var(--accent-text)' : 'var(--text-secondary)',
-                    background: normalizedActive.startsWith('/manage') ? 'var(--accent-dim)' : 'var(--surface-raised)',
-                  }}
+                  className="workspace-manage-btn motion-interactive"
                   aria-current={normalizedActive.startsWith('/manage') ? 'page' : undefined}
                 >
                   <Server className="w-3.5 h-3.5" aria-hidden="true" />
                   <span>Manage</span>
-                  <span className="text-[9px] font-bold uppercase tracking-wider px-1 rounded bg-red-100 text-red-700">
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-600 border border-red-500/20">
                     Admin
                   </span>
                 </button>
@@ -447,13 +422,7 @@ export const AppShell: React.FC<AppShellProps> = ({
                 <button
                   type="button"
                   onClick={() => handleNavClick('/manage/diagnostics')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold motion-interactive ${
-                    normalizedActive.startsWith('/manage/diagnostics') ? 'border border-[var(--accent)] font-bold' : ''
-                  }`}
-                  style={{
-                    color: normalizedActive.startsWith('/manage/diagnostics') ? 'var(--accent-text)' : 'var(--text-secondary)',
-                    background: normalizedActive.startsWith('/manage/diagnostics') ? 'var(--accent-dim)' : 'var(--surface-raised)',
-                  }}
+                  className="workspace-manage-btn motion-interactive"
                   aria-current={normalizedActive.startsWith('/manage/diagnostics') ? 'page' : undefined}
                 >
                   <Radio className="w-3.5 h-3.5" aria-hidden="true" />
