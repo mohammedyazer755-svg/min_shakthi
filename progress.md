@@ -3,10 +3,11 @@
 ## Cloud backend deployment work - 17 October 2026
 
 - Provisioned `minsakthi-db` on Neon's free plan through the authenticated Vercel project after the user accepted provider terms.
-- Added a PostgreSQL repository, additive migration `0006_cloud_runtime.sql`, a same-origin Express/Socket.IO API service, and a continuous MQTT daemon. Production does not construct the test-seeded memory repository.
+- Added a PostgreSQL repository, additive migration `0006_cloud_runtime.sql`, a same-origin Express/Socket.IO API function, and a continuous MQTT daemon. Production does not construct the test-seeded memory repository.
 - Bootstrapped one admin with a generated password supplied through an ignored local file; no public test password or fabricated telemetry was seeded. Registered prototype device/channel IDs use the same database records as authentication and diagnostics.
 - Verified full workspace build, lint, all 124 existing tests, isolated-schema real database tests, and local HTTP/socket login/refresh/logout/tenant isolation against the real database. The local worker connected and subscribed to the configured MQTT broker, then was stopped before cloud rollout.
-- Deploying through GitHub. Hosted rollout and public-browser verification are pending; this entry does not claim a completed cloud deployment or hardware calibration.
+- Deployed from GitHub to `https://min-shakthi.vercel.app`. Public verification passed database readiness, login, refresh/logout/revocation, tenant isolation, and Socket.IO snapshots. The cloud worker reports running, broker connected, and subscription active.
+- Headless browser verification passed sign-in through the existing modal, session persistence after reload, and sign-out, with zero HTTP 5xx responses. Dashboard screenshot is retained locally in ignored `.vercel/browser-dashboard.png`. Hardware calibration remains unverified.
 - Architecture, commands, and QoS/filesystem limitations: `docs/CLOUD_DEPLOYMENT.md`.
 Updated: 16 October 2026. State: Phases 1–5 COMPLETE; Phase 6 SOFTWARE DELIVERABLES & LOCAL GATES COMPLETE; Physical Hardware Gates (H01–H06) Truthfully Documented as BLOCKED.
 
