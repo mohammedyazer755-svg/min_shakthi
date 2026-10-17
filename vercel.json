@@ -10,8 +10,8 @@
     "api": {
       "root": "apps/server",
       "framework": "express",
-      "entrypoint": "src/cloud-api.mts",
-      "buildCommand": "cd ../.. && npm run build:server"
+      "entrypoint": "dist/cloud-api.cjs",
+      "buildCommand": "cd ../.. && npm run build:server && npm run build:cloud --workspace=@minsakthi/server"
     }
   },
   "daemons": {
