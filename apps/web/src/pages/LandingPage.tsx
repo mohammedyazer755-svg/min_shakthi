@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
-import { ArrowRight, Activity, ShieldCheck, Zap, BarChart3, ChevronRight } from 'lucide-react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { ArrowRight, Activity, ShieldCheck, Zap, BarChart3, ChevronRight, Pause, Play } from 'lucide-react';
 import { ElectricBrandMark } from '../components/ElectricBrandMark';
 import { LightRays } from '../components/LightRays/LightRays';
 import { AuthModal } from '../components/Auth/AuthModal';
+import { useReducedMotion } from '../motion/useReducedMotion';
 import './LandingPage.css';
 
 export interface LandingPageProps {
@@ -18,6 +19,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 }) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(initialAuthOpen);
   const [prefillEmail, setPrefillEmail] = useState('admin@minsakthi.local');
+  const [ambientPaused, setAmbientPaused] = useState(false);
+  const [pageVisible, setPageVisible] = useState(() => typeof document === 'undefined' || !document.hidden);
+  const { isReducedMotion } = useReducedMotion();
+  const backgroundPaused = ambientPaused || isReducedMotion || !pageVisible || isAuthModalOpen;
+
+  useEffect(() => {
+    const updateVisibility = () => setPageVisible(!document.hidden);
+    document.addEventListener('visibilitychange', updateVisibility);
+    return () => document.removeEventListener('visibilitychange', updateVisibility);
+  }, []);
 
   const handleCloseAuth = useCallback(() => {
     setIsAuthModalOpen(false);
@@ -59,7 +70,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   ];
 
   return (
-    <div className="landing-container">
+    <div className="landing-container" data-ambient-paused={backgroundPaused}>
       {/* ── Ambient Layer: Animated Pastel Aurora Orbs + Grid Flow + Light Rays ── */}
       <div className="landing-ambient-layer" aria-hidden="true">
         <div className="landing-aurora-container">
@@ -85,6 +96,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               strokeDasharray="8 8"
               className="landing-wave-path-2"
             />
+            <path
+              d="M-100 160 C 200 60, 420 260, 720 160 C 1020 60, 1240 260, 1540 160"
+              pathLength="1000" stroke="url(#pastelWave1)" strokeWidth="4" strokeLinecap="round"
+              className="landing-energy-trail landing-energy-trail-1"
+            />
+            <path
+              d="M-100 190 C 260 270, 460 110, 720 190 C 980 270, 1180 110, 1540 190"
+              pathLength="1000" stroke="url(#pastelWave2)" strokeWidth="3" strokeLinecap="round"
+              className="landing-energy-trail landing-energy-trail-2"
+            />
             <defs>
               <linearGradient id="pastelWave1" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="#93C5FD" stopOpacity="0.05" />
@@ -100,7 +121,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </defs>
           </svg>
         </div>
-        <LightRays
+        {!backgroundPaused && <LightRays
           raysOrigin="top-center"
           raysSpeed={0.55}
           lightSpread={0.55}
@@ -111,7 +132,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           mouseInfluence={0.08}
           distortion={0.04}
           className="landing-rays-canvas"
-        />
+        />}
       </div>
 
       {/* ── Sticky Frosted Navigation Bar ── */}
@@ -157,6 +178,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* ── Hero Section with Dimensional 3D Assembly ── */}
       <section className="landing-hero" id="overview">
+        {!isReducedMotion && <button
+          type="button"
+          className="landing-ambient-toggle"
+          onClick={() => setAmbientPaused(paused => !paused)}
+          aria-pressed={ambientPaused}
+          aria-label={ambientPaused ? 'Resume background animation' : 'Pause background animation'}
+        >
+          {ambientPaused ? <Play size={12} aria-hidden="true" /> : <Pause size={12} aria-hidden="true" />}
+          <span>{ambientPaused ? 'Resume motion' : 'Pause motion'}</span>
+        </button>}
         <div className="landing-hero-grid items-center">
           {/* Left: Editorial Headline & Actions */}
           <div className="landing-hero-left">

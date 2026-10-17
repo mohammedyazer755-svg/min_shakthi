@@ -1,5 +1,12 @@
 # MIN-SAKTHI V2 Progress and Handover Log
 
+## Landing background motion refinement - 17 October 2026
+
+- Enhanced the existing pastel aurora with shorter staggered drift cycles, a gentle wave sway and two travelling decorative light trails. Preserved the current light landing design, content and overview card.
+- Added a background pause/resume control. OS/in-app reduced-motion preferences stop CSS motion and prevent the WebGL rays from mounting; opening sign-in or hiding the tab also pauses the background and stops the rays.
+- Web build, lint and all 221 automated checks passed. Real-browser checks cover visible motion, pause/resume, reduced motion, paused sign-in background, existing authentication, navigation and mobile overflow. Captures are saved in `docs/evidence/landing-ambient/`.
+
+
 ## Workspace colour and motion refinement - 17 October 2026
 
 - Added pale blue and lavender gradients to the supporting overview cards, a slate highlight to the charcoal power card, staggered entrance, subtle hover lift and a moving surface highlight. All hover effects are limited to precise pointers; OS and in-app reduced-motion preferences disable the movement.
