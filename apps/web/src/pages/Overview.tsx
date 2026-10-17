@@ -41,16 +41,26 @@ export const Overview: React.FC<OverviewProps> = ({
 }) => {
   const auth = useOptionalAuth();
   const user = auth?.user ?? null;
+  const accessToken = auth?.accessToken;
   const [recentIncident, setRecentIncident] = useState<IncidentRecord | null>(null);
+  const [activeAlertCount,setActiveAlertCount] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!user?.siteId) return;
+    if (!user?.siteId || !accessToken) return;
     let mounted = true;
+    setRecentIncident(null);
+    setActiveAlertCount(null);
+    void fetch(`${API_BASE}/api/v1/sites/${user.siteId}/alerts?deviceId=${encodeURIComponent(selectedDevice)}`,
+      {headers:{Authorization:`Bearer ${accessToken}`}}).then(async response => {
+        if (!response.ok) return;
+        const data = await response.json();
+        if (mounted) setActiveAlertCount((data.alerts ?? []).filter((alert: {state:string}) => alert.state === 'open').length);
+      }).catch(() => {});
     async function loadRecentIncident() {
       try {
         const res = await fetch(
           `${API_BASE}/api/v1/sites/${user!.siteId}/incidents?deviceId=${encodeURIComponent(selectedDevice)}&limit=1`,
-          { credentials: 'include' }
+          { headers:{Authorization:`Bearer ${accessToken}`} }
         );
         if (res.ok) {
           const data = (await res.json()) as { incidents?: IncidentRecord[] };
@@ -68,7 +78,7 @@ export const Overview: React.FC<OverviewProps> = ({
     return () => {
       mounted = false;
     };
-  }, [user?.siteId, selectedDevice]);
+  }, [user?.siteId, accessToken, selectedDevice]);
 
   const {
     channels,
@@ -160,13 +170,13 @@ export const Overview: React.FC<OverviewProps> = ({
 
   // Chart series for power trends
   const chartSeries = useMemo(() => {
-    const seriesColors = ['#80601E', '#176B65', '#3C5D91', '#78547A', '#454B49'];
+    const seriesColors = ['#171717', '#176B65', '#3C5D91', '#78547A', '#454B49'];
     return channels
       .filter((ch) => ch.freshness !== 'unconfigured')
       .map((ch, idx) => ({
         id: ch.rawChannelId,
         name: ch.label,
-        color: seriesColors[idx % seriesColors.length] ?? '#80601E',
+        color: seriesColors[idx % seriesColors.length] ?? '#171717',
         unit: 'W',
         data: powerHistory[ch.rawChannelId] || [],
       }));
@@ -257,7 +267,7 @@ export const Overview: React.FC<OverviewProps> = ({
             type="button"
             onClick={() => onNavigate?.(`/insights/incidents?incidentId=${recentIncident.id}`)}
             className="flex-shrink-0 px-3 py-1.5 rounded font-bold text-white transition-opacity hover:opacity-90"
-            style={{ background: 'var(--accent, #a38445)' }}
+            style={{ background: 'var(--accent, #171717)' }}
           >
             Investigate Event →
           </button>
@@ -291,7 +301,7 @@ export const Overview: React.FC<OverviewProps> = ({
             )}
           </div>
           <span style={metricSubtext}>
-            Active Power Total · {activeCount > 0 ? `${totalPower.toFixed(1)} W monitored` : 'No active load'}
+            Active Power Total · {activeCount > 0 ? `${totalPower.toFixed(1)} W monitored` : 'No current readings'}
           </span>
         </div>
 
@@ -343,11 +353,11 @@ export const Overview: React.FC<OverviewProps> = ({
             <Bell className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} aria-hidden="true" />
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-            <span style={metricValue}>0</span>
+            <span style={metricValue}>{activeAlertCount ?? '—'}</span>
             <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>active</span>
           </div>
           <span style={metricSubtext}>
-            All electrical thresholds nominal · Zero active violations
+            {activeAlertCount === null ? 'Checking recorded alerts' : activeAlertCount === 0 ? 'No open alerts recorded' : 'Open alerts require review'}
           </span>
         </div>
       </div>

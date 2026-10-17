@@ -34,7 +34,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   socketConnected = false,
 }) => {
   const { user: authUser, logout } = useAuth();
-  const isWorkspacePreview = typeof window !== 'undefined' && (
+  const isWorkspacePreview = import.meta.env.DEV && typeof window !== 'undefined' && (
     window.location.search.includes('view=workspace') ||
     window.location.hash === '#workspace'
   );
@@ -663,6 +663,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         {/* Content Container */}
         <main
           id="main-content"
+          style={{ viewTransitionName:'workspace-content' }}
           tabIndex={-1}
           className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto w-full outline-hidden"
         >

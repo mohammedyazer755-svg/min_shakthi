@@ -179,8 +179,8 @@
 
 .landing-hero-grid {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 64px;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 48px;
   align-items: start;
 }
 
@@ -214,7 +214,7 @@
 }
 
 .landing-headline {
-  font-size: clamp(38px, 5.2vw, 76px);
+  font-size: clamp(38px, 4.1vw, 64px);
   font-weight: 800;
   line-height: 1.05;
   letter-spacing: -0.035em;
@@ -242,18 +242,18 @@
   position: relative;
   background: linear-gradient(165deg, rgba(255, 255, 255, 0.08) 0%, rgba(15, 15, 20, 0.85) 60%, rgba(5, 5, 8, 0.95) 100%);
   border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 24px;
-  padding: 36px;
+  border-radius: 28px;
+  padding: 40px;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.2);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 240ms var(--motion-ease-standard), border-color 240ms ease, box-shadow 240ms ease;
 }
 
 .landing-index-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(200, 169, 110, 0.4);
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.75), 0 0 30px rgba(200, 169, 110, 0.15);
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 28px 72px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255,255,255,0.2);
 }
 
 .landing-card-header {
@@ -274,7 +274,7 @@
 }
 
 .landing-card-title {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.01em;
   color: #ffffff;
@@ -282,8 +282,8 @@
 }
 
 .landing-card-text {
-  font-size: 13.5px;
-  line-height: 1.6;
+  font-size: 15px;
+  line-height: 1.7;
   color: rgba(255, 255, 255, 0.65);
   margin-bottom: 24px;
 }
@@ -291,6 +291,16 @@
 .landing-card-actions {
   display: flex;
   gap: 12px;
+}
+
+.landing-card-actions :is(.landing-primary-btn, .landing-secondary-btn) {
+  height: 54px;
+  border-radius: 14px;
+}
+@media (max-width: 600px) {
+  .landing-index-card { padding: 26px; border-radius: 24px; }
+  .landing-card-title { font-size: 20px; }
+  .landing-card-text { font-size: 14px; }
 }
 
 .landing-primary-btn {

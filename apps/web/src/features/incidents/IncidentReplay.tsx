@@ -116,8 +116,8 @@ export const IncidentReplay: React.FC<IncidentReplayProps> = ({ incident }) => {
       <div
         className="flex items-center justify-between px-3 py-2 rounded-lg text-xs"
         style={{
-          background: 'rgba(163, 132, 69, 0.12)',
-          border: '1px solid rgba(163, 132, 69, 0.3)',
+          background: 'var(--accent-dim)',
+          border: '1px solid var(--border)',
           color: 'var(--accent-text, #725719)',
         }}
       >
@@ -256,7 +256,7 @@ export const IncidentReplay: React.FC<IncidentReplayProps> = ({ incident }) => {
             type="button"
             onClick={() => setIsPlaying((prev) => !prev)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded font-bold text-xs text-white"
-            style={{ background: isPlaying ? '#805300' : 'var(--accent, #a38445)' }}
+            style={{ background: isPlaying ? '#805300' : 'var(--accent, #171717)' }}
             aria-label={isPlaying ? 'Pause replay' : 'Play replay'}
           >
             {isPlaying ? (

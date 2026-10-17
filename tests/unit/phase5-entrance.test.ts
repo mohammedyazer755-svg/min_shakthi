@@ -65,11 +65,11 @@ describe('Phase 5: Refined Dark Landing & 3D Hero Entrance', () => {
       expect(html).toContain('grid commits.');
 
       // System status indicator
-      expect(html).toContain('System Ready');
+      expect(html).toContain('Secure access');
       expect(html).toContain('SUB-SECOND EDGE TELEMETRY');
 
       // Primary buttons
-      expect(html).toContain('Open Dashboard');
+      expect(html).toContain('Live Stream');
       expect(html).toContain('Sign In');
     });
 

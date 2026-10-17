@@ -112,9 +112,9 @@
   --text-dim: #777B72;
   --border: #DDDCD5;
   --border-strong: #777B72;
-  --accent: #A38445;
-  --accent-text: #725719;
-  --accent-dim: rgba(163, 132, 69, 0.12);
+  --accent: #171717;
+  --accent-text: #171717;
+  --accent-dim: rgba(0, 0, 0, 0.05);
   --status-ok: #176344;
   --status-ok-bg: rgba(23, 99, 68, 0.1);
   --status-ok-border: rgba(23, 99, 68, 0.25);
@@ -127,7 +127,7 @@
   --status-unknown: #5D625D;
   --status-unknown-bg: rgba(93, 98, 93, 0.12);
   --status-unknown-border: rgba(93, 98, 93, 0.25);
-  --focus-ring: #A38445;
+  --focus-ring: #171717;
   --button-primary: #202321;
   --button-text: #FFFFFF;
   --danger-bg: rgba(165, 46, 46, 0.08);
@@ -136,6 +136,12 @@
   --header-border: #DDDCD5;
   --shadow-card: 0 1px 3px rgba(32, 35, 33, 0.05), 0 1px 2px rgba(32, 35, 33, 0.03);
   --metric-glow: none;
+}
+
+[data-theme="light"] {
+  --color-accent-gold: #171717;
+  --color-accent-gold-text: #171717;
+  --focus-ring-color: #171717;
 }
 
 /* Public Landing / Cinema Dark Entrance */

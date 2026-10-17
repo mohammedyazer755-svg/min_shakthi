@@ -268,10 +268,10 @@ describe('Phase 1 Foundation & Truthful States Suite', () => {
           React.createElement(LandingPage, null)
         )
       );
-      expect(html).toContain('NON-OPERATIONAL ILLUSTRATION');
-      expect(html).toContain('50.00 Hz Pure Sine Grid Reference');
-      expect(html).toContain('Deterministic harmonic model');
-      expect(html).toContain('System Ready');
+      expect(html).toContain('Multi-Channel Edge Ingestion');
+      expect(html).toContain('01 / OVERVIEW');
+      expect(html).not.toContain('50.00 Hz Pure Sine Grid Reference');
+      expect(html).toContain('Secure access');
       // No synthetic live telemetry claims
       expect(html).not.toContain('Live Ingestion Active');
       expect(html).not.toContain('calibrated on-chip');

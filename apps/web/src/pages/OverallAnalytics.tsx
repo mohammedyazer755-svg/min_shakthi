@@ -41,13 +41,13 @@ export const OverallAnalytics: React.FC<OverallAnalyticsProps> = ({
 
   // Channel chart series
   const chartSeries = useMemo(() => {
-    const seriesColors = ['#80601E', '#176B65', '#3C5D91', '#78547A', '#454B49'];
+    const seriesColors = ['#171717', '#176B65', '#3C5D91', '#78547A', '#454B49'];
     return channels
       .filter((ch) => ch.freshness !== 'unconfigured')
       .map((ch, idx) => ({
         id: ch.rawChannelId,
         name: ch.label,
-        color: seriesColors[idx % seriesColors.length] ?? '#80601E',
+        color: seriesColors[idx % seriesColors.length] ?? '#171717',
         unit: 'W',
         data: powerHistory[ch.rawChannelId] || [],
       }));

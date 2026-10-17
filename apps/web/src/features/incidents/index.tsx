@@ -15,7 +15,7 @@ export const PowerEventInvestigator: React.FC<PowerEventInvestigatorProps> = ({
   selectedDevice,
   initialIncidentId,
 }) => {
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const { queryParams } = useRouter();
 
   const [incidents, setIncidents] = useState<IncidentRecord[]>([]);
@@ -26,7 +26,7 @@ export const PowerEventInvestigator: React.FC<PowerEventInvestigatorProps> = ({
   const incidentIdParam = initialIncidentId || queryParams.get('incidentId');
 
   const fetchIncidents = useCallback(async () => {
-    if (!user?.siteId) return;
+    if (!user?.siteId || !accessToken) return;
 
     setIsLoading(true);
     setError(null);
@@ -35,6 +35,7 @@ export const PowerEventInvestigator: React.FC<PowerEventInvestigatorProps> = ({
       const devParam = selectedDevice ? `?deviceId=${encodeURIComponent(selectedDevice)}` : '';
       const res = await fetch(`${API_BASE}/api/v1/sites/${user.siteId}/incidents${devParam}`, {
         credentials: 'include',
+        headers: { Authorization:`Bearer ${accessToken}` },
       });
 
       if (!res.ok) {
@@ -57,7 +58,7 @@ export const PowerEventInvestigator: React.FC<PowerEventInvestigatorProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [user?.siteId, selectedDevice, incidentIdParam]);
+  }, [user?.siteId, accessToken, selectedDevice, incidentIdParam]);
 
   useEffect(() => {
     fetchIncidents();

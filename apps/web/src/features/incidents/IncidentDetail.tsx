@@ -25,7 +25,7 @@ export const IncidentDetail: React.FC<IncidentDetailProps> = ({
   onBack,
   onRefresh,
 }) => {
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const [ackNote, setAckNote] = useState('');
   const [isSubmittingAck, setIsSubmittingAck] = useState(false);
   const [ackError, setAckError] = useState<string | null>(null);
@@ -34,7 +34,7 @@ export const IncidentDetail: React.FC<IncidentDetailProps> = ({
 
   const handleAcknowledge = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canAcknowledge) return;
+    if (!canAcknowledge || !accessToken) return;
 
     setIsSubmittingAck(true);
     setAckError(null);
@@ -44,7 +44,7 @@ export const IncidentDetail: React.FC<IncidentDetailProps> = ({
         `${API_BASE}/api/v1/sites/${incident.siteId}/incidents/${incident.id}/ack`,
         {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization:`Bearer ${accessToken}` },
           credentials: 'include',
           body: JSON.stringify({ note: ackNote.trim() || undefined }),
         }
@@ -83,6 +83,25 @@ export const IncidentDetail: React.FC<IncidentDetailProps> = ({
 
   const printUrl = `${API_BASE}/api/v1/sites/${incident.siteId}/incidents/${incident.id}/export/html`;
   const csvUrl = `${API_BASE}/api/v1/sites/${incident.siteId}/incidents/${incident.id}/export/csv`;
+  const [exportError,setExportError] = useState<string | null>(null);
+  const exportReport = async (url: string,kind: 'html' | 'csv') => {
+    if (!accessToken) return;
+    // Open print destination during the gesture; the authenticated response is loaded below.
+    const reportWindow = kind === 'html' ? window.open('about:blank','_blank') : null;
+    if (reportWindow) reportWindow.opener = null;
+    setExportError(null);
+    try {
+      const response = await fetch(url,{headers:{Authorization:`Bearer ${accessToken}`}});
+      if (!response.ok) throw new Error('Unable to export this incident. Please retry.');
+      const blobUrl = URL.createObjectURL(await response.blob());
+      if (reportWindow) reportWindow.location.href = blobUrl;
+      else {
+        const link=document.createElement('a');
+        link.href=blobUrl;link.download=`incident-${incident.id}.${kind}`;link.click();
+      }
+      setTimeout(() => URL.revokeObjectURL(blobUrl),60000);
+    } catch(error) { reportWindow?.close();setExportError((error as Error).message); }
+  };
 
   return (
     <div className="space-y-6">
@@ -99,28 +118,29 @@ export const IncidentDetail: React.FC<IncidentDetailProps> = ({
         </button>
 
         <div className="flex items-center gap-2">
-          <a
-            href={printUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => { void exportReport(printUrl,'html'); }}
             className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border hover:bg-neutral-50 transition-colors"
             style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Print Report</span>
-          </a>
+          </button>
 
-          <a
-            href={csvUrl}
-            download={`incident-${incident.id}.csv`}
+          <button
+            type="button"
+            onClick={() => { void exportReport(csvUrl,'csv'); }}
             className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition-opacity hover:opacity-90"
-            style={{ background: 'var(--accent, #a38445)' }}
+            style={{ background: 'var(--accent, #171717)' }}
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export CSV</span>
-          </a>
+          </button>
         </div>
       </div>
+
+      {exportError && <p role="alert" className="text-sm text-red-700">{exportError}</p>}
 
       {/* Main Incident Overview Box */}
       <div
@@ -155,8 +175,8 @@ export const IncidentDetail: React.FC<IncidentDetailProps> = ({
           className="p-4 rounded-lg border text-sm leading-relaxed"
           style={{
             background: 'var(--canvas, #f7f6f2)',
-            borderColor: 'rgba(163, 132, 69, 0.3)',
-            borderLeft: '4px solid var(--accent, #a38445)',
+            borderColor: 'var(--border)',
+            borderLeft: '4px solid var(--accent, #171717)',
           }}
         >
           <div className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-1">
@@ -361,7 +381,7 @@ export const IncidentDetail: React.FC<IncidentDetailProps> = ({
               type="submit"
               disabled={isSubmittingAck}
               className="px-4 py-2 rounded text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-              style={{ background: 'var(--accent, #a38445)' }}
+              style={{ background: 'var(--accent, #171717)' }}
             >
               {isSubmittingAck ? 'Acknowledging...' : 'Acknowledge Incident'}
             </button>

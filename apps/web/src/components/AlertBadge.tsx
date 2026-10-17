@@ -38,8 +38,8 @@ export const AlertBadge: React.FC<AlertBadgeProps> = ({
       label: 'Info',
       style: {
         color: 'var(--accent-text, #725719)',
-        background: 'rgba(163, 132, 69, 0.12)',
-        border: '1px solid rgba(163, 132, 69, 0.28)',
+        background: 'var(--accent-dim)',
+        border: '1px solid var(--border)',
       },
     },
   }[severity];

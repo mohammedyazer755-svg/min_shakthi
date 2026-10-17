@@ -1,6 +1,8 @@
 import { getEffectiveReducedMotion } from './motionPreference';
+import { flushSync } from 'react-dom';
 
 let activeTransitionId = 0;
+let activeTransition: { skipTransition: () => void } | undefined;
 
 export interface ViewTransitionOptions {
   /** Skip transition even if supported */
@@ -18,6 +20,9 @@ export async function safeViewTransition(
   updateFn: () => void | Promise<void>,
   options?: ViewTransitionOptions
 ): Promise<void> {
+  const transitionId = ++activeTransitionId;
+  activeTransition?.skipTransition();
+  activeTransition = undefined;
   // If SSR or explicitly skipped or reduced motion active, execute immediately
   if (
     typeof document === 'undefined' ||
@@ -28,8 +33,6 @@ export async function safeViewTransition(
     await updateFn();
     return;
   }
-
-  const transitionId = ++activeTransitionId;
 
   try {
     const doc = document as unknown as {
@@ -46,9 +49,15 @@ export async function safeViewTransition(
       if (transitionId !== activeTransitionId) {
         return;
       }
-      await updateFn();
+      let result: void | Promise<void> = undefined;
+      flushSync(() => { result = updateFn(); });
+      await result;
     });
-
+    activeTransition = transition;
+    void transition.ready.catch(() => {});
+    void transition.finished.catch(() => {}).then(() => {
+      if (activeTransition === transition) activeTransition = undefined;
+    });
     await transition.updateCallbackDone.catch(() => {});
   } catch {
     // If startViewTransition failed or was aborted, ensure updateFn runs

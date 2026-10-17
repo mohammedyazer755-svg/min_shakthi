@@ -272,9 +272,9 @@ export const Settings: React.FC = () => {
                     fontWeight: 800,
                     textTransform: 'uppercase',
                     letterSpacing: '0.1em',
-                    background: 'var(--accent-dim, rgba(163,132,69,0.12))',
+                    background: 'var(--accent-dim, var(--accent-dim))',
                     color: 'var(--accent-text)',
-                    border: '1px solid rgba(163,132,69,0.3)',
+                    border: '1px solid var(--border)',
                   }}
                 >
                   {user?.role}

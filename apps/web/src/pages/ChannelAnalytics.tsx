@@ -43,7 +43,7 @@ export const ChannelAnalytics: React.FC<ChannelAnalyticsProps> = ({
       {
         id: selectedChannel.rawChannelId,
         name: `${selectedChannel.label} (CH0${selectedChannel.displaySlot})`,
-        color: '#80601E',
+        color: '#171717',
         unit: 'W',
         data: hist,
       },

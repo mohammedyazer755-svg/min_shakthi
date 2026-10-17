@@ -3,7 +3,6 @@ import { ArrowRight, Activity, ShieldCheck, Zap, BarChart3, ChevronRight } from 
 import { ElectricBrandMark } from '../components/ElectricBrandMark';
 import { LightRays } from '../components/LightRays/LightRays';
 import { AuthModal } from '../components/Auth/AuthModal';
-import { HeroScene } from '../components/HeroScene';
 import './LandingPage.css';
 
 export interface LandingPageProps {
@@ -96,7 +95,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="landing-nav-actions">
             <div className="landing-status-badge hidden sm:inline-flex">
               <span className="landing-live-dot" aria-hidden="true" style={{ background: '#c8a96e', boxShadow: '0 0 10px rgba(200, 169, 110, 0.5)' }} />
-              <span>System Ready</span>
+              <span>Secure access</span>
             </div>
 
             <button
@@ -138,28 +137,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               Continuous hardware telemetry, verified civil reporting, and high-integrity historical records.
             </p>
 
-            <div className="landing-hero-cta flex flex-wrap items-center gap-4 mt-8">
-              <button
-                type="button"
-                onClick={() => handleOpenAuth()}
-                className="landing-primary-btn motion-interactive motion-btn-press"
-              >
-                <span>Open Dashboard</span>
-                <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </button>
-
-              <a
-                href="#preview"
-                className="landing-secondary-btn motion-interactive motion-btn-press"
-              >
-                Explore Preview
-              </a>
-            </div>
           </div>
 
-          {/* Right: Composed 3D Energy Meter Scene with Ambient Integration */}
-          <div className="landing-hero-scene-wrap flex items-center justify-center p-4">
-            <HeroScene size={380} className="max-w-[380px] w-full" />
+          <div className="landing-index-card">
+            <div className="landing-card-header">
+              <span className="landing-card-tag">01 / OVERVIEW</span>
+              <span className="text-xs font-bold text-neutral-400">ESP32 PROTO</span>
+            </div>
+            <h2 className="landing-card-title">Multi-Channel Edge Ingestion</h2>
+            <p className="landing-card-text">
+              Monitor five electrical channels in one workspace. Live voltage, current,
+              active power, and grid frequency, with clear device status and searchable history.
+            </p>
+            <div className="landing-card-actions">
+              <button type="button" onClick={() => handleOpenAuth()} className="landing-primary-btn motion-interactive motion-btn-press">
+                Live Stream <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </button>
+              <a href="#benefits" className="landing-secondary-btn motion-interactive motion-btn-press">Architecture</a>
+            </div>
           </div>
         </div>
       </section>

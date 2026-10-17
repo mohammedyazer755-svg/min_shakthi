@@ -119,17 +119,13 @@ describe('Phase 7 Release Verification & Audit Contract', () => {
   });
 
   describe('2. Bundle Budget & Lazy-Loaded Graphics Chunk Isolation', () => {
-    it('verifies EnergyMeter3D is isolated into its own bundle chunk', () => {
+    it('does not ship the removed EnergyMeter3D hero chunk', () => {
       const assetsDir = path.join(distDir, 'assets');
       expect(fs.existsSync(assetsDir)).toBe(true);
 
       const files = fs.readdirSync(assetsDir);
       const meterChunk = files.find((f) => f.startsWith('EnergyMeter3D') && f.endsWith('.js'));
-      expect(meterChunk).toBeDefined();
-
-      const stat = fs.statSync(path.join(assetsDir, meterChunk!));
-      // Budget: <= 15 kB uncompressed for isolated 3D chunk
-      expect(stat.size).toBeLessThan(15 * 1024);
+      expect(meterChunk).toBeUndefined();
     });
 
     it('verifies authenticated startup path has zero imports of ogl or EnergyMeter3D', () => {

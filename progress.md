@@ -1,5 +1,21 @@
 # MIN-SAKTHI V2 Progress and Handover Log
 
+## Final visual polish and main release - 17 October 2026
+
+- Replaced the landing's 3D meter with the requested dark glass 01 / OVERVIEW card, matching its heading, proportions, Live Stream action, and Architecture link. Removed the unused meter chunk from the production build.
+- Changed light-workspace accents, primary card edges, selected navigation, controls, chart highlights, and neutral informational panels from brass/brown to black while keeping the light surfaces and semantic status colors.
+- Coordinated React commits with native view-transition snapshots, canceled obsolete transitions during rapid navigation, and scoped animation to the working content while the navigation remains steady. Existing reduced-motion behavior remains supported.
+- Corrected bearer authentication for configured devices, incident lists, acknowledgement, and report downloads. Preserved the existing admin credentials and cookie session behavior. Restricted visual workspace shortcuts to development builds; production requires sign-in.
+- Removed hard-coded zero/nominal alert claims from Overview and loaded the current user's recorded alerts instead. Unavailable current readings are labeled accordingly.
+- Full build and lint passed; all 219 automated checks passed, including existing integration, security, and accessibility/documentation checks. Real-browser sign-in, reload, black theme, navigation, reduced-motion navigation, incident loading, and desktop/mobile captures passed against the real backend. No physical hardware verification is claimed.
+- Release from GitHub main is pending verification. Local captures are in `docs/evidence/final-polish-review/`; no fabricated telemetry or production mappings were introduced.
+
+## Authenticated branch design review - 17 October 2026
+
+- Inspected `preview/experience-redesign` at `9a2a12e` and built the current branch. Confirmed the deployed preview API fails at startup because `DATABASE_URL` is missing.
+- Captured real admin-authenticated local branch screens against the existing database, without the `view=workspace` shortcut, fake telemetry, migrations, or a local MQTT worker. Production and application source were not changed.
+- Saved desktop/mobile captures and a clickable gallery under `docs/evidence/redesign-authenticated-review/`. The Event Investigator's existing cookie-only request fails the bearer-auth API; its current error state is documented rather than replaced with invented incident content.
+
 ## Experience Redesign Phase 7: Validation, Comprehensive Audit, Release Preparation & Final Handover - 17 October 2026
 
 - **Comprehensive Verification & Acceptance Contract**:

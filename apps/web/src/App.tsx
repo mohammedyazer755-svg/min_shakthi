@@ -15,7 +15,7 @@ import {
 } from './pages';
 
 export const MainAppContent: React.FC = () => {
-  const { user, status } = useAuth();
+  const { user, status, accessToken } = useAuth();
   const {
     canonicalPath,
     selectedDevice,
@@ -36,6 +36,7 @@ export const MainAppContent: React.FC = () => {
       try {
         const res = await fetch(`${API_BASE}/api/v1/sites/${user!.siteId}/devices`, {
           credentials: 'include',
+          headers: { Authorization:`Bearer ${accessToken}` },
         });
         if (res.ok) {
           const data = (await res.json()) as { devices?: Array<{ rawDeviceId: string }> };
@@ -60,7 +61,7 @@ export const MainAppContent: React.FC = () => {
     return () => {
       mounted = false;
     };
-  }, [status, user?.siteId, selectedDevice, selectDevice]);
+  }, [status, user?.siteId, accessToken, selectedDevice, selectDevice]);
 
   // Shared authenticated live telemetry store (singleton per tab session - R06, R07, T15)
   // Kept mounted above all route transitions so socket is never torn down on page switch
@@ -82,7 +83,7 @@ export const MainAppContent: React.FC = () => {
     );
   }
 
-  const isWorkspacePreview = typeof window !== 'undefined' && (
+  const isWorkspacePreview = import.meta.env.DEV && typeof window !== 'undefined' && (
     window.location.search.includes('view=workspace') ||
     window.location.hash === '#workspace'
   );
@@ -213,7 +214,7 @@ export const MainAppContent: React.FC = () => {
 
 export const MainApp: React.FC = () => {
   const { user } = useAuth();
-  const isWorkspacePreview = typeof window !== 'undefined' && (
+  const isWorkspacePreview = import.meta.env.DEV && typeof window !== 'undefined' && (
     window.location.search.includes('view=workspace') ||
     window.location.hash === '#workspace'
   );

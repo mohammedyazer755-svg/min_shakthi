@@ -198,7 +198,6 @@
 }
 .motion-page-enter {
   animation: pageEnter var(--motion-duration-normal) var(--motion-ease-standard) both;
-  will-change: opacity, transform;
 }
 
 /* Auth handoff reveal */
@@ -288,6 +287,24 @@
 ::view-transition-new(root) {
   animation-duration: var(--motion-duration-normal);
   animation-timing-function: var(--motion-ease-standard);
+}
+
+/* Keep the navigation still while the working panel moves between views. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+::view-transition-old(workspace-content) {
+  animation: workspaceLeave 160ms var(--motion-ease-standard) both;
+}
+::view-transition-new(workspace-content) {
+  animation: pageEnter 220ms var(--motion-ease-standard) both;
+}
+@keyframes workspaceLeave {
+  to { opacity: 0; transform: translateY(-4px); }
+}
+html:active-view-transition .motion-page-enter { animation: none; }
+[data-theme="light"] :is(button, a, input, select, summary) {
+  transition-property: color, background-color, border-color, box-shadow, transform;
+  transition-duration: var(--motion-duration-fast);
+  transition-timing-function: var(--motion-ease-standard);
 }
 
 /* Strict Reduced Motion Enforcements */
