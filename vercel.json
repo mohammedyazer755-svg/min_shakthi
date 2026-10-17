@@ -58,5 +58,5 @@
     "framework":  "vite",
     "buildCommand":  "npm run build \u0026\u0026 npm run build:cloud --workspace=@minsakthi/server",
     "outputDirectory":  "apps/web/dist",
-    "installCommand":  "npm ci"
+    "installCommand":  "npm ci --include=dev"
 }
