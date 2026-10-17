@@ -1,5 +1,12 @@
 # MIN-SAKTHI V2 Progress and Handover Log
 
+## Restore coloured workspace cards and animations - 17 October 2026
+
+- Restored the authenticated workspace version from `e1bfb6f`: charcoal power panel, pale blue and lavender supporting cards, staggered entrance, hover lift and surface highlight, tinted header controls and navigation feedback. Reduced-motion support and responsive layout are restored with that exact revision.
+- Preserved the requested original black-and-gold homepage from `3dd074f`; its page and stylesheet remain unchanged. Staged source/test directories match `e1bfb6f`, which already contains that homepage.
+- Web build, lint and all 221 automated checks passed. Release verification checks the deployed original homepage together with the restored card gradients and animation rules.
+
+
 ## Restore the screenshot version from 3dd074f - 17 October 2026
 
 - Restored `apps/web/src` and its regression tests exactly from commit `3dd074f`, as requested by the user's reference screenshot. This restores the original black-and-gold “Measure every watt” homepage, overview card, light workspace and authentication behavior from that revision.

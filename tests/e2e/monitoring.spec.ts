@@ -168,7 +168,7 @@ describe('Monitoring E2E Suite (Phase 4: Five monitoring screens)', () => {
     // Header & KPIs
     expect(html).toContain('prototype1');
     expect(html).toContain('ESP: Live · Partial');
-    expect(html).toContain('Active Power Total');
+    expect(html).toContain('Power now');
     expect(html).toContain('33.2'); // Active power sum
     expect(html).toContain('Supply Voltage');
     expect(html).toContain('239.7 – 240.1 V');

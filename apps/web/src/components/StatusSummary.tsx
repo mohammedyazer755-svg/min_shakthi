@@ -62,7 +62,7 @@ export const StatusSummary: React.FC<StatusSummaryProps> = ({
       }}
     >
       {layers.map((layer) => (
-        <div key={layer.name} className="inline-flex items-center gap-1">
+        <div key={layer.name} className="workspace-health-layer inline-flex items-center gap-1" data-tone={layer.isGood ? 'positive' : layer.isDegraded ? 'warning' : 'critical'}>
           {layer.stateText === 'Reconnecting' || layer.stateText === 'Subscribing' ? (
             <RefreshCw className="w-3 h-3 animate-spin flex-shrink-0" aria-hidden="true" style={{ color: 'var(--status-warn)' }} />
           ) : (
