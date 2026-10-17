@@ -142,7 +142,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="landing-index-card">
             <div className="landing-card-header">
               <span className="landing-card-tag">01 / OVERVIEW</span>
-              <span className="text-xs font-bold text-neutral-400">ESP32 PROTO</span>
+              <span className="text-xs font-bold text-slate-500">ESP32 PROTO</span>
             </div>
             <h2 className="landing-card-title">Multi-Channel Edge Ingestion</h2>
             <p className="landing-card-text">
@@ -174,15 +174,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             return (
               <div key={b.title} className="landing-benefit-card motion-clickable-card">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-2.5 rounded-lg bg-neutral-900 border border-neutral-800 text-amber-400">
+                  <div className="p-2.5 rounded-xl landing-benefit-icon-tile">
                     <Icon className="w-5 h-5" aria-hidden="true" />
                   </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 font-mono">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
                     {b.badge}
                   </span>
                 </div>
-                <h3 className="text-base font-bold text-white mb-2">{b.title}</h3>
-                <p className="text-xs leading-relaxed text-neutral-400">{b.desc}</p>
+                <h3 className="text-base font-bold text-slate-900 mb-2">{b.title}</h3>
+                <p className="text-xs leading-relaxed text-slate-600">{b.desc}</p>
               </div>
             );
           })}
@@ -197,18 +197,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <h2 className="landing-section-heading">5-Channel Composite Tracking</h2>
             <div className="flex items-center gap-2 mt-1">
               <span
-                className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded"
-                style={{ background: 'rgba(200, 169, 110, 0.15)', color: '#c8a96e', border: '1px solid rgba(200, 169, 110, 0.3)' }}
+                className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
+                style={{ background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE' }}
               >
                 NON-OPERATIONAL WORKSPACE PREVIEW
               </span>
-              <span className="text-xs text-neutral-400">Sign in to view real-time site telemetry</span>
+              <span className="text-xs text-slate-500">Sign in to view real-time site telemetry</span>
             </div>
           </div>
           <button
             type="button"
             onClick={() => handleOpenAuth()}
-            className="text-xs font-bold text-amber-300 hover:text-white flex items-center gap-1 transition-colors"
+            className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
           >
             <span>Authorize workspace access</span>
             <ChevronRight className="w-3.5 h-3.5" />
@@ -241,19 +241,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
       {/* ── Final Call to Action ── */}
       <section className="landing-cta-section max-w-7xl mx-auto px-6 py-16">
-        <div
-          className="p-8 sm:p-12 rounded-2xl border text-center flex flex-col items-center justify-center relative overflow-hidden"
-          style={{
-            background: 'linear-gradient(180deg, #0d0d12 0%, #050508 100%)',
-            borderColor: 'rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
-          }}
-        >
+        <div className="landing-cta-box p-8 sm:p-12 rounded-3xl border text-center flex flex-col items-center justify-center relative overflow-hidden">
           <ElectricBrandMark size={40} className="mb-4" />
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
             Authorize Mission-Control Access
           </h2>
-          <p className="text-xs sm:text-sm text-neutral-400 max-w-lg mt-3 leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-600 max-w-lg mt-3 leading-relaxed">
             Sign in to access your site&apos;s real-time power telemetry cockpit, multi-channel diagnostics,
             automated alert evaluations, and historical event logs.
           </p>
@@ -274,11 +267,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <ElectricBrandMark size={20} />
-            <span className="font-bold text-neutral-300">MIN-SAKTHI V2</span>
-            <span>— Energy Intelligence Platform</span>
+            <span className="font-bold text-slate-800">MIN-SAKTHI V2</span>
+            <span className="text-slate-500">— Energy Intelligence Platform</span>
           </div>
 
-          <div className="text-xs text-neutral-500">
+          <div className="text-xs text-slate-500">
             Sessions authenticated via secure HttpOnly tokens. All rights reserved.
           </div>
         </div>
