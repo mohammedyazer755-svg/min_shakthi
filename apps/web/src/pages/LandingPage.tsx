@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowRight, Activity, ChevronRight } from 'lucide-react';
 import { ElectricBrandMark } from '../components/ElectricBrandMark';
 import { LightRays } from '../components/LightRays/LightRays';
@@ -38,6 +38,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     }, 1800);
 
     return () => clearInterval(timer);
+  }, []);
+
+  const handleCloseAuth = useCallback(() => {
+    setIsAuthModalOpen(false);
   }, []);
 
   const handleOpenAuth = (roleEmail = 'admin@minsakthi.local') => {
@@ -357,7 +361,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* ── Glassmorphism Auth Modal ── */}
       <AuthModal
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        onClose={handleCloseAuth}
         onSuccess={onSuccess}
         initialEmail={prefillEmail}
       />

@@ -33,27 +33,31 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   }, [initialEmail]);
 
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const hasFocusedRef = useRef(false);
+
   useEffect(() => {
     if (!isOpen) {
       clearError();
+      hasFocusedRef.current = false;
       return;
     }
 
-    const previousFocus = document.activeElement as HTMLElement | null;
-    const dialog = dialogRef.current;
-
-    const emailInput = dialog?.querySelector<HTMLInputElement>('#signin-email');
-    if (emailInput) {
-      emailInput.focus();
+    // Only focus email once upon opening the modal
+    if (!hasFocusedRef.current) {
+      const emailInput = dialogRef.current?.querySelector<HTMLInputElement>('#signin-email');
+      emailInput?.focus();
+      hasFocusedRef.current = true;
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
-        onClose();
-      } else if (event.key === 'Tab' && dialog) {
+        onCloseRef.current();
+      } else if (event.key === 'Tab' && dialogRef.current) {
         const focusable = Array.from(
-          dialog.querySelectorAll<HTMLElement>(
+          dialogRef.current.querySelectorAll<HTMLElement>(
             'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
           )
         ).filter(el => el.offsetWidth > 0 || el.offsetHeight > 0);
@@ -76,9 +80,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      previousFocus?.focus();
     };
-  }, [isOpen, clearError, onClose]);
+  }, [isOpen, clearError]);
 
   if (!isOpen) return null;
 
