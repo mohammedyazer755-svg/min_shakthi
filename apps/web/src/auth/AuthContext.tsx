@@ -140,3 +140,8 @@ export function useAuth(): AuthContextType {
   }
   return ctx;
 }
+
+export function useOptionalAuth(): AuthContextType | null {
+  const ctx = useContext(AuthContext);
+  return ctx ?? null;
+}

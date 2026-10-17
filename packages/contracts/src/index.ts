@@ -11,4 +11,5 @@ export * from './reports.js';
 export * from './alerts.js';
 export * from './devices.js';
 export * from './preferences.js';
+export * from './incidents.js';
 

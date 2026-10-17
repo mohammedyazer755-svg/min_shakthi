@@ -1,6 +1,6 @@
 # Performance and Synthetic Load Validation Evidence (T26 & R18)
 
-**Test Date:** 2026-10-16T18:13:13.651Z  
+**Test Date:** 2026-10-17T01:02:26.327Z  
 **Target Specification:** 50 packets/sec, 20 concurrent authenticated client connections  
 **Duration:** 10 seconds  
 **Result:** PASSED
@@ -11,11 +11,11 @@
 
 | Metric | Target | Measured Value | Status |
 |---|---|---|---|
-| **p50 Latency** | ≤ 500 ms | **0.94 ms** | PASS |
-| **p95 Latency** | ≤ 1,000 ms | **1.93 ms** | **PASS** |
-| **p99 Latency** | ≤ 2,000 ms | **2.56 ms** | **PASS** |
-| **Minimum Latency** | - | 0.44 ms | - |
-| **Maximum Latency** | - | 9.83 ms | - |
+| **p50 Latency** | ≤ 500 ms | **1.08 ms** | PASS |
+| **p95 Latency** | ≤ 1,000 ms | **2.11 ms** | **PASS** |
+| **p99 Latency** | ≤ 2,000 ms | **2.96 ms** | **PASS** |
+| **Minimum Latency** | - | 0.27 ms | - |
+| **Maximum Latency** | - | 6 ms | - |
 
 ---
 
@@ -31,8 +31,8 @@
 
 ## Memory and Resource Bounds
 
-- **Heap Used:** 22.18 MB
-- **RSS:** 94.56 MB
+- **Heap Used:** 30.97 MB
+- **RSS:** 107.6 MB
 - **Buffer Saturation:** None (in-memory queues strictly bounded to 200 items per subscriber session)
 
 ---

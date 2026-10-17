@@ -8,10 +8,11 @@ export interface ChannelAnalyticsProps {
   selectedDevice: string;
 }
 
-const darkSurface: React.CSSProperties = {
-  background: 'var(--dark-surface)',
-  border: '1px solid var(--dark-border)',
+const lightSurface: React.CSSProperties = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
   borderRadius: 12,
+  boxShadow: 'var(--shadow-card)',
 };
 
 const sectionLabel: React.CSSProperties = {
@@ -19,7 +20,7 @@ const sectionLabel: React.CSSProperties = {
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: '0.15em',
-  color: 'var(--dark-text-muted)',
+  color: 'var(--text-secondary)',
 };
 
 export const ChannelAnalytics: React.FC<ChannelAnalyticsProps> = ({
@@ -57,7 +58,7 @@ export const ChannelAnalytics: React.FC<ChannelAnalyticsProps> = ({
       {/* Slot Selector Tabs */}
       <div
         style={{
-          ...darkSurface,
+          ...lightSurface,
           padding: '12px 16px',
           display: 'flex',
           flexWrap: 'wrap',
@@ -72,8 +73,8 @@ export const ChannelAnalytics: React.FC<ChannelAnalyticsProps> = ({
             style={{
               display: 'inline-flex',
               borderRadius: 8,
-              border: '1px solid var(--dark-border)',
-              background: 'var(--dark-canvas, #050507)',
+              border: '1px solid var(--border)',
+              background: 'var(--surface-raised)',
               padding: 2,
               gap: 2,
             }}
@@ -92,14 +93,15 @@ export const ChannelAnalytics: React.FC<ChannelAnalyticsProps> = ({
                     fontSize: 12,
                     fontWeight: 700,
                     borderRadius: 6,
-                    border: isSelected ? '1px solid rgba(200,169,110,0.35)' : '1px solid transparent',
-                    background: isSelected ? 'var(--dark-surface)' : 'transparent',
-                    color: isSelected ? 'var(--dark-accent)' : 'var(--dark-text-muted)',
+                    border: isSelected ? '1px solid var(--border-strong)' : '1px solid transparent',
+                    background: isSelected ? 'var(--surface)' : 'transparent',
+                    color: isSelected ? 'var(--accent-text)' : 'var(--text-secondary)',
                     cursor: 'pointer',
                     opacity: unconf ? 0.6 : 1,
                     display: 'flex',
                     alignItems: 'center',
                     gap: 5,
+                    boxShadow: isSelected ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
                     transition: 'all 0.15s',
                   }}
                 >
@@ -112,10 +114,10 @@ export const ChannelAnalytics: React.FC<ChannelAnalyticsProps> = ({
                         borderRadius: '50%',
                         background:
                           ch.freshness === 'fresh'
-                            ? '#22c55e'
+                            ? 'var(--status-ok)'
                             : ch.freshness === 'stale'
-                            ? '#f59e0b'
-                            : 'rgba(138,138,150,0.4)',
+                              ? 'var(--status-warn)'
+                              : 'var(--status-unknown)',
                         display: 'inline-block',
                       }}
                     />
@@ -129,8 +131,8 @@ export const ChannelAnalytics: React.FC<ChannelAnalyticsProps> = ({
         {selectedChannel && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <FreshnessLabel freshness={selectedChannel.freshness} />
-            <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--dark-text-muted)' }}>
-              Raw ID: <strong style={{ color: 'var(--dark-text-primary)' }}>{selectedChannel.rawChannelId}</strong>
+            <span style={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--text-secondary)' }}>
+              Raw ID: <strong style={{ color: 'var(--text-primary)' }}>{selectedChannel.rawChannelId}</strong>
             </span>
           </div>
         )}
@@ -139,18 +141,18 @@ export const ChannelAnalytics: React.FC<ChannelAnalyticsProps> = ({
       {isUnconfigured ? (
         <div
           style={{
-            ...darkSurface,
+            ...lightSurface,
             padding: '64px 32px',
             textAlign: 'center',
           }}
         >
-          <ShieldAlert style={{ width: 32, height: 32, color: 'var(--dark-text-muted)', margin: '0 auto 12px', opacity: 0.6 }} aria-hidden="true" />
-          <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--dark-text-primary)', margin: '0 0 6px' }}>
+          <ShieldAlert style={{ width: 32, height: 32, color: 'var(--text-secondary)', margin: '0 auto 12px', opacity: 0.6 }} aria-hidden="true" />
+          <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 6px' }}>
             Slot CH0{selectedSlot} is Unconfigured
           </h3>
-          <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', maxWidth: 420, margin: '0 auto', lineHeight: 1.6 }}>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', maxWidth: 420, margin: '0 auto', lineHeight: 1.6 }}>
             Device{' '}
-            <strong style={{ fontFamily: 'monospace', color: 'var(--dark-accent)' }}>{selectedDevice}</strong>{' '}
+            <strong style={{ fontFamily: 'monospace', color: 'var(--accent-text)' }}>{selectedDevice}</strong>{' '}
             has no hardware channel assigned to display slot {selectedSlot}. In accordance with telemetry truth, unconfigured slots report null readings without simulated data.
           </p>
         </div>
@@ -185,8 +187,8 @@ export const ChannelAnalytics: React.FC<ChannelAnalyticsProps> = ({
           </div>
 
           {/* Primary Channel Trend Chart */}
-          <div style={{ ...darkSurface, padding: 16 }}>
-            <p style={{ ...sectionLabel, marginBottom: 8, color: 'var(--dark-accent)' }}>
+          <div style={{ ...lightSurface, padding: 16 }}>
+            <p style={{ ...sectionLabel, marginBottom: 8, color: 'var(--accent-text)' }}>
               CH0{selectedChannel?.displaySlot} Active Power Trend
             </p>
             <MeasurementChart
@@ -198,24 +200,24 @@ export const ChannelAnalytics: React.FC<ChannelAnalyticsProps> = ({
           </div>
 
           {/* Channel Detail Specs */}
-          <div style={{ ...darkSurface, padding: '20px 24px' }}>
-            <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-text-primary)', marginBottom: 12 }}>
+          <div style={{ ...lightSurface, padding: '20px 24px' }}>
+            <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 12 }}>
               Channel Metadata &amp; Ingestion Provenance
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
                 {
                   label: 'Assigned Load Label',
-                  value: <span style={{ fontWeight: 600, color: 'var(--dark-text-primary)', fontSize: 13 }}>{selectedChannel?.label}</span>,
+                  value: <span style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 13 }}>{selectedChannel?.label}</span>,
                 },
                 {
                   label: 'Cumulative Raw Energy Counter',
                   value: (
                     <>
-                      <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--dark-text-primary)', fontSize: 13 }}>
+                      <span style={{ fontFamily: 'monospace', fontWeight: 600, color: 'var(--text-primary)', fontSize: 13 }}>
                         {lastSample?.values.energyRaw ?? '—'}
                       </span>
-                      <span style={{ fontSize: 11, color: 'var(--dark-text-muted)', display: 'block', marginTop: 2 }}>Unit unverified (tokens)</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginTop: 2 }}>Unit unverified (tokens)</span>
                     </>
                   ),
                 },
@@ -223,13 +225,13 @@ export const ChannelAnalytics: React.FC<ChannelAnalyticsProps> = ({
                   label: 'Last Packet Receipt',
                   value: (
                     <>
-                      <span style={{ fontFamily: 'monospace', color: 'var(--dark-text-primary)', fontSize: 13 }}>
+                      <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)', fontSize: 13 }}>
                         {selectedChannel?.lastReceivedAt
                           ? new Date(selectedChannel.lastReceivedAt).toLocaleTimeString()
                           : 'Awaiting first packet'}
                       </span>
                       {selectedChannel?.lastReceivedAt && (
-                        <span style={{ fontSize: 11, color: 'var(--dark-text-muted)', display: 'block', marginTop: 2 }}>
+                        <span style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'block', marginTop: 2 }}>
                           {new Date(selectedChannel.lastReceivedAt).toLocaleDateString()}
                         </span>
                       )}
@@ -241,16 +243,16 @@ export const ChannelAnalytics: React.FC<ChannelAnalyticsProps> = ({
                   key={item.label}
                   style={{
                     padding: 12,
-                    background: 'var(--dark-canvas, #050507)',
+                    background: 'var(--canvas)',
                     borderRadius: 8,
-                    border: '1px solid var(--dark-border)',
+                    border: '1px solid var(--border)',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 4,
                     fontSize: 12,
                   }}
                 >
-                  <span style={{ color: 'var(--dark-text-muted)' }}>{item.label}</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>{item.label}</span>
                   {item.value}
                 </div>
               ))}
@@ -261,3 +263,5 @@ export const ChannelAnalytics: React.FC<ChannelAnalyticsProps> = ({
     </div>
   );
 };
+
+export default ChannelAnalytics;

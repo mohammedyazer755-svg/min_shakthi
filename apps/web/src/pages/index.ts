@@ -10,3 +10,5 @@ export * from './Alerts';
 export * from './Devices';
 export * from './Settings';
 export * from './IntegrationView';
+export * from './Insights';
+export * from './Manage';

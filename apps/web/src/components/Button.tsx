@@ -24,30 +24,30 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variantStyle: React.CSSProperties = {
     primary: {
-      background: 'var(--dark-accent)',
-      color: '#000000',
+      background: 'var(--button-primary)',
+      color: 'var(--button-text)',
       border: 'none',
     },
     secondary: {
-      background: 'var(--dark-surface)',
-      color: 'var(--dark-text-primary)',
-      border: '1px solid var(--dark-border-strong)',
+      background: 'var(--surface)',
+      color: 'var(--text-primary)',
+      border: '1px solid var(--border-strong)',
     },
     danger: {
-      background: 'rgba(245,101,101,0.15)',
-      color: '#f87171',
-      border: '1px solid rgba(245,101,101,0.3)',
+      background: 'var(--danger-bg)',
+      color: 'var(--status-critical)',
+      border: '1px solid var(--danger-border)',
     },
     ghost: {
       background: 'transparent',
-      color: 'var(--dark-text-muted)',
-      border: '1px solid var(--dark-border)',
+      color: 'var(--text-secondary)',
+      border: '1px solid var(--border)',
     },
   }[variant];
 
   return (
     <button
-      className={`inline-flex items-center justify-center font-semibold rounded-lg transition-all select-none relative overflow-hidden
+      className={`inline-flex items-center justify-center font-semibold rounded-lg motion-interactive motion-btn-press select-none relative overflow-hidden
         disabled:opacity-40 disabled:pointer-events-none
         focus-visible:outline-2 focus-visible:outline-offset-2
         ${className}`}

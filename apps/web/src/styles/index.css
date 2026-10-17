@@ -6,8 +6,8 @@
 @layer base {
   html {
     font-size: 16px;
-    background-color: var(--dark-canvas);
-    color: var(--dark-text-primary);
+    background-color: var(--canvas);
+    color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -15,15 +15,15 @@
   body {
     margin: 0;
     min-height: 100vh;
-    background-color: var(--dark-canvas);
-    color: var(--dark-text-primary);
+    background-color: var(--canvas);
+    color: var(--text-primary);
     font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     line-height: var(--line-height-normal);
   }
 
   :focus-visible {
-    outline: var(--focus-ring-width) solid var(--dark-accent);
-    outline-offset: var(--focus-ring-offset);
+    outline: var(--focus-ring-width, 2px) solid var(--focus-ring);
+    outline-offset: var(--focus-ring-offset, 2px);
   }
 
   .tabular-nums {
@@ -32,12 +32,12 @@
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.12) transparent;
+    scrollbar-color: var(--border) transparent;
   }
   *::-webkit-scrollbar { width: 6px; height: 6px; }
   *::-webkit-scrollbar-track { background: transparent; }
-  *::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
-  *::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+  *::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  *::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
 }
 
 /* ═══════════════════════════════════
@@ -67,16 +67,16 @@
    GLASS CARD
 ═══════════════════════════════════ */
 .glass-card {
-  background: var(--dark-surface-glass);
-  border: 1px solid var(--dark-border);
+  background: var(--surface-glass);
+  border: 1px solid var(--border);
   border-radius: 12px;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
 
 .glass-card-strong {
-  background: var(--dark-surface);
-  border: 1px solid var(--dark-border-strong);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
 }
 
@@ -120,7 +120,7 @@
    METRIC NUMBER GLOW
 ═══════════════════════════════════ */
 .metric-glow {
-  text-shadow: 0 0 20px rgba(200, 169, 110, 0.4);
+  text-shadow: var(--metric-glow);
 }
 
 /* ═══════════════════════════════════
@@ -136,7 +136,7 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent, var(--dark-accent), transparent);
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
   border-radius: 1px;
 }
 
@@ -144,7 +144,7 @@
    TABLE ROW HOVER
 ═══════════════════════════════════ */
 .dark-table tbody tr:hover {
-  background: rgba(200, 169, 110, 0.04);
+  background: var(--accent-dim);
 }
 
 /* ═══════════════════════════════════
@@ -156,4 +156,179 @@
   overflow: hidden;
   pointer-events: none;
   border-radius: inherit;
+}
+
+/* ═══════════════════════════════════
+   MOTION SYSTEM (PHASE 4)
+═══════════════════════════════════ */
+.motion-interactive {
+  transition: transform var(--motion-duration-fast) var(--motion-ease-out),
+              background-color var(--motion-duration-fast) var(--motion-ease-out),
+              border-color var(--motion-duration-fast) var(--motion-ease-out),
+              box-shadow var(--motion-duration-fast) var(--motion-ease-out),
+              color var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.motion-clickable-card {
+  transition: transform var(--motion-duration-fast) var(--motion-ease-out),
+              box-shadow var(--motion-duration-fast) var(--motion-ease-out),
+              border-color var(--motion-duration-fast) var(--motion-ease-out);
+}
+.motion-clickable-card:hover {
+  transform: translateY(var(--motion-translate-lift));
+}
+.motion-clickable-card:active {
+  transform: scale(var(--motion-scale-press));
+}
+
+.motion-btn-press:active {
+  transform: scale(var(--motion-scale-press));
+}
+
+/* Page entrance — 6–10px vertical movement plus opacity */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.motion-page-enter {
+  animation: pageEnter var(--motion-duration-normal) var(--motion-ease-standard) both;
+  will-change: opacity, transform;
+}
+
+/* Auth handoff reveal */
+@keyframes authReveal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.motion-auth-reveal {
+  animation: authReveal var(--motion-duration-auth) var(--motion-ease-standard) both;
+}
+
+/* Modal transitions */
+@keyframes modalBackdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes modalContentSlideUp {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.motion-modal-backdrop {
+  animation: modalBackdropFadeIn var(--motion-duration-normal) var(--motion-ease-standard) both;
+}
+.motion-modal-card {
+  animation: modalContentSlideUp var(--motion-duration-normal) var(--motion-ease-standard) both;
+}
+
+/* Drawer transitions */
+@keyframes drawerSlideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+.motion-drawer-backdrop {
+  animation: modalBackdropFadeIn var(--motion-duration-normal) var(--motion-ease-standard) both;
+}
+.motion-drawer-slide {
+  animation: drawerSlideIn var(--motion-duration-normal) var(--motion-ease-standard) both;
+}
+
+/* Dropdown menu entrance */
+@keyframes dropdownSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.motion-dropdown-enter {
+  animation: dropdownSlideDown var(--motion-duration-fast) var(--motion-ease-out) both;
+  transform-origin: top;
+}
+
+/* Feedback messages (save, ack, error) */
+@keyframes feedbackEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.motion-feedback {
+  animation: feedbackEnter var(--motion-duration-feedback) var(--motion-ease-standard) both;
+}
+
+/* View Transition API enhancement */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--motion-duration-normal);
+  animation-timing-function: var(--motion-ease-standard);
+}
+
+/* Strict Reduced Motion Enforcements */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .motion-page-enter,
+  .motion-auth-reveal,
+  .motion-modal-backdrop,
+  .motion-modal-card,
+  .motion-drawer-backdrop,
+  .motion-drawer-slide,
+  .motion-dropdown-enter,
+  .motion-feedback {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
+[data-motion="reduce"] *,
+[data-motion="reduce"] *::before,
+[data-motion="reduce"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+[data-motion="reduce"] .motion-page-enter,
+[data-motion="reduce"] .motion-auth-reveal,
+[data-motion="reduce"] .motion-modal-backdrop,
+[data-motion="reduce"] .motion-modal-card,
+[data-motion="reduce"] .motion-drawer-backdrop,
+[data-motion="reduce"] .motion-drawer-slide,
+[data-motion="reduce"] .motion-dropdown-enter,
+[data-motion="reduce"] .motion-feedback {
+  animation: none !important;
+  transform: none !important;
+  opacity: 1 !important;
 }

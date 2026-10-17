@@ -18,9 +18,9 @@ export const StatusSummary: React.FC<StatusSummaryProps> = ({
 }) => {
   const stream = deviceStreamStatus(channels,socketConnected,health);
   const getStatusIcon = (isGood: boolean, isDegraded = false) => {
-    if (isGood) return <CheckCircle2 className="w-3 h-3 flex-shrink-0" aria-hidden="true" style={{ color: 'var(--dark-status-ok)' }} />;
-    if (isDegraded) return <AlertTriangle className="w-3 h-3 flex-shrink-0" aria-hidden="true" style={{ color: 'var(--dark-status-warn)' }} />;
-    return <XCircle className="w-3 h-3 flex-shrink-0" aria-hidden="true" style={{ color: 'var(--dark-status-critical)' }} />;
+    if (isGood) return <CheckCircle2 className="w-3 h-3 flex-shrink-0" aria-hidden="true" style={{ color: 'var(--status-ok)' }} />;
+    if (isDegraded) return <AlertTriangle className="w-3 h-3 flex-shrink-0" aria-hidden="true" style={{ color: 'var(--status-warn)' }} />;
+    return <XCircle className="w-3 h-3 flex-shrink-0" aria-hidden="true" style={{ color: 'var(--status-critical)' }} />;
   };
 
   const layers = [
@@ -56,23 +56,24 @@ export const StatusSummary: React.FC<StatusSummaryProps> = ({
       role="status"
       aria-label="System Health Status Summary"
       style={{
-        background: 'var(--dark-surface)',
-        border: '1px solid var(--dark-border)',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        boxShadow: 'var(--shadow-card)',
       }}
     >
       {layers.map((layer) => (
         <div key={layer.name} className="inline-flex items-center gap-1">
           {layer.stateText === 'Reconnecting' || layer.stateText === 'Subscribing' ? (
-            <RefreshCw className="w-3 h-3 animate-spin flex-shrink-0" aria-hidden="true" style={{ color: 'var(--dark-status-warn)' }} />
+            <RefreshCw className="w-3 h-3 animate-spin flex-shrink-0" aria-hidden="true" style={{ color: 'var(--status-warn)' }} />
           ) : (
             getStatusIcon(layer.isGood, layer.isDegraded)
           )}
-          <span className="font-bold uppercase tracking-wide" style={{ color: 'var(--dark-text-muted)' }}>{layer.name}</span>
-          <span className="font-medium" style={{ color: 'var(--dark-text-primary)' }}>{layer.stateText}</span>
+          <span className="font-bold uppercase tracking-wide" style={{ color: 'var(--text-secondary)' }}>{layer.name}</span>
+          <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{layer.stateText}</span>
         </div>
       ))}
       {health && health.persistenceLagMs > 1000 && (
-        <div className="inline-flex items-center gap-1 font-bold" style={{ color: 'var(--dark-status-warn)' }}>
+        <div className="inline-flex items-center gap-1 font-bold" style={{ color: 'var(--status-warn)' }}>
           <AlertTriangle className="w-3 h-3" aria-hidden="true" />
           <span>Lag: {Math.round(health.persistenceLagMs / 1000)}s</span>
         </div>

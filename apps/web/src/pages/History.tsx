@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../components';
 import { useAuth } from '../auth/AuthContext';
+import { API_BASE } from '../api';
 import type { UseLiveTelemetryResult } from '../live/useLiveTelemetry';
 import {
   Download,
@@ -20,18 +21,19 @@ export interface HistoryProps {
   selectedDevice: string;
 }
 
-const darkSurface: React.CSSProperties = {
-  background: 'var(--dark-surface)',
-  border: '1px solid var(--dark-border)',
+const lightSurface: React.CSSProperties = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
   borderRadius: 12,
+  boxShadow: 'var(--shadow-card)',
 };
 
-const darkInput: React.CSSProperties = {
+const lightInput: React.CSSProperties = {
   padding: '6px 10px',
-  background: 'var(--dark-canvas, #050507)',
-  border: '1px solid var(--dark-border)',
+  background: 'var(--canvas)',
+  border: '1px solid var(--border-strong)',
   borderRadius: 6,
-  color: 'var(--dark-text-primary)',
+  color: 'var(--text-primary)',
   fontSize: 12,
   fontWeight: 500,
   outline: 'none',
@@ -39,7 +41,7 @@ const darkInput: React.CSSProperties = {
 
 const thStyle: React.CSSProperties = {
   padding: '10px 12px',
-  color: 'var(--dark-text-muted)',
+  color: 'var(--text-secondary)',
   fontWeight: 700,
   textTransform: 'uppercase',
   fontSize: 10,
@@ -89,7 +91,7 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
       }
 
       const res = await fetch(
-        `/api/v1/sites/${user.siteId}/devices/${selectedDevice}/history?${params.toString()}`,
+        `${API_BASE}/api/v1/sites/${user.siteId}/devices/${selectedDevice}/history?${params.toString()}`,
         {
           headers: { Authorization: `Bearer ${accessToken}` },
         }
@@ -132,7 +134,7 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
       if (cutoff) params.set('cutoff', cutoff);
 
       const res = await fetch(
-        `/api/v1/sites/${user.siteId}/devices/${selectedDevice}/export?${params.toString()}`,
+        `${API_BASE}/api/v1/sites/${user.siteId}/devices/${selectedDevice}/export?${params.toString()}`,
         {
           headers: { Authorization: `Bearer ${accessToken}` },
         }
@@ -172,7 +174,7 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
       {/* Header & Controls Card */}
       <div
         style={{
-          ...darkSurface,
+          ...lightSurface,
           padding: '16px 20px',
           display: 'flex',
           flexWrap: 'wrap',
@@ -182,10 +184,10 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
         }}
       >
         <div>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--dark-text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
             Historical Telemetry Logs &amp; Audit
           </h2>
-          <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
             Query immutable historical readings with deterministic cutoff and formula-escaped CSV exports.
           </p>
         </div>
@@ -198,15 +200,15 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
                 alignItems: 'center',
                 gap: 6,
                 padding: '4px 10px',
-                background: 'var(--dark-canvas, #050507)',
+                background: 'var(--canvas)',
                 borderRadius: 6,
-                border: '1px solid var(--dark-border)',
+                border: '1px solid var(--border)',
                 fontSize: 12,
-                color: 'var(--dark-text-muted)',
+                color: 'var(--text-secondary)',
                 fontFamily: 'monospace',
               }}
             >
-              <Clock style={{ width: 13, height: 13, color: 'var(--dark-accent)' }} aria-hidden="true" />
+              <Clock style={{ width: 13, height: 13, color: 'var(--accent)' }} aria-hidden="true" />
               <span>{`Cutoff: ${new Date(cutoff).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`}</span>
             </div>
           )}
@@ -240,7 +242,7 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
       {/* Filter Bar */}
       <div
         style={{
-          ...darkSurface,
+          ...lightSurface,
           padding: '12px 16px',
           display: 'flex',
           flexWrap: 'wrap',
@@ -251,16 +253,16 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
         }}
       >
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--dark-text-muted)' }}>
-            <Filter style={{ width: 13, height: 13, color: 'var(--dark-accent)' }} aria-hidden="true" />
-            <span style={{ fontWeight: 600, color: 'var(--dark-text-primary)' }}>Channel:</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)' }}>
+            <Filter style={{ width: 13, height: 13, color: 'var(--accent)' }} aria-hidden="true" />
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Channel:</span>
             <select
               value={selectedChannel}
               onChange={(e) => {
                 setSelectedChannel(e.target.value);
                 setPage(1);
               }}
-              style={darkInput}
+              style={lightInput}
             >
               <option value="all">All Channels</option>
               {channels
@@ -273,14 +275,14 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
             </select>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--dark-text-muted)' }}>
-            <span style={{ fontWeight: 600, color: 'var(--dark-text-primary)' }}>Window:</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-secondary)' }}>
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Window:</span>
             <div
               style={{
                 display: 'inline-flex',
                 borderRadius: 6,
-                border: '1px solid var(--dark-border)',
-                background: 'var(--dark-canvas, #050507)',
+                border: '1px solid var(--border)',
+                background: 'var(--canvas)',
                 padding: 2,
                 gap: 2,
               }}
@@ -300,8 +302,9 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
                     fontWeight: 700,
                     border: 'none',
                     cursor: 'pointer',
-                    background: timeRange === w ? 'var(--dark-surface)' : 'transparent',
-                    color: timeRange === w ? 'var(--dark-accent)' : 'var(--dark-text-muted)',
+                    background: timeRange === w ? 'var(--surface)' : 'transparent',
+                    color: timeRange === w ? 'var(--accent-text)' : 'var(--text-secondary)',
+                    boxShadow: timeRange === w ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
                     transition: 'all 0.15s',
                   }}
                 >
@@ -313,14 +316,14 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ color: 'var(--dark-text-muted)' }}>Rows:</span>
+          <span style={{ color: 'var(--text-secondary)' }}>Rows:</span>
           <select
             value={pageSize}
             onChange={(e) => {
               setPageSize(Number(e.target.value));
               setPage(1);
             }}
-            style={darkInput}
+            style={lightInput}
           >
             <option value={25}>25</option>
             <option value={50}>50</option>
@@ -334,14 +337,14 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
         <div
           style={{
             padding: 16,
-            background: 'rgba(245,158,11,0.08)',
-            border: '1px solid rgba(245,158,11,0.25)',
+            background: 'var(--status-warn-bg, rgba(128,83,0,0.08))',
+            border: '1px solid var(--status-warn, #805300)',
             borderRadius: 8,
             display: 'flex',
             alignItems: 'center',
             gap: 12,
             fontSize: 12,
-            color: 'var(--dark-accent)',
+            color: 'var(--status-warn, #805300)',
           }}
         >
           <AlertTriangle style={{ width: 16, height: 16, flexShrink: 0 }} aria-hidden="true" />
@@ -350,14 +353,14 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
       )}
 
       {/* Samples Table */}
-      <div style={{ ...darkSurface, overflow: 'hidden' }}>
+      <div style={{ ...lightSurface, overflow: 'hidden' }}>
         <div className="overflow-x-auto">
           <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--dark-border-strong)', background: 'transparent' }}>
+              <tr style={{ borderBottom: '1px solid var(--border-strong)', background: 'var(--surface-raised, #F0F1EC)' }}>
                 <th style={thStyle}>Receipt Time (UTC)</th>
                 <th style={thStyle}>Event ID</th>
-                <th style={{ ...thStyle, color: 'var(--dark-accent)' }}>Channel</th>
+                <th style={{ ...thStyle, color: 'var(--accent-text)' }}>Channel</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Voltage</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Current</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Power</th>
@@ -369,7 +372,7 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
             <tbody>
               {samples.length === 0 ? (
                 <tr>
-                  <td colSpan={9} style={{ padding: '48px 12px', textAlign: 'center', color: 'var(--dark-text-muted)' }}>
+                  <td colSpan={9} style={{ padding: '48px 12px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                     {loading ? 'Executing historical query...' : 'No historical telemetry records match query filters.'}
                   </td>
                 </tr>
@@ -380,9 +383,9 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
                     <tr
                       key={pkt.eventId}
                       style={{
-                        borderBottom: '1px solid var(--dark-border)',
+                        borderBottom: '1px solid var(--border)',
                         fontFamily: 'monospace',
-                        color: 'var(--dark-text-primary)',
+                        color: 'var(--text-primary)',
                       }}
                     >
                       <td style={{ padding: '10px 12px' }}>
@@ -397,7 +400,7 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
                             alignItems: 'center',
                             gap: 4,
                             fontSize: 11,
-                            color: 'var(--dark-text-muted)',
+                            color: 'var(--text-secondary)',
                             background: 'none',
                             border: 'none',
                             cursor: 'pointer',
@@ -407,13 +410,13 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
                         >
                           <span>{`${pkt.eventId.slice(0, 8)}...`}</span>
                           {isCopied ? (
-                            <Check style={{ width: 11, height: 11, color: '#22c55e' }} aria-hidden="true" />
+                            <Check style={{ width: 11, height: 11, color: 'var(--status-ok, #176344)' }} aria-hidden="true" />
                           ) : (
                             <Copy style={{ width: 11, height: 11 }} aria-hidden="true" />
                           )}
                         </button>
                       </td>
-                      <td style={{ padding: '10px 12px', fontFamily: 'sans-serif', fontWeight: 500, color: 'var(--dark-accent)' }}>
+                      <td style={{ padding: '10px 12px', fontFamily: 'sans-serif', fontWeight: 600, color: 'var(--accent-text)' }}>
                         {pkt.channelId}
                       </td>
                       <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
@@ -425,7 +428,7 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
                       <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
                         {`${pkt.values.power.toFixed(2)} W`}
                       </td>
-                      <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--dark-text-muted)' }}>
+                      <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-secondary)' }}>
                         {pkt.values.energyRaw}
                       </td>
                       <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
@@ -440,9 +443,9 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
                             fontSize: 10,
                             fontFamily: 'sans-serif',
                             fontWeight: 700,
-                            background: 'rgba(34,197,94,0.10)',
-                            color: '#22c55e',
-                            border: '1px solid rgba(34,197,94,0.20)',
+                            background: 'rgba(23,99,68,0.10)',
+                            color: 'var(--status-ok, #176344)',
+                            border: '1px solid rgba(23,99,68,0.20)',
                           }}
                         >
                           Persisted
@@ -460,13 +463,13 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
         <div
           style={{
             padding: '12px 16px',
-            background: 'var(--dark-canvas, #050507)',
-            borderTop: '1px solid var(--dark-border)',
+            background: 'var(--canvas)',
+            borderTop: '1px solid var(--border)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             fontSize: 12,
-            color: 'var(--dark-text-muted)',
+            color: 'var(--text-secondary)',
           }}
         >
           <span>{`Showing ${samples.length > 0 ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, total)} of ${total} records`}</span>
@@ -479,9 +482,9 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
               style={{
                 padding: '4px 8px',
                 borderRadius: 6,
-                border: '1px solid var(--dark-border)',
-                background: 'var(--dark-surface)',
-                color: 'var(--dark-text-primary)',
+                border: '1px solid var(--border)',
+                background: 'var(--surface)',
+                color: 'var(--text-primary)',
                 cursor: page <= 1 || loading ? 'not-allowed' : 'pointer',
                 opacity: page <= 1 || loading ? 0.4 : 1,
               }}
@@ -489,7 +492,7 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
             >
               <ChevronLeft style={{ width: 14, height: 14 }} />
             </button>
-            <span style={{ fontWeight: 700, color: 'var(--dark-text-primary)', fontFamily: 'monospace' }}>
+            <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'monospace' }}>
               {`${page} / ${totalPages}`}
             </span>
             <button
@@ -499,9 +502,9 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
               style={{
                 padding: '4px 8px',
                 borderRadius: 6,
-                border: '1px solid var(--dark-border)',
-                background: 'var(--dark-surface)',
-                color: 'var(--dark-text-primary)',
+                border: '1px solid var(--border)',
+                background: 'var(--surface)',
+                color: 'var(--text-primary)',
                 cursor: page >= totalPages || loading ? 'not-allowed' : 'pointer',
                 opacity: page >= totalPages || loading ? 0.4 : 1,
               }}

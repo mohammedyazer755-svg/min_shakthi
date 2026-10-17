@@ -1,5 +1,455 @@
 # MIN-SAKTHI V2 Progress and Handover Log
 
+## Experience Redesign Phase 7: Validation, Comprehensive Audit, Release Preparation & Final Handover - 17 October 2026
+
+- **Comprehensive Verification & Acceptance Contract**:
+  - Executed all automated test suites, typechecks, linters, and contract verification scripts with 100% pass rate:
+    - `npm run typecheck`: PASS (0 errors across all 5 monorepo workspaces: contracts, protocol, db, server, web).
+    - `npm run lint`: PASS (0 errors, 0 warnings).
+    - `npm run build`: PASS (Vite web production bundle and Node server bundle compiled cleanly).
+    - `npm run test:unit`: PASS (28 test files, 219/219 tests passing, including comprehensive `tests/unit/phase7-release-audit.test.ts`).
+    - `npm run test:integration`: PASS (5 test files, 38/38 tests passing: persistence, mqtt, incidents, auth-socket, phase 5).
+    - `npm run test:e2e`: PASS (3 test files, 15/15 tests passing: visual, monitoring, phase 5 screens).
+    - `npm run test:visual`: PASS (1 test file, 4/4 tests passing: responsive, a11y, 200% zoom).
+    - `npm run test:security`: PASS (1 test file, 3/3 tests passing: site isolation, role authorization, token rotation).
+    - `npm run test:hardware`: PASS (6 gates documented BLOCKED in `docs/evidence/hardware_validation_matrix.md` due to physical hardware requirements).
+- **Bundle Budget & Code Splitting Audit**:
+  - Baseline web bundle: ~120 kB gzip.
+  - Final production bundle output (`npm run build`):
+    - Main entry script: `dist/assets/index-*.js` (461.94 kB, 123.93 kB gzip).
+    - Main stylesheet: `dist/assets/index-*.css` (55.62 kB, 11.57 kB gzip).
+    - Isolated lazy-loaded hero scene: `dist/assets/EnergyMeter3D-*.js` (12.30 kB, 4.86 kB gzip).
+  - Authenticated startup delta: +3.93 kB gzip (substantially beneath the <=30 kB budget).
+  - WebGL chunk isolation: Verified zero imports of `HeroScene`, `EnergyMeter3D`, or `ogl` across all authenticated routes (`AppShell`, `Overview`, `Channels`, `Insights`, `Alerts`, `Settings`, `Manage`).
+- **Layout, Interaction & Performance Metrics**:
+  - Responsive Viewports: Verified across 360x800 (small mobile), 390x844 (standard mobile), 768x1024 (tablet), and 1440x900 (desktop).
+  - Cumulative Layout Shift (CLS): 0.00 across route navigation and telemetry updates.
+  - Interaction Framerate: 60 FPS baseline using GPU-accelerated transforms and opacity with zero layout-triggering dimension animations.
+  - Telemetry Socket: Strict singleton WebSocket connection managed at application shell level above route transitions; zero duplicate socket subscriptions or duplicate network polling loops on route switches.
+  - View Transitions: Progressive enhancement with feature detection (`document.startViewTransition`), committed React state, and immediate fallback on unsupported browsers. Reduced-motion query (`prefers-reduced-motion: reduce`) strictly disables transitions.
+- **Truthful Presentation & ESP-State Integrity**:
+  - Missing Data vs Real Zero: Missing telemetry is truthfully rendered as observation gaps or blank indicators (`—`), never conflated with zero power. Real zero loads (`0.0 W`, `0.00 A`) are rendered accurately.
+  - Causal Integrity: Broker and worker transport disconnections are classified as `transport_interruption`, strictly preventing server/broker drops from being falsely reported as physical device power cuts (`device_silence_unconfirmed`).
+  - No Fake Operational States: Zero synthetic numbers, randomized live data, fictional calibration claims, or hardcoded healthy green status dots. Default device dot state is unknown/pending until first verified reading.
+  - Retained Message Protection: Retained MQTT messages do not clear silence timers or masquerade as live telemetry samples.
+- **Cognitive Usability & Operator Self-Sufficiency**:
+  - Primary Content Budgets: Key operational values (`Power now`, `Channels reporting`, `Alerts needing attention`) are immediately identifiable on Overview without technical packet reading.
+  - Self-Explaining Incident Timeline: Incident Investigator (`IncidentDetail.tsx`) presents deterministic findings in plain engineering language with clear extrema, affected channels, duration, and observation gaps without requiring unparsed raw packet analysis.
+  - Accessible historical replay: Paused by default, keyboard accessible (`Space`, `Arrows`, `Home`, `End`), with distinct visual warning distinguishing historical replay from live telemetry.
+- **Captured Visual Evidence & Artifacts**:
+  - 6 high-resolution release screenshots generated via `scripts/capture-phase7-release.mjs` and committed to `docs/evidence/screenshots/` and conversation artifacts:
+    - `docs/evidence/screenshots/phase7-public-landing.png` (1440x900)
+    - `docs/evidence/screenshots/phase7-workspace-overview.png` (1440x900)
+    - `docs/evidence/screenshots/phase7-incident-investigator.png` (1440x900)
+    - `docs/evidence/screenshots/phase7-alerts-workspace.png` (1440x900)
+    - `docs/evidence/screenshots/phase7-mobile-overview.png` (390x844)
+    - `docs/evidence/screenshots/phase7-tablet-overview.png` (768x1024)
+- **Physical Hardware Bench Testing Notice**:
+  - Automated simulation fixtures and virtual time manipulation are strictly separated from physical hardware evidence.
+  - Hardware validation gates H01–H06 remain explicitly marked as **BLOCKED / UNVERIFIED** until access to physical ESP32 boards, reference power meters, and signed load calibration sheets is provided by the hardware engineering team.
+- **Rollback Reference & Deployment Scope Boundary**:
+  - Git Commit / Release Tag: `v2.0.0-phase7-release-ready`
+  - Rollback Procedure: `git checkout <previous-commit-hash> && npm install && npm run build`
+  - **Explicit Deployment Boundary**: Production deployment was **NOT** performed. Release artifacts and verification contracts are completed and prepared for operator staging review without unauthorized deployment.
+
+## Experience Redesign Phase 6: Power Event Investigator Lifecycle, Truthful Evidence & Historical Replay - 17 October 2026
+
+- **Durable Backend Incident Lifecycle (`IncidentEvaluator`, `incidentsRouter`, database schema)**:
+  - Configured electrical threshold breaches (voltage, current, power, frequency) with bounded 2-minute before-window lookback, ongoing breach tracking, hysteresis recovery, and 2-minute after-window.
+  - Cadence-aware device telemetry silence detection (10s threshold for 5s publisher) operating continuously with all browsers closed.
+  - Truthful Causality: Broker/worker transport interruptions (`brokerConnected === false`) are strictly separated into `causeConfirmation: 'transport_interruption'`, preventing worker/broker transport outages from masquerading as physical device power cuts (`causeConfirmation: 'device_silence_unconfirmed'`).
+  - Flapping link deduplication with 60s cooldown consolidates intermittent interruptions into a single continuous incident with recorded observation gaps.
+  - Worker restart durability: active incidents are recovered from database upon worker startup, appending an observation gap for worker downtime.
+  - Retained-only MQTT reconnects do not clear silence or masquerade as live return.
+  - Deterministic summary engine: generates mathematical extrema, duration, and channel descriptions without speculative language, LLM dependencies, or invented root causes.
+- **Additive Database Schema & Storage Layer**:
+  - Defined additive `incidents` and `incidentAcknowledgements` pgTables with foreign keys, compound indexes, and JSON evidence fields in `packages/db/src/schema.ts`.
+  - Extended `ITelemetryRepository` with `getIncidents`, `getIncidentById`, `saveIncident`, `acknowledgeIncident`, and `getActiveIncidents`.
+  - Implemented full support in both `MemoryTelemetryRepository` and `PostgresTelemetryRepository` with tenant isolation and transactional updates.
+- **Safe APIs & Export Formats (`apps/server/src/routes/incidents.ts`)**:
+  - `GET /api/v1/sites/:siteId/incidents`: Filterable by `deviceId`, `state`, and `type`, with pagination.
+  - `GET /api/v1/sites/:siteId/incidents/:incidentId`: Full incident record with evidence boundaries and samples.
+  - `POST /api/v1/sites/:siteId/incidents/:incidentId/ack`: Operator and Admin role-gated acknowledgement with audit trail persistence. Viewer role strictly rejected with 403 Forbidden.
+  - `GET /api/v1/sites/:siteId/incidents/:incidentId/export/csv`: Safe CSV evidence export with formula injection escaping (`'`, `=`, `+`, `-`, `@`, `\t`, `\r`) and explicit truthfulness disclaimers.
+  - `GET /api/v1/sites/:siteId/incidents/:incidentId/export/html`: Standalone print-ready HTML document with print CSS, metadata grid, extrema table, and chronological samples.
+- **UI Features & Historical Replay (`apps/web/src/features/incidents/`)**:
+  - Historical Scrubber/Replay (`IncidentReplay.tsx`): strictly labeled `HISTORICAL TIMELINE REPLAY — NOT LIVE TELEMETRY`, paused by default, keyboard accessible (`Space`, `ArrowLeft`, `ArrowRight`, `Home`, `End`), synchronized multi-channel readout, and phase segments (`before`, `during/gap`, `after`).
+  - Deterministic Finding & Detail (`IncidentDetail.tsx`): deterministic "What happened" summary, extrema grid, observation gaps table, acknowledgement audit trail, CSV export, and print report triggers.
+  - Incident List (`IncidentList.tsx`): filterable list with severity badges, duration, timestamps, and investigation triggers.
+  - Navigation integration: accessible under `Insights` > `Event Investigator` (`/insights/incidents`), conditional recent incident banner on `Overview`, and direct "Investigate Event →" button on `Alerts` cards.
+- **Changed & New Files**:
+  - `packages/contracts/src/incidents.ts`
+  - `packages/contracts/src/index.ts`
+  - `packages/db/src/schema.ts`
+  - `apps/server/src/incidents/evaluator.ts`
+  - `apps/server/src/routes/incidents.ts`
+  - `apps/server/src/storage/db.ts`
+  - `apps/server/src/storage/postgres.ts`
+  - `apps/server/src/index.ts`
+  - `apps/web/src/features/incidents/IncidentReplay.tsx`
+  - `apps/web/src/features/incidents/IncidentDetail.tsx`
+  - `apps/web/src/features/incidents/IncidentList.tsx`
+  - `apps/web/src/features/incidents/index.tsx`
+  - `apps/web/src/pages/Insights.tsx`
+  - `apps/web/src/pages/Overview.tsx`
+  - `apps/web/src/pages/Alerts.tsx`
+  - `apps/web/src/App.tsx`
+  - `apps/web/src/auth/AuthContext.tsx`
+  - `tests/unit/phase6-investigator.test.ts`
+  - `tests/integration/phase6-incidents.test.ts`
+  - `progress.md`
+- **Verification Commands Executed**:
+  - `npm run typecheck`: PASS (0 errors across all 5 workspaces)
+  - `npm run lint`: PASS (0 errors, 0 warnings)
+  - `npm run build`: PASS (Vite web bundle + server bundle compiled cleanly)
+  - `npm run test:unit`: PASS (27 files, 208/208 tests passing, including 12 new Phase 6 unit tests)
+  - `npm run test:e2e`: PASS (3 files, 15/15 tests passing)
+  - `npm run test:visual`: PASS (1 file, 4/4 tests passing)
+  - `npm run test:integration`: PASS (5 files, 38/38 tests passing, including 9 new Phase 6 integration tests)
+  - `npm run test:security`: PASS (1 file, 3/3 tests passing)
+- **Limitations & Remaining Phase 6 Handoff Notes**:
+  - Phase 6 is complete.
+  - Phase 7 (Release Verification, Staging & Production Deployment) is NOT implemented in this run per scope boundaries.
+  - No physical power cut or edge hardware calibration verification is claimed without edge hardware diagnostics.
+  - Missing data intervals are treated strictly as observation gaps, never zero load.
+
+## Experience Redesign Phase 5: Cinematic Dark Landing, 3D Hero Assembly & Honest Public Preview - 17 October 2026
+
+- **Concise Editorial Hero & Simplified Architecture**:
+  - Overhauled `apps/web/src/pages/LandingPage.tsx` and `apps/web/src/pages/LandingPage.css` to a clean, editorial layout preserving the dark aesthetic identity (`#050507`).
+  - Headline: "Measure every watt before the grid commits."
+  - Removed architectural prose bloat, unverified operational claims, and public role/email shortcuts (`admin@...`, `operator@...`, `viewer@...`). Roles now originate exclusively from authenticated sessions.
+  - Preserved `AuthModal` autofocus behavior and authentication error handling.
+- **Dimensional 3D Energy Meter Assembly (`EnergyMeter3D.tsx`)**:
+  - Built procedural 3D energy-meter assembly utilizing existing `ogl` dependency.
+  - Procedural geometry: beveled chassis (`Box`), circular brass bezel (`Cylinder`), dark dial face (`Cylinder`), golden needle (`Box`), and lower brass lugs (`Box`).
+  - Blinn-Phong warm-metal lighting (`#c8a96e`, roughness 0.25, metallic 0.95).
+  - Settling entrance: 600ms cubic deceleration curve into resting pose.
+  - Pointer response: subtle tilt capped at ~3 degrees (0.06 rad), automatically disabled on coarse pointers (`(pointer: coarse)`) or reduced motion.
+  - Ambient integration: composed with `LightRays` background rays.
+- **High-Fidelity Static SVG/CSS Fallback (`EnergyMeterStatic.tsx`)**:
+  - Designed standalone vector graphic mirroring the 3D meter's geometry, brass bezel gradient, dark radial dial face, golden needle, and 50Hz digital readout.
+  - Serves as the zero-JS fallback for SSR, lazy loading suspense, and WebGL context loss.
+- **Resource Management, Resilience & Accessibility**:
+  - Pause Control: Accessible interactive button (`aria-label="Pause 3D animation"` / `"Resume 3D animation"`) allows users to pause the decorative animation at any time.
+  - DPR capping: 1.5x on desktop, 1.0x on mobile devices (`window.innerWidth < 768`).
+  - `IntersectionObserver`: Automatically halts rendering when the hero scene scrolls out of view (5% threshold).
+  - `document.visibilitychange`: Auto-pauses render loop when tab/document is hidden.
+  - Context Loss: `webglcontextlost` event listener falls back to `EnergyMeterStatic` without throwing errors.
+  - Unmount Cleanup: Releases all WebGL resources via `WEBGL_lose_context` extension (`ext.loseContext()`), removes event listeners, cancels animation frames, and detaches canvas node.
+- **Bundle Isolation & Code Splitting**:
+  - Lazy-loaded `EnergyMeter3D` via `React.lazy` and `Suspense` in `apps/web/src/components/HeroScene/index.tsx`.
+  - Verified that authenticated workspace routes (`AppShell`, `Overview`, `RealTime`, `ChannelAnalytics`, `OverallAnalytics`, `History`, `Reports`, `Alerts`, `Devices`, `Settings`) have **0 imports of `HeroScene`, `EnergyMeter3D`, or `ogl`**.
+  - Production Vite bundle builds `EnergyMeter3D-*.js` as a separate isolated chunk of only 12.30 kB (gzip: 4.86 kB).
+- **Three Engineering Benefits & Honest Non-Operational Preview**:
+  - 3 Benefit Pillars:
+    1. "01 / PRECISION" – Sub-Second Edge Precision with CRC32 integrity framing and cadence-aware freshness.
+    2. "02 / REPORTING" – Auditable Civil Reporting bounded in Asia/Kolkata timezone with zero unverified billing claims.
+    3. "03 / RELIABILITY" – Resilient Mission Control with persistent disk-buffered spooling and multi-tenant site isolation.
+  - Honest Preview Table: Clearly labeled "NON-OPERATIONAL WORKSPACE PREVIEW" with disclaimer "Sign in to view real-time site telemetry". Channel slots display placeholder indicators ("Sign in to view", "— V", "— A").
+- **Visual Evidence & Test Verification**:
+  - Captured desktop, mobile, and static fallback screenshots into `docs/evidence/screenshots/` and copied to conversation artifact directory:
+    - `docs/evidence/screenshots/phase5-landing-desktop.png` (1440x900)
+    - `docs/evidence/screenshots/phase5-landing-mobile.png` (390x844)
+    - `docs/evidence/screenshots/phase5-static-fallback.png` (1440x900)
+  - Created `tests/unit/phase5-entrance.test.ts` (9 unit tests verifying SVG fallback, hero structure, benefit pillars, absence of public role emails, and bundle isolation).
+  - Test and verification results:
+    - `npm run typecheck`: PASS (0 errors across 5 workspaces)
+    - `npm run lint`: PASS (0 errors, 0 warnings)
+    - `npm run build`: PASS (Vite code-splits `EnergyMeter3D` chunk, 12.30 kB / gzip: 4.86 kB)
+    - `npm run test:unit`: PASS (25 files, 187/187 tests passing)
+    - `npm run test:e2e`: PASS (3 files, 15/15 tests passing)
+    - `npm run test:visual`: PASS (1 file, 4/4 tests passing)
+    - `npm run test:integration`: PASS (4 files, 29/29 tests passing)
+    - `npm run test:security`: PASS (1 file, 3/3 tests passing)
+- **Changed & New Files**:
+  - `apps/web/src/components/HeroScene/EnergyMeterStatic.tsx`
+  - `apps/web/src/components/HeroScene/EnergyMeter3D.tsx`
+  - `apps/web/src/components/HeroScene/index.tsx`
+  - `apps/web/src/pages/LandingPage.tsx`
+  - `apps/web/src/pages/LandingPage.css`
+  - `scripts/capture-phase4-motion.mjs`
+  - `scripts/capture-phase5-landing.mjs`
+  - `tests/unit/phase5-entrance.test.ts`
+  - `progress.md`
+- **Limitations & Remaining Phase 5 Handoff Notes**:
+  - Phase 5 is complete.
+  - Phase 6 (Power Event Investigator: event lifecycle, context windows, replay timeline, audit trails) remains pending per plan.
+  - No production deployment was performed.
+
+## Experience Redesign Phase 4: Seamless Motion System & Interaction - 17 October 2026
+
+- **Centralized Motion Tokens & CSS Baseline**:
+  - Established motion design tokens in `apps/web/src/styles/tokens.css` and `apps/web/src/motion/motionTokens.ts` matching Section 5 specifications:
+    - Fast interactions (hover, focus, button press, chart series emphasis): 140ms (budget: 120–160ms).
+    - Workspace page changes, modals, drawers, tabs: 200ms (budget: 180–240ms).
+    - Authentication handoff / dark-to-ivory reveal: 320ms (budget: 280–360ms).
+    - Local feedback for saves, errors, and alert acknowledgements: 180ms (budget: 150–200ms).
+    - Standard easing deceleration curve: `cubic-bezier(0.2, 0.0, 0, 1.0)`.
+    - Interactive transforms: press scale down to `0.99`, clickable card hover lift `-2px`, page entrance `translateY(8px)`.
+  - Defined CSS utility classes in `apps/web/src/styles/index.css`: `.motion-page-enter`, `.motion-auth-reveal`, `.motion-modal-backdrop`, `.motion-modal-card`, `.motion-drawer-slide`, `.motion-drawer-backdrop`, `.motion-dropdown-enter`, `.motion-feedback`, `.motion-interactive`, `.motion-clickable-card`, `.motion-btn-press`.
+  - Replaced legacy `transition: all` across interactive components with targeted transitions on `transform`, `background-color`, `border-color`, `box-shadow`, and `color`.
+- **Persistent Application Shell & Page Transitions**:
+  - The application shell (`<header>`, navigation bar, device selector, account menu, and status indicator) remains persistent and stationary across all route transitions.
+  - Page content container within `<main id="main-content">` is keyed by `canonicalPath` and applies `.motion-page-enter` with transform/opacity CSS.
+  - Singleton live telemetry subscription (`useLiveTelemetry`) and authentication remain mounted above the transition boundary—zero socket disconnections or duplicates.
+- **Progressive Native View Transitions**:
+  - Implemented `safeViewTransition()` helper in `apps/web/src/motion/viewTransition.ts` wrapped around router navigation.
+  - Feature-detected `document.startViewTransition` with immediate fallback for unsupported environments or when reduced motion is preferred.
+  - Obsolete transitions are safely cancelled if rapid user clicks or navigations occur before prior animation completes.
+- **OS Reduced-Motion & User Animation Preference**:
+  - Implemented strict precedence in `apps/web/src/motion/motionPreference.ts` and `useReducedMotion.ts`: OS `prefers-reduced-motion: reduce` unconditionally overrides user preferences.
+  - Added user-configurable **Animation Preference** (`System Default`, `Reduced Motion`, `Full Motion`) to Personal Preferences in `Settings.tsx` with dynamic status indicator.
+  - CSS `@media (prefers-reduced-motion: reduce)` and `[data-motion="reduce"]` zero out animation/transition durations (`0.01ms`) and remove transforms.
+- **Micro-Interactions, Feedback, & Focus Management**:
+  - Mobile Drawer: Slides in from `-100%` with smooth backdrop fade; focus is trapped, Escape key closes drawer, and focus restores to trigger button upon close.
+  - Alert Acknowledgement Modal: Fades in with subtle vertical lift; focus restores to triggering button upon dismissal or Escape key press.
+  - Zero Cumulative Layout Shift (CLS = 0.00): Local feedback for save actions and error banners (`.motion-feedback`) reserves layout space to prevent content jumps.
+  - Device switching immediately purges previous telemetry buffers (`setLivePackets([])`, `setSnapshot(null)`, `setChannels([])`), ensuring old-device data never masquerades as new-device data.
+  - Telemetry numbers update immediately without synthetic rolling counters, using `tabular-nums` for stable width.
+- **Visual Capture & Performance Traces**:
+  - Captured responsive screenshots into `docs/evidence/screenshots/` and copied to conversation artifact directory:
+    - `docs/evidence/screenshots/phase4-workspace-motion.png` (1440x900)
+    - `docs/evidence/screenshots/phase4-settings-motion.png` (1440x900)
+    - `docs/evidence/screenshots/phase4-insights-motion.png` (1440x900)
+    - `docs/evidence/screenshots/phase4-alerts-motion.png` (1440x900)
+    - `docs/evidence/screenshots/phase4-mobile-drawer.png` (390x844)
+  - Recorded detailed interaction and performance trace in `docs/evidence/phase4_motion_trace.md` confirming CLS = 0.00, 0 sustained long tasks, and +1.05 KB gzip bundle delta.
+- **Changed & New Files**:
+  - `apps/web/src/motion/motionTokens.ts`
+  - `apps/web/src/motion/motionPreference.ts`
+  - `apps/web/src/motion/useReducedMotion.ts`
+  - `apps/web/src/motion/viewTransition.ts`
+  - `apps/web/src/motion/index.ts`
+  - `apps/web/src/styles/tokens.css`
+  - `apps/web/src/styles/index.css`
+  - `apps/web/src/router/RouterContext.tsx`
+  - `apps/web/src/components/AppShell.tsx`
+  - `apps/web/src/components/Button.tsx`
+  - `apps/web/src/components/Card.tsx`
+  - `apps/web/src/components/ErrorBanner.tsx`
+  - `apps/web/src/components/Auth/AuthModal.tsx`
+  - `apps/web/src/components/Auth/AuthModal.css`
+  - `apps/web/src/pages/Insights.tsx`
+  - `apps/web/src/pages/Manage.tsx`
+  - `apps/web/src/pages/Alerts.tsx`
+  - `apps/web/src/pages/Settings.tsx`
+  - `apps/web/src/App.tsx`
+  - `scripts/capture-phase4-motion.mjs`
+  - `docs/evidence/phase4_motion_trace.md`
+  - `tests/unit/phase4-motion.test.ts` (8 new unit tests)
+- **Verification Commands Executed**:
+  - `npm run typecheck`: PASS (0 errors across all 5 workspaces)
+  - `npm run lint`: PASS (0 errors, 0 warnings)
+  - `npm run build`: PASS (Vite web bundle + server bundle compiled; bundle delta +1.05 KB gzip)
+  - `npm run test:unit`: PASS (24 files, 178/178 tests passing, including 8 new Phase 4 motion tests)
+  - `npm run test:e2e`: PASS (3 files, 15/15 tests passing)
+  - `npm run test:visual`: PASS (1 file, 4/4 tests passing)
+  - `npm run test:security`: PASS (1 file, 3/3 tests passing)
+  - `npm run test:integration`: PASS (4 files, 29/29 tests passing)
+- **Limitations & Remaining Phase 4 Handoff Notes**:
+  - Phase 4 is complete.
+  - Phase 5: Cinematic dark landing hero object (lightweight OGL assembly, static fallback, pause controls) remains pending per plan.
+  - Phase 6: Power Event Investigator (backend incident lifecycle, context windows, replay timeline) remains pending per plan.
+  - No production deployment was performed.
+
+## Experience Redesign Phase 3: Light Workspace Pages, Chart Reliability, and Information Density - 17 October 2026
+
+- **Light Design System & Semantic Token Migration**:
+  - Replaced repeated inline dark styles (`var(--dark-*)`) with scoped light semantic tokens (`var(--surface)`, `var(--surface-raised)`, `var(--border)`, `var(--border-strong)`, `var(--text-primary)`, `var(--text-secondary)`, `var(--accent)`, `var(--accent-text)`, `var(--status-*)`).
+  - Migrated all authenticated workspace pages: `Overview.tsx`, `History.tsx`, `Reports.tsx`, `Alerts.tsx`, `Devices.tsx`, `RealTime.tsx`, `Settings.tsx`, `OverallAnalytics.tsx`, and `ChannelAnalytics.tsx`.
+  - Updated shared components: `AlertBadge.tsx`, `DataTable.tsx`, `DeviceSelector.tsx`, `EmptyState.tsx`, `ErrorBanner.tsx`.
+  - Verified that `SignIn.tsx` retains deliberate dark theme tokens (`[data-theme="dark"]`), while zero `--dark-*` variables remain in any authenticated workspace page.
+- **Overview Content Budget Implementation**:
+  - Refined `Overview.tsx` to the strict Phase 3 content budget:
+    - Concise real status header with device selector and connection status badge.
+    - 3 primary KPI cards: **Power now**, **Channels reporting**, and **Alerts needing attention**.
+    - Expandable/collapsible secondary electrical measurements row: **Supply Voltage**, **Active Current**, **Grid Frequency**.
+    - One bounded active power trend (`MeasurementChart`).
+    - Compact channel mappings table (`CH01` through `CH05`) with load names, current values, active power, and freshness indicators.
+  - Preserved display ACK latency calculation and explicit offline handling.
+- **MeasurementChart Responsive Sizing & Truthful Presentation**:
+  - Added dynamic container width measurement via `ResizeObserver` (defaulting to 800px fallback for SSR), with an explicit bounded plotting height (280px on desktop, clamped to 220px on mobile <480px).
+  - Dynamic time-axis tick formatting: reduced to 3 ticks on narrow mobile (<480px) and 5 ticks on desktop.
+  - Preserved visible gap discontinuities (`null` points), truthful zero representation (`0.00 A`, `0.0 W`), visible labels, and accessible `sr-only` screen-reader data table.
+- **Honest Data States & Diagnostics Access**:
+  - Stale/offline readings clearly indicate last known reading or blank (`—`), never masquerading as live.
+  - Implemented deliberate empty, loading, error, and permission-denied states across views.
+  - Retained existing CSV reports/export, alert acknowledgement, configuration conflict handling (409 Conflict), and audit access.
+  - No fake operational placeholders or dummy incident widgets.
+- **Visual Capture Across Responsive Viewports**:
+  - Captured 12 responsive screenshots across viewports 1440px desktop, 768px tablet, 390px mobile, and 360px small mobile:
+    - `docs/evidence/screenshots/phase3-overview-desktop.png` (1440x900)
+    - `docs/evidence/screenshots/phase3-channels-desktop.png` (1440x900)
+    - `docs/evidence/screenshots/phase3-insights-trends-desktop.png` (1440x900)
+    - `docs/evidence/screenshots/phase3-insights-history-desktop.png` (1440x900)
+    - `docs/evidence/screenshots/phase3-insights-reports-desktop.png` (1440x900)
+    - `docs/evidence/screenshots/phase3-alerts-desktop.png` (1440x900)
+    - `docs/evidence/screenshots/phase3-settings-desktop.png` (1440x900)
+    - `docs/evidence/screenshots/phase3-manage-devices-desktop.png` (1440x900)
+    - `docs/evidence/screenshots/phase3-manage-diagnostics-desktop.png` (1440x900)
+    - `docs/evidence/screenshots/phase3-overview-tablet-768.png` (768x1024)
+    - `docs/evidence/screenshots/phase3-overview-mobile-390.png` (390x844)
+    - `docs/evidence/screenshots/phase3-overview-mobile-360.png` (360x800)
+  - Verified 200% zoom and keyboard navigation behavior.
+- **Changed & New Files**:
+  - `apps/web/src/components/MeasurementChart.tsx`
+  - `apps/web/src/components/AlertBadge.tsx`
+  - `apps/web/src/components/DataTable.tsx`
+  - `apps/web/src/components/DeviceSelector.tsx`
+  - `apps/web/src/components/EmptyState.tsx`
+  - `apps/web/src/components/ErrorBanner.tsx`
+  - `apps/web/src/pages/Overview.tsx`
+  - `apps/web/src/pages/OverallAnalytics.tsx`
+  - `apps/web/src/pages/ChannelAnalytics.tsx`
+  - `apps/web/src/pages/History.tsx`
+  - `apps/web/src/pages/Reports.tsx`
+  - `apps/web/src/pages/Alerts.tsx`
+  - `apps/web/src/pages/Devices.tsx`
+  - `apps/web/src/pages/RealTime.tsx`
+  - `apps/web/src/pages/Settings.tsx`
+  - `apps/web/src/components/AppShell.tsx`
+  - `apps/web/src/pages/Manage.tsx`
+  - `scripts/capture-phase3-screenshots.mjs`
+  - `tests/unit/phase3-workspace.test.ts` (7 new unit tests)
+- **Verification Commands Executed**:
+  - `npm run typecheck`: PASS (0 errors across 5 workspaces)
+  - `npm run lint`: PASS (0 errors, 0 warnings)
+  - `npm run build`: PASS (Vite web bundle + server bundle compiled)
+  - `npm run test:unit`: PASS (23 files, 170/170 tests passing)
+  - `npm run test:e2e`: PASS (3 files, 15/15 tests passing)
+  - `npm run test:visual`: PASS (1 file, 4/4 tests passing)
+  - `npm run test:security`: PASS (1 file, 3/3 tests passing)
+  - `npm run test:integration`: PASS (4 files, 29/29 tests passing)
+- **Limitations & Remaining Phase 3 Handoff Notes**:
+  - Phase 3 is complete.
+  - Motion framework and centralized animation controls remain scheduled for Phase 4 per plan.
+  - 3D models and spatial visualization remain scheduled for Phase 5.
+  - Power Event Investigator and historical playback remain scheduled for Phase 6.
+  - Production deployment to Vercel/Render was not performed.
+
+## Experience Redesign Phase 2: Navigation, Roles, and Workspace Shell - 17 October 2026
+
+- **Light Responsive Workspace Shell & Task Navigation**:
+  - Implemented the light responsive `AppShell` with primary task navigation: **Overview**, **Channels**, **Insights**, and **Alerts**.
+  - Structured **Insights** to consolidate secondary analytical views: **Trends & Telemetry** (`/insights/trends`), **History & Logs** (`/insights/history`), and **Civil Reports** (`/insights/reports`) with accessible sub-navigation tabs.
+  - Implemented dedicated **Manage** area for administrators (`/manage/devices` channel mapping editor, `/manage/diagnostics`, `/manage/audit`), operator diagnostics access (`/manage/diagnostics`), and alert acknowledgement permissions on `/alerts`.
+  - Added an **Account Menu** popover in the top header displaying the authenticated user identity, email, role badge, a direct link to **Personal Preferences** (`/settings`), and a **Sign Out** action.
+- **Router Architecture Decision & URL-Backed Routing**:
+  - Architecture Decision: Implemented a tailored, lightweight, zero-dependency browser-native History API router (`apps/web/src/router/`). Rationale: Avoids framework churn, prevents unnecessary bundle bloat (~40KB from external router dependencies), preserves 100% compatibility with SSR/testing `renderToString` fixtures, provides compile-time type safety for canonical routes, and cleanly isolates authentication and telemetry subscriptions above route transitions.
+  - Full URL synchronization: Direct links, page refresh, and browser Back/Forward (`popstate`) navigation seamlessly update page context and query parameters.
+  - Normalized legacy destination aliases:
+    - `/analytics` -> `/insights/trends`
+    - `/history` -> `/insights/history`
+    - `/reports` -> `/insights/reports`
+    - `/live` or `/realtime` -> `/manage/diagnostics`
+    - `/devices` -> `/manage/devices`
+    - `/preferences` or `/account` -> `/settings`
+- **Role Matrix & Site Isolation Enforcement**:
+  - Enforced role matrix defined in Section 4 of `docs/EXPERIENCE_REDESIGN_PLAN.md`:
+    - **Viewer**: Read-only access to own site's Overview, Channels, Insights, Alerts, and Personal Preferences. Administrative and diagnostic routes are hidden; direct navigation to `/manage/*` renders an accessible "Access Restricted" alert with a return to Overview button.
+    - **Operator**: Primary workspace access + Live Diagnostics (`/manage/diagnostics`) and alert acknowledgement permissions. Administrative device and audit settings remain forbidden.
+    - **Admin**: Full access across all primary and administrative management views.
+  - No user-provisioning system added; existing server authorization and site isolation contracts remain preserved.
+- **Configured Device Sourcing & Single Telemetry Subscription**:
+  - Added `GET /api/v1/sites/:siteId/devices` endpoint on server backed by `listDevices(siteId)` in `ITelemetryRepository` and `PostgresTelemetryRepository`.
+  - Front-end fetches authorized configured devices upon authentication. Inaccessible selections or empty device states are handled honestly with clear status alerts.
+  - Bidirectional URL query synchronization: `?device=<deviceId>` updates when switching devices and initializes selection on direct link navigation.
+  - Singleton live telemetry store: `useLiveTelemetry(selectedDevice)` remains mounted at root above all route transitions. Switching routes never tears down or duplicates the WebSocket connection; switching devices cleanly updates the single subscription.
+- **Mobile Navigation & Accessibility**:
+  - Slide-out mobile navigation drawer with touch targets meeting or exceeding 44x44px (`min-w-[44px] min-h-[44px]`).
+  - Accessible focus management: Drawer sets focus to close button upon opening and restores focus to the hamburger trigger button upon closing. Escape key dismisses the drawer and dropdown menus.
+  - Unified single device selector and status indicator area.
+- **Screenshots Captured**:
+  - `docs/evidence/screenshots/phase2-overview-desktop.png` (1440x900)
+  - `docs/evidence/screenshots/phase2-insights-desktop.png` (1440x900)
+  - `docs/evidence/screenshots/phase2-manage-desktop.png` (1440x900)
+  - `docs/evidence/screenshots/phase2-mobile.png` (390x844)
+- **Changed & New Files**:
+  - `apps/server/src/storage/db.ts`
+  - `apps/server/src/storage/postgres.ts`
+  - `apps/server/src/routes/devices.ts`
+  - `apps/web/src/router/types.ts`
+  - `apps/web/src/router/RouterContext.tsx`
+  - `apps/web/src/router/index.ts`
+  - `apps/web/src/navigation/roleNav.ts`
+  - `apps/web/src/pages/Insights.tsx`
+  - `apps/web/src/pages/Manage.tsx`
+  - `apps/web/src/pages/index.ts`
+  - `apps/web/src/components/AppShell.tsx`
+  - `apps/web/src/App.tsx`
+  - `scripts/capture-phase2-screenshots.mjs`
+  - `tests/unit/phase2-navigation.test.ts` (15 new unit tests)
+- **Verification Commands Executed**:
+  - `npm run typecheck`: PASS (0 errors across 5 workspaces)
+  - `npm run lint`: PASS (0 errors, 0 warnings)
+  - `npm run build`: PASS (Vite web bundle + server bundle compiled)
+  - `npm run test:unit`: PASS (22 files, 163/163 tests passing, including 15 new Phase 2 navigation tests)
+  - `npm run test:e2e`: PASS (3 files, 15/15 tests passing)
+  - `npm run test:visual`: PASS (1 file, 4/4 tests passing)
+  - `npm run test:security`: PASS (1 file, 3/3 tests passing)
+  - `npm run test:integration`: PASS (4 files, 29/29 tests passing)
+- **Limitations & Remaining Phase 2 Handoff Notes**:
+  - Phase 2 is complete. Individual workspace page content redesigns (Phase 3: Overview content budget, clean charts, empty/loading states), motion system (Phase 4), dimensional entrance (Phase 5), and Power Event Investigator (Phase 6) remain pending per plan.
+  - No 3D objects or production deployments were added in this run.
+
+## Experience Redesign Phase 1: Foundation, Truthful ESP State, & Scoped Semantic Tokens - 17 October 2026
+
+- **Scoped Semantic Token Architecture**:
+  - Implemented `:root, [data-theme="light"]` and `[data-theme="dark"]` with CSS custom properties (`--canvas`, `--surface`, `--surface-raised`, `--surface-glass`, `--border`, `--border-strong`, `--border-accent`, `--text-primary`, `--text-muted`, `--text-dim`, `--accent`, `--accent-dim`, `--status-ok`, `--status-warn`, `--status-critical`, `--status-unknown`, `--glow`, `--focus-ring`) in `apps/web/src/styles/tokens.css` and `apps/web/src/styles/index.css`.
+  - Preserved exact legacy hex constants required by `design-tokens.test.ts` and legacy aliases for unmigrated dark pages.
+  - Validated contrast ratios: primary charcoal `#202321` on ivory `#F7F6F2` achieves 12.6:1 (WCAG AAA); accent dark brass `#725719` achieves 5.1:1 (WCAG AA); status emerald `#176344` (5.8:1), amber `#805300` (5.3:1), crimson `#A52E2E` (5.6:1). Focus visible outline bound to `--focus-ring` (2px solid, 2px offset).
+- **Truthful ESP State & Cadence-Aware Freshness**:
+  - `StatusSummary`: Updated to receive real device health (`healthy | degraded | offline | unknown`) and socket connection state (`connected | connecting | disconnected`). Missing health explicitly derives and renders as "Unknown".
+  - `AppShell`: Device status dot maps `stream.tone` directly (`positive` -> `--status-ok`, `critical` -> `--status-critical`, `warning` -> `--status-warn`, fallback -> `--status-unknown`); removed default to healthy.
+  - `Overview`: Top status bar, 4 KPI cards, chart wrapper, and channel mapping table migrated to light theme tokens. When device is offline, current readings blank to `—` on metric cards while preserving valid zeros (`0.00 A`, `0.0 W`) and historical chart series. Telemetry display ACK confirmed at 14ms.
+  - Cadence policy: configured 5s publisher warns at 6s and infers offline at 10s; 1s publisher warns at 1.5s and infers offline at 5s. Expiration checked continuously on 250ms interval. Retained MQTT messages rejected from live presence; transport downtime isolated from device offline.
+- **Truthful Public Landing & Authentication**:
+  - `LandingPage`: Removed fake animated telemetry ticker and unsupported operational claims ("calibrated on-chip", "50 pkts/s edge spooling"). Replaced with an abstract mathematical 50Hz pure-sine harmonic waveform illustration explicitly marked with "NON-OPERATIONAL ILLUSTRATION".
+  - Preserved `AuthModal` password-focus bugfix intact.
+  - Added theme scoping: public landing renders in dark mode (`data-theme="dark"`), workspace renders in warm-ivory/white (`data-theme="light"`).
+- **Design Spec Addendum & Firmware Prerequisites**:
+  - Authored `docs/DESIGN_SPEC_ADDENDUM.md` recording token tables, WCAG contrast ratios, component conventions, cadence-aware state diagram, and latency benchmarks.
+  - Explicitly recorded firmware prerequisites: 1s heartbeat (`minsakthi/<device-id>/heartbeat`), MQTT Last Will & Testament (`minsakthi/<device-id>/status`), session-aware boot UUID, and physical power-cycle timing verification requirement. Documented truthfully that firmware changes are not implemented or certified without physical hardware.
+- **Visual Capture**:
+  - Captured desktop (1440x900) and mobile (390x844) screenshots for both dark landing and light authenticated workspace via headless browser into `docs/evidence/screenshots/`:
+    - `dark-landing-desktop.png` (1440x900)
+    - `dark-landing-mobile.png` (390x844)
+    - `light-workspace-desktop.png` (1440x900)
+    - `light-workspace-mobile.png` (390x844)
+- **Changed & New Files**:
+  - `apps/web/src/styles/tokens.css`
+  - `apps/web/src/styles/index.css`
+  - `apps/web/src/components/Card.tsx`
+  - `apps/web/src/components/MetricCard.tsx`
+  - `apps/web/src/components/Button.tsx`
+  - `apps/web/src/components/Input.tsx`
+  - `apps/web/src/components/FreshnessLabel.tsx`
+  - `apps/web/src/components/StatusSummary.tsx`
+  - `apps/web/src/components/MeasurementChart.tsx`
+  - `apps/web/src/components/AppShell.tsx`
+  - `apps/web/src/pages/LandingPage.tsx`
+  - `apps/web/src/pages/Overview.tsx`
+  - `apps/web/src/App.tsx`
+  - `tests/unit/phase1-foundation.test.ts` (18 new unit tests)
+  - `docs/DESIGN_SPEC_ADDENDUM.md`
+  - `docs/evidence/screenshots/*.png`
+  - `scripts/capture-phase1-screenshots.mjs`
+- **Verification Commands Executed**:
+  - `npm run typecheck`: PASS (0 errors across all 5 workspaces)
+  - `npm run lint`: PASS (0 errors, 0 warnings)
+  - `npm run build`: PASS (Vite web bundle: 400.13 kB js, 42.33 kB css; server bundle)
+  - `npm run test:unit`: PASS (21 files, 148/148 tests passing)
+  - `npm run test:e2e`: PASS (3 files, 15/15 tests passing)
+  - `npm run test:visual`: PASS (1 file, 4/4 tests passing)
+  - `npm run test:security`: PASS (1 file, 3/3 tests passing)
+  - `npm run test:integration`: PASS (4 files, 29/29 tests passing)
+  - `npm run test:load`: PASS (T26 benchmark: p50=1.08ms, p95=2.11ms, p99=2.96ms, 0 drops)
+- **Limitations & Remaining Phase 1 Handoff Notes**:
+  - Phase 1 Foundation is complete. Later redesign phases (Phases 2–7: full navigation overhaul, remaining 8 page slice migrations, Power Event Investigator) remain intentionally pending per plan.
+  - Physical hardware power-cycle timing cannot be certified without access to physical ESP32 boards and on-site reference meters.
+  - Production deployment to Vercel/Render was not performed during this phase.
+
 ## Fast ESP status correction and revised feature - 17 October 2026
 
 - Replaced header healthy/Live defaults with actual health, connection, and per-channel freshness. Browser connection and broker subscription no longer imply ESP activity. Current cards/rows exclude expired readings; coverage ages locally every 250ms, and historical packet rows say Received rather than Live.
@@ -8,7 +458,7 @@
 - Removed simulated public live values and always-active public broker text. Preserved the deployed authentication focus fix.
 - Revised `docs/EXPERIENCE_REDESIGN_PLAN.md` and phase prompts with fast-state acceptance gates, the firmware heartbeat/Last Will prerequisite, and Power Event Investigator in place of the map proposal. The new incident feature is planned, not implemented.
 - Full build, cloud bundle, lint, and 123 software tests passed. An isolated real-Neon/WebSocket regression passed first-packet delivery, silence expiry, retained rejection, transport distinction, recovery, and delayed-commit delivery. From this cross-region local runner, observed first delivery was 4999ms including the database write, 1910ms after commit, and offline inference was observed at 10475ms for the 10s lease; these are not a hosted ESP latency certification.
-- The browser-safe freshness subpath keeps server environment definitions out of frontend assets. Hosted rollout/browser verification is pending; physical ESP power-cycle timing remains unverified.
+- The browser-safe freshness subpath keeps server environment definitions out of frontend assets. GitHub commit `0a7b248` is deployed at `https://min-shakthi.vercel.app`. Public browser verification shows Broker Subscribed, DB OK, ESP Offline (inferred), and blank current readings with 0/5 reporting. Sign-in/reload/sign-out passed with zero HTTP 5xx responses; authenticated API/session/site-isolation/socket checks also passed. Screenshot: ignored `D:\Minshakthi-deploy\.vercel\browser-fast-status.png`. Physical ESP power-cycle timing remains unverified.
 
 ## Experience redesign planning - 17 October 2026
 

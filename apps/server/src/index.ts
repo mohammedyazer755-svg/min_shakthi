@@ -13,6 +13,8 @@ import { createReportsRouter } from './routes/reports.js';
 import { createAlertsRouter } from './routes/alerts.js';
 import { createDevicesRouter } from './routes/devices.js';
 import { createUsersRouter } from './routes/users.js';
+import { createIncidentsRouter } from './routes/incidents.js';
+import { IncidentEvaluator } from './incidents/evaluator.js';
 import { getTelemetryRepository } from './storage/db.js';
 import { DurableSpoolManager } from './storage/spool.js';
 import { TelemetryPersisterWorker } from './storage/persister.js';
@@ -25,6 +27,7 @@ const httpServer = http.createServer(app);
 const metrics = IngestMetrics.getInstance();
 const repo = getTelemetryRepository();
 const authService = new AuthService(repo);
+const incidentEvaluator = new IncidentEvaluator(repo);
 
 // Spool & Persister
 const spoolDir = process.env['SPOOL_DIR'] || path.resolve(process.cwd(), '.spool');
@@ -93,10 +96,16 @@ app.use('/api/v1', createTelemetryRouter(authService, repo));
 app.use('/api/v1', createReportsRouter(authService, repo));
 app.use('/api/v1', createAlertsRouter(authService, repo));
 app.use('/api/v1', createDevicesRouter(authService, repo));
+app.use('/api/v1', createIncidentsRouter(authService, repo));
 
 let isRunning = false;
 
 if (process.env['NODE_ENV'] !== 'test') {
+  void incidentEvaluator.initialize();
+  setInterval(() => {
+    void incidentEvaluator.checkCadence();
+  }, 2000);
+
   spool.open();
   // Recover and replay any uncommitted records from spool
   const replayResult = spool.recoverAndReplay(0, async (rec) => {
@@ -143,4 +152,5 @@ export {
   spool,
   persister,
   socketServer,
+  incidentEvaluator,
 };

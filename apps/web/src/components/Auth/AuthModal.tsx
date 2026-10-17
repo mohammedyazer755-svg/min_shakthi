@@ -36,12 +36,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
   const hasFocusedRef = useRef(false);
+  const triggerElementRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
       clearError();
       hasFocusedRef.current = false;
+      if (triggerElementRef.current && typeof triggerElementRef.current.focus === 'function') {
+        triggerElementRef.current.focus();
+        triggerElementRef.current = null;
+      }
       return;
+    }
+
+    if (!triggerElementRef.current && typeof document !== 'undefined') {
+      triggerElementRef.current = document.activeElement as HTMLElement | null;
     }
 
     // Only focus email once upon opening the modal

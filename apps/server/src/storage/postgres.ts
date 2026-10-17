@@ -4,6 +4,7 @@ import { attachDatabasePool } from '@vercel/functions';
 import type {
   AlertAcknowledgement, AlertRecord, AlertRule, ChannelMappingItem,
   TelemetryPayload, UserPreferences, UserRole,
+  IncidentRecord, IncidentAcknowledgement,
 } from '@minsakthi/contracts';
 import type {
   DbAuditLog, DbChannel, DbDevice, DbSession, DbUser,
@@ -134,7 +135,12 @@ export class PostgresTelemetryRepository implements ITelemetryRepository {
       ORDER BY c.display_slot NULLS LAST,c.raw_channel_id`, [siteId,deviceId]);
     return rows;
   }
-  async listDevices(): Promise<DbDevice[]> {
+  async listDevices(siteId?: string): Promise<DbDevice[]> {
+    if (siteId) {
+      const { rows } = await this.query<DbDevice>(`SELECT id,raw_device_id AS "rawDeviceId",site_id AS "siteId",enabled,
+        expected_interval_ms AS "expectedIntervalMs",config_version AS "configVersion" FROM devices WHERE site_id=$1 AND enabled=true`, [siteId]);
+      return rows;
+    }
     const { rows } = await this.query<DbDevice>(`SELECT id,raw_device_id AS "rawDeviceId",site_id AS "siteId",enabled,
       expected_interval_ms AS "expectedIntervalMs",config_version AS "configVersion" FROM devices WHERE enabled=true`);
     return rows;
@@ -271,5 +277,107 @@ export class PostgresTelemetryRepository implements ITelemetryRepository {
       await client.query("UPDATE runtime_documents SET payload=$2,updated_at=NOW() WHERE kind='alert' AND id=$1", [id,JSON.stringify(updated)]);
       return updated;
     });
+  }
+
+  async getIncidents(
+    siteId: string,
+    options?: {
+      deviceId?: string;
+      state?: 'evaluating' | 'resolved' | 'acknowledged';
+      type?: 'electrical_breach' | 'device_interruption' | 'transport_outage';
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<{ incidents: IncidentRecord[]; total: number }> {
+    const { rows } = await this.query<{ payload: IncidentRecord }>(
+      `SELECT payload FROM runtime_documents WHERE kind='incident' AND site_id=$1
+       AND ($2::text IS NULL OR payload->>'deviceId'=$2)
+       AND ($3::text IS NULL OR payload->>'state'=$3)
+       AND ($4::text IS NULL OR payload->>'type'=$4)
+       ORDER BY updated_at DESC`,
+      [siteId, options?.deviceId ?? null, options?.state ?? null, options?.type ?? null]
+    );
+    const total = rows.length;
+    const offset = options?.offset ?? 0;
+    const limit = options?.limit ?? 50;
+    const paginated = rows.slice(offset, offset + limit).map((r) => r.payload);
+    return { incidents: paginated, total };
+  }
+
+  async getIncidentById(siteId: string, incidentId: string): Promise<IncidentRecord | null> {
+    const doc = await this.document<IncidentRecord>('incident', incidentId);
+    if (!doc || doc.siteId !== siteId) return null;
+    return doc;
+  }
+
+  async saveIncident(incident: IncidentRecord): Promise<void> {
+    const existing = await this.document<IncidentRecord>('incident', incident.id);
+    await this.putDocument(
+      'incident',
+      incident.id,
+      {
+        ...incident,
+        acknowledgements: existing?.acknowledgements ?? incident.acknowledgements,
+        state: incident.state === 'evaluating' && existing?.state === 'acknowledged'
+          ? 'acknowledged'
+          : incident.state,
+      },
+      incident.siteId
+    );
+  }
+
+  async acknowledgeIncident(
+    siteId: string,
+    incidentId: string,
+    userId: string,
+    displayName?: string,
+    note?: string
+  ): Promise<IncidentRecord> {
+    return this.transaction(async (client) => {
+      const { rows } = await client.query<{ payload: IncidentRecord; site_id: string }>(
+        "SELECT payload, site_id FROM runtime_documents WHERE kind='incident' AND id=$1 FOR UPDATE",
+        [incidentId]
+      );
+      const row = rows[0];
+      if (!row || row.site_id !== siteId) throw new Error('INCIDENT_NOT_FOUND');
+      const role = await client.query(
+        "SELECT 1 FROM memberships WHERE user_id=$1 AND site_id=$2 AND role IN('operator','admin')",
+        [userId, row.site_id]
+      );
+      if (!role.rowCount) throw new Error('FORBIDDEN');
+      const ack: IncidentAcknowledgement = {
+        id: crypto.randomUUID(),
+        incidentId,
+        userId,
+        userDisplayName: displayName,
+        ackAt: new Date().toISOString(),
+        note: note ?? null,
+      };
+      const updated: IncidentRecord = {
+        ...row.payload,
+        state: 'acknowledged',
+        acknowledgements: [
+          ...row.payload.acknowledgements.filter((a) => a.userId !== userId),
+          ack,
+        ],
+        updatedAt: new Date().toISOString(),
+      };
+      await client.query(
+        "UPDATE runtime_documents SET payload=$2, updated_at=NOW() WHERE kind='incident' AND id=$1",
+        [incidentId, JSON.stringify(updated)]
+      );
+      return updated;
+    });
+  }
+
+  async getActiveIncidents(siteId: string, deviceId?: string): Promise<IncidentRecord[]> {
+    const { rows } = await this.query<{ payload: IncidentRecord }>(
+      `SELECT payload FROM runtime_documents WHERE kind='incident' AND site_id=$1
+       AND payload->>'state'='evaluating'
+       AND ($2::text IS NULL OR payload->>'deviceId'=$2)
+       ORDER BY updated_at DESC`,
+      [siteId, deviceId ?? null]
+    );
+    return rows.map((r) => r.payload);
   }
 }

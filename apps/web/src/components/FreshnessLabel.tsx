@@ -17,53 +17,53 @@ export const FreshnessLabel: React.FC<FreshnessLabelProps> = ({
     switch (freshness) {
       case 'fresh':
         return {
-          icon: <CheckCircle2 className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--dark-status-ok)' }} />,
+          icon: <CheckCircle2 className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--status-ok)' }} />,
           label: 'Fresh',
           style: {
-            color: 'var(--dark-status-ok)',
-            background: 'rgba(34,212,124,0.1)',
-            border: '1px solid rgba(34,212,124,0.25)',
+            color: 'var(--status-ok)',
+            background: 'var(--status-ok-bg)',
+            border: '1px solid var(--status-ok-border)',
           },
         };
       case 'stale':
         return {
-          icon: <Clock className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--dark-status-warn)' }} />,
+          icon: <Clock className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--status-warn)' }} />,
           label: 'Stale',
           style: {
-            color: 'var(--dark-status-warn)',
-            background: 'rgba(245,158,11,0.1)',
-            border: '1px solid rgba(245,158,11,0.25)',
+            color: 'var(--status-warn)',
+            background: 'var(--status-warn-bg)',
+            border: '1px solid var(--status-warn-border)',
           },
         };
       case 'offline_inferred':
         return {
-          icon: <AlertOctagon className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--dark-status-critical)' }} />,
+          icon: <AlertOctagon className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--status-critical)' }} />,
           label: 'Offline',
           style: {
-            color: 'var(--dark-status-critical)',
-            background: 'rgba(245,101,101,0.1)',
-            border: '1px solid rgba(245,101,101,0.25)',
+            color: 'var(--status-critical)',
+            background: 'var(--status-critical-bg)',
+            border: '1px solid var(--status-critical-border)',
           },
         };
       case 'unseen':
         return {
-          icon: <HelpCircle className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--dark-text-dim)' }} />,
+          icon: <HelpCircle className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--status-unknown)' }} />,
           label: 'Awaiting',
           style: {
-            color: 'var(--dark-text-dim)',
-            background: 'rgba(85,85,95,0.15)',
-            border: '1px solid var(--dark-border)',
+            color: 'var(--status-unknown)',
+            background: 'var(--status-unknown-bg)',
+            border: '1px solid var(--status-unknown-border)',
           },
         };
       case 'unconfigured':
       default:
         return {
-          icon: <HelpCircle className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--dark-text-dim)' }} />,
+          icon: <HelpCircle className="w-3 h-3" aria-hidden="true" style={{ color: 'var(--status-unknown)' }} />,
           label: 'Not configured',
           style: {
-            color: 'var(--dark-text-dim)',
-            background: 'rgba(85,85,95,0.15)',
-            border: '1px solid var(--dark-border)',
+            color: 'var(--status-unknown)',
+            background: 'var(--status-unknown-bg)',
+            border: '1px solid var(--status-unknown-border)',
           },
         };
     }

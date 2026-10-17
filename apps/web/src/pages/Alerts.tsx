@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '../components';
 import { useAuth } from '../auth/AuthContext';
+import { API_BASE } from '../api';
 import type { UseLiveTelemetryResult } from '../live/useLiveTelemetry';
 import {
   Bell,
@@ -11,21 +12,24 @@ import {
   ShieldCheck,
   User,
   MessageSquare,
+  X,
 } from 'lucide-react';
 import type { AlertRecord } from '@minsakthi/contracts';
 
 export interface AlertsProps {
   telemetry: UseLiveTelemetryResult;
   selectedDevice: string;
+  onNavigate?: (route: string) => void;
 }
 
-const darkSurface: React.CSSProperties = {
-  background: 'var(--dark-surface)',
-  border: '1px solid var(--dark-border)',
+const lightSurface: React.CSSProperties = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
   borderRadius: 12,
+  boxShadow: 'var(--shadow-card)',
 };
 
-export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
+export const Alerts: React.FC<AlertsProps> = ({ selectedDevice, onNavigate }) => {
   const { accessToken, user } = useAuth();
   const [alerts, setAlerts] = useState<AlertRecord[]>([]);
   const [stateFilter, setStateFilter] = useState<'all' | 'open' | 'acknowledged' | 'resolved'>('all');
@@ -46,7 +50,7 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
         params.set('state', stateFilter);
       }
 
-      const res = await fetch(`/api/v1/sites/${user.siteId}/alerts?${params.toString()}`, {
+      const res = await fetch(`${API_BASE}/api/v1/sites/${user.siteId}/alerts?${params.toString()}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
@@ -67,12 +71,36 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
     fetchAlerts();
   }, [fetchAlerts]);
 
+  const ackTriggerRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!ackModalAlertId) {
+      if (ackTriggerRef.current && typeof ackTriggerRef.current.focus === 'function') {
+        ackTriggerRef.current.focus();
+        ackTriggerRef.current = null;
+      }
+      return;
+    }
+
+    if (!ackTriggerRef.current && typeof document !== 'undefined') {
+      ackTriggerRef.current = document.activeElement as HTMLElement | null;
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setAckModalAlertId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [ackModalAlertId]);
+
   const handleAcknowledge = async (alertId: string) => {
     if (!accessToken || !user) return;
     setSubmittingAck(true);
 
     try {
-      const res = await fetch(`/api/v1/sites/${user.siteId}/alerts/${alertId}/ack`, {
+      const res = await fetch(`${API_BASE}/api/v1/sites/${user.siteId}/alerts/${alertId}/ack`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +130,7 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
       {/* Top Header */}
       <div
         style={{
-          ...darkSurface,
+          ...lightSurface,
           padding: '16px 20px',
           display: 'flex',
           flexWrap: 'wrap',
@@ -112,10 +140,10 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
         }}
       >
         <div>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--dark-text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
             Electrical Threshold Alerts &amp; Event Log
           </h2>
-          <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
             Durable rule evaluations with sustained debounce, clear hysteresis, and independent multi-user acknowledgements.
           </p>
         </div>
@@ -128,9 +156,9 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
               gap: 6,
               padding: '4px 10px',
               borderRadius: 6,
-              background: 'rgba(34,212,124,0.1)',
-              border: '1px solid rgba(34,212,124,0.25)',
-              color: 'var(--dark-status-ok)',
+              background: 'rgba(23,99,68,0.1)',
+              border: '1px solid rgba(23,99,68,0.25)',
+              color: 'var(--status-ok, #176344)',
               fontSize: 12,
               fontWeight: 600,
             }}
@@ -155,7 +183,7 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
       {/* Filter Tabs */}
       <div
         style={{
-          ...darkSurface,
+          ...lightSurface,
           padding: '12px 16px',
           display: 'flex',
           flexWrap: 'wrap',
@@ -169,8 +197,8 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
           style={{
             display: 'inline-flex',
             borderRadius: 6,
-            border: '1px solid var(--dark-border)',
-            background: 'var(--dark-canvas, #050507)',
+            border: '1px solid var(--border)',
+            background: 'var(--canvas)',
             padding: 2,
             gap: 2,
           }}
@@ -188,8 +216,10 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
                 border: 'none',
                 cursor: 'pointer',
                 textTransform: 'capitalize',
-                background: stateFilter === s ? 'var(--dark-surface)' : 'transparent',
-                color: stateFilter === s ? 'var(--dark-accent)' : 'var(--dark-text-muted)',
+                background: stateFilter === s ? 'var(--surface)' : 'transparent',
+                color: stateFilter === s ? 'var(--accent-text)' : 'var(--text-secondary)',
+                boxShadow: stateFilter === s ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                transition: 'all 0.15s',
               }}
             >
               {s}
@@ -197,7 +227,7 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
           ))}
         </div>
 
-        <span style={{ color: 'var(--dark-text-muted)', fontFamily: 'monospace' }}>
+        <span style={{ color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
           {`Total: ${alerts.length} alerts recorded`}
         </span>
       </div>
@@ -206,14 +236,14 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
         <div
           style={{
             padding: 16,
-            background: 'rgba(245,158,11,0.08)',
-            border: '1px solid rgba(245,158,11,0.25)',
+            background: 'var(--status-warn-bg, rgba(128,83,0,0.08))',
+            border: '1px solid var(--status-warn, #805300)',
             borderRadius: 8,
             display: 'flex',
             alignItems: 'center',
             gap: 12,
             fontSize: 12,
-            color: 'var(--dark-accent)',
+            color: 'var(--status-warn, #805300)',
           }}
         >
           <AlertTriangle style={{ width: 16, height: 16, flexShrink: 0 }} aria-hidden="true" />
@@ -226,14 +256,14 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
         {alerts.length === 0 ? (
           <div
             style={{
-              ...darkSurface,
+              ...lightSurface,
               padding: '48px 16px',
               textAlign: 'center',
             }}
           >
-            <Bell style={{ width: 32, height: 32, color: 'var(--dark-text-dim)', margin: '0 auto 8px', opacity: 0.5 }} />
-            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--dark-text-primary)', margin: 0 }}>No alerts found</p>
-            <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 4 }}>
+            <Bell style={{ width: 32, height: 32, color: 'var(--text-dim)', margin: '0 auto 8px', opacity: 0.5 }} />
+            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>No alerts found</p>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
               No active or historical threshold violations match the current filter.
             </p>
           </div>
@@ -244,16 +274,16 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
             const isCrit = alt.rule?.severity === 'critical';
 
             const cardBorder = isResolved
-              ? 'var(--dark-border)'
+              ? 'var(--border)'
               : isCrit
-              ? 'rgba(245,101,101,0.35)'
-              : 'rgba(200,169,110,0.35)';
+              ? 'rgba(165,46,46,0.35)'
+              : 'rgba(128,83,0,0.35)';
 
             const cardBg = isResolved
-              ? 'var(--dark-surface)'
+              ? 'var(--surface-raised, #F0F1EC)'
               : isCrit
-              ? 'rgba(245,101,101,0.04)'
-              : 'var(--dark-surface)';
+              ? 'rgba(165,46,46,0.04)'
+              : 'var(--surface)';
 
             return (
               <div
@@ -263,7 +293,8 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
                   border: `1px solid ${cardBorder}`,
                   borderRadius: 12,
                   padding: '16px 20px',
-                  opacity: isResolved ? 0.7 : 1,
+                  boxShadow: 'var(--shadow-card)',
+                  opacity: isResolved ? 0.75 : 1,
                   transition: 'all 0.15s',
                 }}
               >
@@ -277,9 +308,9 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
                           fontSize: 10,
                           fontWeight: 800,
                           textTransform: 'uppercase',
-                          background: isCrit ? 'rgba(245,101,101,0.15)' : 'rgba(245,158,11,0.15)',
-                          color: isCrit ? '#f87171' : '#fbbf24',
-                          border: `1px solid ${isCrit ? 'rgba(245,101,101,0.3)' : 'rgba(245,158,11,0.3)'}`,
+                          background: isCrit ? 'rgba(165,46,46,0.12)' : 'rgba(128,83,0,0.12)',
+                          color: isCrit ? 'var(--status-critical, #A52E2E)' : 'var(--status-warn, #805300)',
+                          border: `1px solid ${isCrit ? 'rgba(165,46,46,0.25)' : 'rgba(128,83,0,0.25)'}`,
                         }}
                       >
                         {alt.rule?.severity || 'WARNING'}
@@ -292,35 +323,35 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
                           fontSize: 10,
                           fontWeight: 700,
                           textTransform: 'capitalize',
-                          background: alt.state === 'open' ? 'rgba(244,63,94,0.15)' : alt.state === 'acknowledged' ? 'rgba(245,158,11,0.15)' : 'rgba(34,212,124,0.12)',
-                          color: alt.state === 'open' ? '#fb7185' : alt.state === 'acknowledged' ? '#f59e0b' : '#22d47c',
+                          background: alt.state === 'open' ? 'rgba(165,46,46,0.12)' : alt.state === 'acknowledged' ? 'rgba(128,83,0,0.12)' : 'rgba(23,99,68,0.12)',
+                          color: alt.state === 'open' ? 'var(--status-critical, #A52E2E)' : alt.state === 'acknowledged' ? 'var(--status-warn, #805300)' : 'var(--status-ok, #176344)',
                         }}
                       >
                         {alt.state}
                       </span>
 
-                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--dark-text-primary)', fontFamily: 'monospace' }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'monospace' }}>
                         {alt.deviceId} · {alt.channelId || 'all channels'}
                       </span>
                     </div>
 
-                    <h4 style={{ fontSize: 14, fontWeight: 700, color: 'var(--dark-text-primary)', margin: '4px 0 0' }}>
+                    <h4 style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', margin: '4px 0 0' }}>
                       {`Violation: ${alt.rule?.metric?.toUpperCase() || 'ELECTRICAL'} reached ${alt.triggerValue}`}
                     </h4>
 
                     {alt.rule && (
-                      <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', fontFamily: 'monospace', margin: 0 }}>
+                      <p style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'monospace', margin: 0 }}>
                         {`Rule: ${alt.rule.metric} ${alt.rule.operator} ${alt.rule.threshold} · Debounce: ${alt.rule.debounceMs}ms · Hysteresis: ${alt.rule.hysteresis}`}
                       </p>
                     )}
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11, color: 'var(--dark-text-muted)', paddingTop: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 11, color: 'var(--text-secondary)', paddingTop: 4 }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         <Clock style={{ width: 12, height: 12 }} />
                         <span>{`Opened: ${new Date(alt.openedAt).toLocaleString()}`}</span>
                       </span>
                       {alt.resolvedAt && (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--dark-status-ok)' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--status-ok, #176344)' }}>
                           <CheckCircle style={{ width: 12, height: 12 }} />
                           <span>{`Resolved: ${new Date(alt.resolvedAt).toLocaleString()}`}</span>
                         </span>
@@ -329,7 +360,16 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
                   </div>
 
                   {/* Actions */}
-                  <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {onNavigate && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => onNavigate(`/insights/incidents?deviceId=${encodeURIComponent(alt.deviceId)}`)}
+                      >
+                        Investigate Event →
+                      </Button>
+                    )}
                     {alt.state !== 'resolved' && (
                       <Button
                         variant={isAck ? 'secondary' : 'primary'}
@@ -349,8 +389,8 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
 
                 {/* Audit Trail */}
                 {alt.acknowledgements && alt.acknowledgements.length > 0 && (
-                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--dark-border)', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--dark-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                       Acknowledgement Audit Trail:
                     </span>
                     {alt.acknowledgements.map((ack) => (
@@ -358,21 +398,21 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
                         key={ack.id}
                         style={{
                           padding: '8px 12px',
-                          background: 'var(--dark-canvas, #050507)',
+                          background: 'var(--canvas)',
                           borderRadius: 6,
-                          border: '1px solid var(--dark-border)',
+                          border: '1px solid var(--border)',
                           fontSize: 12,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          color: 'var(--dark-text-muted)',
+                          color: 'var(--text-secondary)',
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <User style={{ width: 14, height: 14, color: 'var(--dark-accent)' }} />
-                          <strong style={{ color: 'var(--dark-text-primary)' }}>{ack.userDisplayName || ack.userId}</strong>
+                          <User style={{ width: 14, height: 14, color: 'var(--accent)' }} />
+                          <strong style={{ color: 'var(--text-primary)' }}>{ack.userDisplayName || ack.userId}</strong>
                           {ack.note && (
-                            <span style={{ fontStyle: 'italic', color: 'var(--dark-text-primary)' }}>"{ack.note}"</span>
+                            <span style={{ fontStyle: 'italic', color: 'var(--text-primary)' }}>"{ack.note}"</span>
                           )}
                         </div>
                         <span style={{ fontSize: 11, fontFamily: 'monospace' }}>
@@ -391,11 +431,15 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
       {/* Acknowledge Modal */}
       {ackModalAlertId && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="ack-modal-title"
+          className="motion-modal-backdrop"
           style={{
             position: 'fixed',
             inset: 0,
             zIndex: 50,
-            background: 'rgba(0,0,0,0.7)',
+            background: 'rgba(0,0,0,0.5)',
             backdropFilter: 'blur(4px)',
             display: 'flex',
             alignItems: 'center',
@@ -404,33 +448,50 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
           }}
         >
           <div
+            className="motion-modal-card"
             style={{
               width: '100%',
               maxWidth: 440,
               padding: 24,
-              background: 'var(--dark-surface-raised)',
-              border: '1px solid var(--dark-border-strong)',
+              background: 'var(--surface)',
+              border: '1px solid var(--border-strong)',
               borderRadius: 16,
-              boxShadow: '0 24px 60px rgba(0,0,0,0.8)',
+              boxShadow: 'var(--shadow-modal, 0 20px 48px rgba(0,0,0,0.2))',
               display: 'flex',
               flexDirection: 'column',
               gap: 16,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <MessageSquare style={{ width: 16, height: 16, color: 'var(--dark-accent)' }} />
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: 'var(--dark-text-primary)', margin: 0 }}>
-                Acknowledge Threshold Alert
-              </h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <MessageSquare style={{ width: 16, height: 16, color: 'var(--accent)' }} />
+                <h3 id="ack-modal-title" style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                  Acknowledge Threshold Alert
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAckModalAlertId(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary)',
+                  padding: 4,
+                }}
+                aria-label="Close dialog"
+              >
+                <X style={{ width: 16, height: 16 }} />
+              </button>
             </div>
-            <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', margin: 0, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
               Acknowledging records your identity and timestamp as verified observer. The alert remains active until the metric clears the hysteresis boundary.
             </p>
 
             <div>
               <label
                 htmlFor="ack-note-input"
-                style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--dark-text-muted)', marginBottom: 6 }}
+                style={{ display: 'block', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-secondary)', marginBottom: 6 }}
               >
                 Investigation Note (Optional):
               </label>
@@ -443,11 +504,11 @@ export const Alerts: React.FC<AlertsProps> = ({ selectedDevice }) => {
                 style={{
                   width: '100%',
                   padding: 10,
-                  background: 'var(--dark-canvas, #050507)',
-                  border: '1px solid var(--dark-border-strong)',
+                  background: 'var(--canvas)',
+                  border: '1px solid var(--border-strong)',
                   borderRadius: 8,
                   fontSize: 12,
-                  color: 'var(--dark-text-primary)',
+                  color: 'var(--text-primary)',
                   outline: 'none',
                 }}
               />

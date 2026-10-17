@@ -345,4 +345,44 @@ export const reports = pgTable(
   ]
 );
 
+export const incidents = pgTable(
+  'incidents',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    siteId: uuid('site_id').notNull().references(() => sites.id, { onDelete: 'cascade' }),
+    deviceId: varchar('device_id', { length: 64 }).notNull(),
+    channelId: varchar('channel_id', { length: 64 }),
+    type: varchar('type', { length: 32 }).notNull(), // 'electrical_breach' | 'device_interruption' | 'transport_outage'
+    severity: varchar('severity', { length: 16 }).default('warning').notNull(),
+    state: varchar('state', { length: 32 }).default('evaluating').notNull(), // 'evaluating' | 'resolved' | 'acknowledged'
+    title: varchar('title', { length: 255 }).notNull(),
+    summary: text('summary').notNull(),
+    causeConfirmation: varchar('cause_confirmation', { length: 64 }).notNull(),
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull(),
+    endedAt: timestamp('ended_at', { withTimezone: true }),
+    durationMs: integer('duration_ms'),
+    evidenceJson: jsonb('evidence_json').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('incidents_site_dev_state_idx').on(table.siteId, table.deviceId, table.state),
+    index('incidents_site_started_idx').on(table.siteId, table.startedAt),
+  ]
+);
+
+export const incidentAcknowledgements = pgTable(
+  'incident_acknowledgements',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    incidentId: uuid('incident_id').notNull().references(() => incidents.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+    ackAt: timestamp('ack_at', { withTimezone: true }).defaultNow().notNull(),
+    note: text('note'),
+  },
+  (table) => [
+    uniqueIndex('incident_ack_unique').on(table.incidentId, table.userId),
+  ]
+);
+
 

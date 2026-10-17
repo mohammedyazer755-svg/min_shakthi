@@ -16,30 +16,30 @@ export const AlertBadge: React.FC<AlertBadgeProps> = ({
 }) => {
   const config = {
     critical: {
-      icon: <AlertCircle className="w-3.5 h-3.5 text-red-400" aria-hidden="true" />,
+      icon: <AlertCircle className="w-3.5 h-3.5" aria-hidden="true" style={{ color: 'var(--status-critical, #A52E2E)' }} />,
       label: 'Critical',
       style: {
-        color: '#f87171',
-        background: 'rgba(245, 101, 101, 0.12)',
-        border: '1px solid rgba(245, 101, 101, 0.28)',
+        color: 'var(--status-critical, #A52E2E)',
+        background: 'rgba(165, 46, 46, 0.12)',
+        border: '1px solid rgba(165, 46, 46, 0.28)',
       },
     },
     warning: {
-      icon: <AlertTriangle className="w-3.5 h-3.5 text-amber-400" aria-hidden="true" />,
+      icon: <AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" style={{ color: 'var(--status-warn, #805300)' }} />,
       label: 'Warning',
       style: {
-        color: '#fbbf24',
-        background: 'rgba(245, 158, 11, 0.12)',
-        border: '1px solid rgba(245, 158, 11, 0.28)',
+        color: 'var(--status-warn, #805300)',
+        background: 'rgba(128, 83, 0, 0.12)',
+        border: '1px solid rgba(128, 83, 0, 0.28)',
       },
     },
     info: {
-      icon: <Info className="w-3.5 h-3.5" aria-hidden="true" style={{ color: 'var(--dark-accent)' }} />,
+      icon: <Info className="w-3.5 h-3.5" aria-hidden="true" style={{ color: 'var(--accent-text, #725719)' }} />,
       label: 'Info',
       style: {
-        color: 'var(--dark-accent)',
-        background: 'rgba(200, 169, 110, 0.12)',
-        border: '1px solid rgba(200, 169, 110, 0.28)',
+        color: 'var(--accent-text, #725719)',
+        background: 'rgba(163, 132, 69, 0.12)',
+        border: '1px solid rgba(163, 132, 69, 0.28)',
       },
     },
   }[severity];

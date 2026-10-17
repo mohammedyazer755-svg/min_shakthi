@@ -12,22 +12,23 @@ const sectionLabel: React.CSSProperties = {
   fontSize: 10,
   fontWeight: 700,
   textTransform: 'uppercase',
-  letterSpacing: '0.2em',
-  color: 'var(--dark-text-muted)',
+  letterSpacing: '0.15em',
+  color: 'var(--text-secondary)',
 };
 
-const darkSurface: React.CSSProperties = {
-  background: 'var(--dark-surface)',
-  border: '1px solid var(--dark-border)',
+const lightSurface: React.CSSProperties = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
   borderRadius: 12,
+  boxShadow: 'var(--shadow-card)',
 };
 
-const darkInput: React.CSSProperties = {
+const lightInput: React.CSSProperties = {
   padding: '6px 10px',
-  background: 'var(--dark-canvas, #050507)',
-  border: '1px solid var(--dark-border)',
+  background: 'var(--canvas)',
+  border: '1px solid var(--border-strong)',
   borderRadius: 6,
-  color: 'var(--dark-text-primary)',
+  color: 'var(--text-primary)',
   fontSize: 12,
   fontWeight: 500,
   outline: 'none',
@@ -56,14 +57,16 @@ export const RealTime: React.FC<RealTimeProps> = ({
   }, [livePackets, channelFilter]);
 
   const handleCopyEventId = (eventId: string) => {
-    navigator.clipboard.writeText(eventId).catch(() => {});
-    setCopiedEventId(eventId);
-    setTimeout(() => setCopiedEventId(null), 2000);
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(eventId).catch(() => {});
+      setCopiedEventId(eventId);
+      setTimeout(() => setCopiedEventId(null), 2000);
+    }
   };
 
   const thStyle: React.CSSProperties = {
     padding: '10px 12px',
-    color: 'var(--dark-text-muted)',
+    color: 'var(--text-secondary)',
     fontWeight: 700,
     textTransform: 'uppercase',
     fontSize: 10,
@@ -73,17 +76,35 @@ export const RealTime: React.FC<RealTimeProps> = ({
   return (
     <div className="space-y-6">
       {/* Realtime Stream Header & Controls */}
-      <div style={{ ...darkSurface, padding: '16px 20px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+      <div
+        style={{
+          ...lightSurface,
+          padding: '16px 20px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+        }}
+      >
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#22c55e', display: 'inline-block', animation: 'pulse 2s infinite' }} />
-            <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--dark-text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: '50%',
+                background: 'var(--status-ok, #176344)',
+                display: 'inline-block',
+              }}
+            />
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
               Recent telemetry packets
             </h2>
           </div>
-          <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
             Streaming packets from device{' '}
-            <strong style={{ fontFamily: 'monospace', color: 'var(--dark-accent)' }}>{selectedDevice}</strong>
+            <strong style={{ fontFamily: 'monospace', color: 'var(--accent-text)' }}>{selectedDevice}</strong>
             {' '}· Bounded to last 200 packets
           </p>
         </div>
@@ -91,11 +112,11 @@ export const RealTime: React.FC<RealTimeProps> = ({
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
           {/* Channel Filter */}
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, ...sectionLabel }}>
-            <Filter style={{ width: 13, height: 13 }} aria-hidden="true" />
+            <Filter style={{ width: 13, height: 13, color: 'var(--accent)' }} aria-hidden="true" />
             <select
               value={channelFilter}
               onChange={(e) => setChannelFilter(e.target.value)}
-              style={darkInput}
+              style={lightInput}
             >
               <option value="all">All Channels</option>
               {channels
@@ -139,16 +160,16 @@ export const RealTime: React.FC<RealTimeProps> = ({
                 alignItems: 'center',
                 gap: 6,
                 padding: '4px 10px',
-                background: 'var(--dark-canvas, #050507)',
+                background: 'var(--canvas)',
                 borderRadius: 6,
-                border: '1px solid var(--dark-border)',
+                border: '1px solid var(--border)',
                 fontSize: 12,
-                color: 'var(--dark-text-muted)',
+                color: 'var(--text-secondary)',
                 fontFamily: 'monospace',
               }}
             >
-              <Activity style={{ width: 13, height: 13, color: 'var(--dark-accent)' }} aria-hidden="true" />
-              <span>ACK: <strong style={{ color: 'var(--dark-text-primary)' }}>{`${lastDisplayLatencyMs}ms`}</strong></span>
+              <Activity style={{ width: 13, height: 13, color: 'var(--accent)' }} aria-hidden="true" />
+              <span>ACK: <strong style={{ color: 'var(--text-primary)' }}>{`${lastDisplayLatencyMs}ms`}</strong></span>
             </div>
           )}
         </div>
@@ -159,14 +180,14 @@ export const RealTime: React.FC<RealTimeProps> = ({
         <div
           style={{
             padding: '12px 16px',
-            background: 'rgba(245,158,11,0.08)',
-            border: '1px solid rgba(245,158,11,0.25)',
+            background: 'var(--status-warn-bg, rgba(128,83,0,0.08))',
+            border: '1px solid var(--status-warn, #805300)',
             borderRadius: 8,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             fontSize: 12,
-            color: 'var(--dark-accent)',
+            color: 'var(--status-warn, #805300)',
           }}
         >
           <span>
@@ -175,7 +196,7 @@ export const RealTime: React.FC<RealTimeProps> = ({
           <button
             type="button"
             onClick={resumeView}
-            style={{ fontWeight: 700, textDecoration: 'underline', color: 'var(--dark-accent)', background: 'none', border: 'none', cursor: 'pointer', marginLeft: 12 }}
+            style={{ fontWeight: 700, textDecoration: 'underline', color: 'var(--accent-text)', background: 'none', border: 'none', cursor: 'pointer', marginLeft: 12 }}
           >
             Catch up now ({pausedCatchupCount} new)
           </button>
@@ -183,15 +204,15 @@ export const RealTime: React.FC<RealTimeProps> = ({
       )}
 
       {/* Live Table */}
-      <div style={{ ...darkSurface, overflow: 'hidden' }}>
+      <div style={{ ...lightSurface, overflow: 'hidden' }}>
         <div className="overflow-x-auto">
           <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--dark-border-strong)', background: 'transparent' }}>
+              <tr style={{ borderBottom: '1px solid var(--border-strong)', background: 'var(--surface-raised, #F0F1EC)' }}>
                 <th style={thStyle}>Receipt Time (UTC)</th>
                 <th style={thStyle}>Event ID</th>
                 <th style={thStyle}>Seq</th>
-                <th style={{ ...thStyle, color: 'var(--dark-accent)' }}>Channel</th>
+                <th style={{ ...thStyle, color: 'var(--accent-text)' }}>Channel</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Voltage</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Current</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Power</th>
@@ -203,7 +224,7 @@ export const RealTime: React.FC<RealTimeProps> = ({
             <tbody>
               {filteredPackets.length === 0 ? (
                 <tr>
-                  <td colSpan={10} style={{ padding: '48px 12px', textAlign: 'center', color: 'var(--dark-text-muted)' }}>
+                  <td colSpan={10} style={{ padding: '48px 12px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                     <span>Awaiting live incoming telemetry packets from broker...</span>
                   </td>
                 </tr>
@@ -214,9 +235,9 @@ export const RealTime: React.FC<RealTimeProps> = ({
                     <tr
                       key={pkt.eventId}
                       style={{
-                        borderBottom: '1px solid var(--dark-border)',
+                        borderBottom: '1px solid var(--border)',
                         fontFamily: 'monospace',
-                        color: 'var(--dark-text-primary)',
+                        color: 'var(--text-primary)',
                         transition: 'background 0.15s',
                       }}
                     >
@@ -237,7 +258,7 @@ export const RealTime: React.FC<RealTimeProps> = ({
                             alignItems: 'center',
                             gap: 4,
                             fontSize: 11,
-                            color: 'var(--dark-text-muted)',
+                            color: 'var(--text-secondary)',
                             background: 'none',
                             border: 'none',
                             cursor: 'pointer',
@@ -247,16 +268,16 @@ export const RealTime: React.FC<RealTimeProps> = ({
                         >
                           <span>{`${pkt.eventId.slice(0, 8)}...`}</span>
                           {isCopied ? (
-                            <Check style={{ width: 11, height: 11, color: '#22c55e' }} aria-hidden="true" />
+                            <Check style={{ width: 11, height: 11, color: 'var(--status-ok, #176344)' }} aria-hidden="true" />
                           ) : (
                             <Copy style={{ width: 11, height: 11 }} aria-hidden="true" />
                           )}
                         </button>
                       </td>
-                      <td style={{ padding: '10px 12px', color: 'var(--dark-text-muted)' }}>
+                      <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>
                         {`#${pkt.sequence}`}
                       </td>
-                      <td style={{ padding: '10px 12px', fontFamily: 'sans-serif', fontWeight: 500, color: 'var(--dark-accent)' }}>
+                      <td style={{ padding: '10px 12px', fontFamily: 'sans-serif', fontWeight: 600, color: 'var(--accent-text)' }}>
                         {pkt.channelId}
                       </td>
                       <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
@@ -265,10 +286,10 @@ export const RealTime: React.FC<RealTimeProps> = ({
                       <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                         {`${pkt.values.current.toFixed(2)} A`}
                       </td>
-                      <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: 'var(--dark-text-primary)' }}>
+                      <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: 'var(--text-primary)' }}>
                         {`${pkt.values.power.toFixed(2)} W`}
                       </td>
-                      <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--dark-text-muted)' }}>
+                      <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-secondary)' }}>
                         {pkt.values.energyRaw}
                       </td>
                       <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
@@ -284,9 +305,9 @@ export const RealTime: React.FC<RealTimeProps> = ({
                               fontSize: 10,
                               fontFamily: 'sans-serif',
                               fontWeight: 700,
-                              background: 'rgba(245,158,11,0.12)',
-                              color: '#f59e0b',
-                              border: '1px solid rgba(245,158,11,0.25)',
+                              background: 'rgba(128,83,0,0.12)',
+                              color: 'var(--status-warn, #805300)',
+                              border: '1px solid rgba(128,83,0,0.25)',
                             }}
                           >
                             Retained
@@ -300,9 +321,9 @@ export const RealTime: React.FC<RealTimeProps> = ({
                               fontSize: 10,
                               fontFamily: 'sans-serif',
                               fontWeight: 700,
-                              background: 'rgba(34,197,94,0.10)',
-                              color: '#22c55e',
-                              border: '1px solid rgba(34,197,94,0.20)',
+                              background: 'rgba(23,99,68,0.10)',
+                              color: 'var(--status-ok, #176344)',
+                              border: '1px solid rgba(23,99,68,0.20)',
                             }}
                           >
                             Received

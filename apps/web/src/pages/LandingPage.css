@@ -668,3 +668,53 @@
   font-size: 11px;
   color: rgba(255, 255, 255, 0.45);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   PHASE 5: HERO SCENE & BENEFITS PILLARS
+   ═══════════════════════════════════════════════════════════ */
+.landing-hero-scene-wrap {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.landing-benefits-section {
+  position: relative;
+  z-index: 2;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 48px 32px 64px;
+}
+
+.landing-benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 32px;
+}
+
+@media (max-width: 1024px) {
+  .landing-benefits-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.landing-benefit-card {
+  background: rgba(14, 14, 20, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 28px 24px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.landing-benefit-card:hover {
+  border-color: rgba(200, 169, 110, 0.4);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
+}
+

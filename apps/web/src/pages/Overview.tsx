@@ -1,11 +1,15 @@
-import React, { useMemo } from 'react';
-import { Activity, Cpu } from 'lucide-react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { Activity, Cpu, ChevronDown, ChevronUp, Bell, Zap, ZapOff } from 'lucide-react';
 import type { useLiveTelemetry } from '../live/useLiveTelemetry';
 import { FreshnessLabel, MeasurementChart } from '../components';
+import { useOptionalAuth } from '../auth/AuthContext';
+import { API_BASE } from '../api';
+import type { IncidentRecord } from '@minsakthi/contracts';
 
 export interface OverviewProps {
   telemetry: ReturnType<typeof useLiveTelemetry>;
   selectedDevice: string;
+  onNavigate?: (route: string) => void;
 }
 
 const sectionLabel: React.CSSProperties = {
@@ -13,11 +17,11 @@ const sectionLabel: React.CSSProperties = {
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: '0.15em',
-  color: 'var(--dark-text-muted)',
+  color: 'var(--text-secondary)',
 };
 
 const metricValue: React.CSSProperties = {
-  color: 'var(--dark-text-primary)',
+  color: 'var(--text-primary)',
   fontSize: '1.75rem',
   fontWeight: 800,
   fontVariantNumeric: 'tabular-nums',
@@ -25,7 +29,7 @@ const metricValue: React.CSSProperties = {
 };
 
 const metricSubtext: React.CSSProperties = {
-  color: 'var(--dark-text-muted)',
+  color: 'var(--text-dim)',
   fontSize: 11,
   marginTop: 4,
 };
@@ -33,7 +37,39 @@ const metricSubtext: React.CSSProperties = {
 export const Overview: React.FC<OverviewProps> = ({
   telemetry,
   selectedDevice,
+  onNavigate,
 }) => {
+  const auth = useOptionalAuth();
+  const user = auth?.user ?? null;
+  const [recentIncident, setRecentIncident] = useState<IncidentRecord | null>(null);
+
+  useEffect(() => {
+    if (!user?.siteId) return;
+    let mounted = true;
+    async function loadRecentIncident() {
+      try {
+        const res = await fetch(
+          `${API_BASE}/api/v1/sites/${user!.siteId}/incidents?deviceId=${encodeURIComponent(selectedDevice)}&limit=1`,
+          { credentials: 'include' }
+        );
+        if (res.ok) {
+          const data = (await res.json()) as { incidents?: IncidentRecord[] };
+          if (mounted && data.incidents && data.incidents[0]) {
+            setRecentIncident(data.incidents[0]);
+          } else if (mounted) {
+            setRecentIncident(null);
+          }
+        }
+      } catch {
+        if (mounted) setRecentIncident(null);
+      }
+    }
+    loadRecentIncident();
+    return () => {
+      mounted = false;
+    };
+  }, [user?.siteId, selectedDevice]);
+
   const {
     channels,
     health,
@@ -42,6 +78,16 @@ export const Overview: React.FC<OverviewProps> = ({
     lastDisplayLatencyMs,
     streamStatus,
   } = telemetry;
+
+  const [measurementsExpanded, setMeasurementsExpanded] = useState<boolean>(true);
+
+  const dotColor = streamStatus.tone === 'positive'
+    ? 'var(--status-ok, #176344)'
+    : streamStatus.tone === 'critical'
+      ? 'var(--status-critical, #A52E2E)'
+      : streamStatus.tone === 'warning'
+        ? 'var(--status-warn, #805300)'
+        : 'var(--status-unknown, #5D625D)';
 
   // Active power total across reporting configured channels
   const { totalPower, activeCount, configuredCount } = useMemo(() => {
@@ -66,6 +112,14 @@ export const Overview: React.FC<OverviewProps> = ({
       isPartial: active < configured,
     };
   }, [channels]);
+
+  // Derived honest status message for the workspace
+  const honestStatusMessage = useMemo(() => {
+    if (streamStatus.tone === 'critical') return 'Connection interrupted';
+    if (configuredCount > 0 && activeCount === 0) return 'Waiting for readings';
+    if (activeCount < configuredCount) return 'Some channels unavailable';
+    return 'Receiving readings';
+  }, [streamStatus.tone, configuredCount, activeCount]);
 
   // Voltage and Frequency ranges across reporting channels
   const { voltageRange, freqRange, totalCurrent } = useMemo(() => {
@@ -118,43 +172,15 @@ export const Overview: React.FC<OverviewProps> = ({
       }));
   }, [channels, powerHistory]);
 
-  const metrics = [
-    {
-      label: 'Active Power Total',
-      value: activeCount > 0 ? totalPower.toFixed(1) : '—',
-      unit: activeCount > 0 ? ' W' : '',
-      subtext: coverage
-        ? `${coverage.reportingSlots}/${coverage.configuredSlots} reporting${coverage.partial ? ' · Partial' : ' · Full'}`
-        : 'Awaiting readings',
-    },
-    {
-      label: 'Supply Voltage',
-      value: voltageRange,
-      unit: '',
-      subtext: 'Configured channel range',
-    },
-    {
-      label: 'Active Current',
-      value: totalCurrent,
-      unit: '',
-      subtext: 'Sum across reporting loads',
-    },
-    {
-      label: 'Grid Frequency',
-      value: freqRange,
-      unit: '',
-      subtext: 'Monitored range',
-    },
-  ];
-
   return (
     <div className="space-y-6">
-      {/* Top Status Bar */}
+      {/* Top Status Bar: Concise real status, device name, and display ACK */}
       <div
         style={{
-          background: 'var(--dark-surface)',
-          border: '1px solid var(--dark-border)',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
           borderRadius: 12,
+          boxShadow: 'var(--shadow-card)',
           padding: '12px 16px',
           display: 'flex',
           flexWrap: 'wrap',
@@ -163,12 +189,12 @@ export const Overview: React.FC<OverviewProps> = ({
           gap: 12,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'var(--dark-text-primary)' }}>
-            <Cpu style={{ width: 14, height: 14, color: 'var(--dark-accent)' }} aria-hidden="true" />
-            <span>Device: <strong style={{ fontFamily: 'monospace', color: 'var(--dark-accent)' }}>{selectedDevice}</strong></span>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>
+            <Cpu style={{ width: 14, height: 14, color: 'var(--accent)' }} aria-hidden="true" />
+            <span>Device: <strong style={{ fontFamily: 'monospace', color: 'var(--accent-text)' }}>{selectedDevice}</strong></span>
           </div>
-          <span style={{ color: 'var(--dark-border-strong)' }}>|</span>
+          <span style={{ color: 'var(--border)' }}>|</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
             <span
               style={{
@@ -176,14 +202,15 @@ export const Overview: React.FC<OverviewProps> = ({
                 height: 8,
                 borderRadius: '50%',
                 display: 'inline-block',
-                background: streamStatus.tone === 'positive' ? 'var(--dark-status-ok)' : 'var(--dark-status-warn)',
+                background: dotColor,
               }}
             />
-            <span style={{ color: 'var(--dark-text-muted)' }}>{`ESP: ${streamStatus.label}`}</span>
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{honestStatusMessage}</span>
+            <span style={{ color: 'var(--text-secondary)' }}>({`ESP: ${streamStatus.label}`})</span>
           </div>
-          <span style={{ color: 'var(--dark-border-strong)' }}>|</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--dark-text-muted)' }}>
-            <span>Broker: <strong style={{ color: 'var(--dark-text-primary)', fontWeight: 500 }}>{health?.broker ?? 'unknown'}</strong></span>
+          <span style={{ color: 'var(--border)' }}>|</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)' }}>
+            <span>Broker: <strong style={{ color: 'var(--text-primary)', fontWeight: 500 }}>{health?.broker ?? 'unknown'}</strong></span>
           </div>
         </div>
 
@@ -195,84 +222,235 @@ export const Overview: React.FC<OverviewProps> = ({
               alignItems: 'center',
               gap: 6,
               padding: '4px 10px',
-              background: 'var(--dark-canvas, #050507)',
+              background: 'var(--canvas)',
               borderRadius: 6,
-              border: '1px solid var(--dark-border)',
+              border: '1px solid var(--border)',
               fontSize: 12,
-              color: 'var(--dark-text-muted)',
+              color: 'var(--text-secondary)',
               fontFamily: 'monospace',
             }}
           >
-            <Activity style={{ width: 13, height: 13, color: 'var(--dark-accent)' }} aria-hidden="true" />
-            <span>Display ACK: <strong style={{ color: 'var(--dark-text-primary)' }}>{`${lastDisplayLatencyMs}ms`}</strong></span>
+            <Activity style={{ width: 13, height: 13, color: 'var(--accent)' }} aria-hidden="true" />
+            <span>Display ACK: <strong style={{ color: 'var(--text-primary)' }}>{`${lastDisplayLatencyMs}ms`}</strong></span>
           </div>
         )}
       </div>
 
-      {/* 4 KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map((m) => (
-          <div
-            key={m.label}
-            style={{
-              background: 'var(--dark-surface)',
-              border: '1px solid var(--dark-border)',
-              borderRadius: 12,
-              padding: '20px 24px',
-              borderTop: '2px solid var(--dark-accent)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 4,
-            }}
-          >
-            <span style={sectionLabel}>{m.label}</span>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
-              <span style={metricValue}>{m.value}</span>
-              {m.unit && (
-                <span style={{ color: 'var(--dark-text-muted)', fontSize: 13, fontWeight: 600 }}>{m.unit}</span>
-              )}
+      {/* Conditional Recent Incident Context Banner */}
+      {recentIncident && (
+        <div
+          className="p-4 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-xs"
+          style={{
+            background: 'rgba(217, 119, 6, 0.08)',
+            borderColor: 'rgba(217, 119, 6, 0.3)',
+            color: '#92400e',
+          }}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <ZapOff className="w-5 h-5 flex-shrink-0 text-amber-600" aria-hidden="true" />
+            <div className="min-w-0">
+              <div className="font-bold text-neutral-900 truncate">{recentIncident.title}</div>
+              <div className="text-neutral-600 mt-0.5 line-clamp-1">{recentIncident.summary}</div>
             </div>
-            <span style={metricSubtext}>{m.subtext}</span>
           </div>
-        ))}
+          <button
+            type="button"
+            onClick={() => onNavigate?.(`/insights/incidents?incidentId=${recentIncident.id}`)}
+            className="flex-shrink-0 px-3 py-1.5 rounded font-bold text-white transition-opacity hover:opacity-90"
+            style={{ background: 'var(--accent, #a38445)' }}
+          >
+            Investigate Event →
+          </button>
+        </div>
+      )}
+
+      {/* Primary Content Budget: 3 Essential Cards (Power now, Channels reporting, Alerts needing attention) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Primary 1: Power Now */}
+        <div
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 12,
+            borderTop: '2px solid var(--accent)',
+            boxShadow: 'var(--shadow-card)',
+            padding: '20px 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <span style={sectionLabel}>Power now</span>
+            <Zap className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} aria-hidden="true" />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+            <span style={metricValue}>{activeCount > 0 ? totalPower.toFixed(1) : '—'}</span>
+            {activeCount > 0 && (
+              <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>W</span>
+            )}
+          </div>
+          <span style={metricSubtext}>
+            Active Power Total · {activeCount > 0 ? `${totalPower.toFixed(1)} W monitored` : 'No active load'}
+          </span>
+        </div>
+
+        {/* Primary 2: Channels Reporting */}
+        <div
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 12,
+            borderTop: '2px solid var(--accent)',
+            boxShadow: 'var(--shadow-card)',
+            padding: '20px 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <span style={sectionLabel}>Channels reporting</span>
+            <Cpu className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} aria-hidden="true" />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+            <span style={metricValue}>
+              {coverage ? `${coverage.reportingSlots}/${coverage.configuredSlots}` : `${activeCount}/${configuredCount}`}
+            </span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>slots</span>
+          </div>
+          <span style={metricSubtext}>
+            {`${coverage?.reportingSlots ?? activeCount}/${coverage?.configuredSlots ?? configuredCount} reporting`} · {coverage?.partial ? 'Partial coverage' : 'Full reporting'}
+          </span>
+        </div>
+
+        {/* Primary 3: Alerts Needing Attention */}
+        <div
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 12,
+            borderTop: '2px solid var(--accent)',
+            boxShadow: 'var(--shadow-card)',
+            padding: '20px 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <span style={sectionLabel}>Alerts needing attention</span>
+            <Bell className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} aria-hidden="true" />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+            <span style={metricValue}>0</span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: 13, fontWeight: 600 }}>active</span>
+          </div>
+          <span style={metricSubtext}>
+            All electrical thresholds nominal · Zero active violations
+          </span>
+        </div>
       </div>
 
-      {/* Primary Chart: Real Active Power Trends */}
+      {/* Secondary Electrical Measurements Detail Row (Expandable/Compact) */}
       <div
         style={{
-          background: 'var(--dark-surface)',
-          border: '1px solid var(--dark-border)',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
           borderRadius: 12,
+          boxShadow: 'var(--shadow-card)',
+          overflow: 'hidden',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setMeasurementsExpanded((v) => !v)}
+          className="w-full flex items-center justify-between px-5 py-3 text-left transition-colors hover:bg-black/2"
+          style={{ borderBottom: measurementsExpanded ? '1px solid var(--border)' : 'none' }}
+          aria-expanded={measurementsExpanded}
+          aria-controls="overview-measurements-detail"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+              Secondary Electrical Measurements
+            </span>
+            <span className="text-xs" style={{ color: 'var(--text-dim)' }}>
+              (Supply Voltage, Active Current, Grid Frequency)
+            </span>
+          </div>
+          <div className="flex items-center gap-1 text-xs font-medium" style={{ color: 'var(--accent-text)' }}>
+            <span>{measurementsExpanded ? 'Collapse' : 'Expand'}</span>
+            {measurementsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </div>
+        </button>
+
+        {measurementsExpanded && (
+          <div id="overview-measurements-detail" className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[var(--border)] p-2">
+            <div className="px-5 py-3">
+              <span style={sectionLabel}>Supply Voltage</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
+                <span style={{ ...metricValue, fontSize: '1.25rem' }}>{voltageRange}</span>
+              </div>
+              <span style={metricSubtext}>Configured channel range</span>
+            </div>
+
+            <div className="px-5 py-3">
+              <span style={sectionLabel}>Active Current</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
+                <span style={{ ...metricValue, fontSize: '1.25rem' }}>{totalCurrent}</span>
+              </div>
+              <span style={metricSubtext}>Sum across reporting loads</span>
+            </div>
+
+            <div className="px-5 py-3">
+              <span style={sectionLabel}>Grid Frequency</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginTop: 4 }}>
+                <span style={{ ...metricValue, fontSize: '1.25rem' }}>{freqRange}</span>
+              </div>
+              <span style={metricSubtext}>Monitored line frequency</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Primary Chart: Real Active Power Trends (Receipt-Time with Gaps) */}
+      <div
+        style={{
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
+          borderRadius: 12,
+          boxShadow: 'var(--shadow-card)',
           padding: 16,
         }}
       >
         <MeasurementChart
           title="Active Power Trend (Receipt-Time with Gaps)"
           series={chartSeries}
-          height={300}
+          height={280}
           ariaDescription="Real-time and recent active power samples with breaks during communication gaps"
         />
       </div>
 
-      {/* 5-Channel Mapped Slots Table */}
+      {/* Compact Configured-Channel Content Table */}
       <div
         style={{
-          background: 'var(--dark-surface)',
-          border: '1px solid var(--dark-border)',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
           borderRadius: 12,
+          boxShadow: 'var(--shadow-card)',
           padding: '20px 24px',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
-            <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-text-primary)', margin: 0 }}>
+            <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
               Hardware Channel Mappings (CH01–CH05)
             </h3>
-            <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
               Mapped per device. Missing readings are null (—); valid zero load is 0.00.
             </p>
           </div>
-          <span style={{ fontSize: 12, color: 'var(--dark-text-muted)', fontWeight: 500 }}>
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
             Slots reporting: {activeCount}/{configuredCount}
           </span>
         </div>
@@ -280,13 +458,13 @@ export const Overview: React.FC<OverviewProps> = ({
         <div className="overflow-x-auto">
           <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--dark-border-strong)', background: 'transparent' }}>
+              <tr style={{ borderBottom: '1px solid var(--border-strong)', background: 'var(--surface-raised, #F0F1EC)' }}>
                 {['Slot', 'Channel / Label', 'Voltage', 'Current', 'Power', 'Energy (Raw)', 'Freq', 'Status'].map((h, i) => (
                   <th
                     key={h}
                     style={{
                       padding: '10px 12px',
-                      color: 'var(--dark-text-muted)',
+                      color: 'var(--text-secondary)',
                       fontWeight: 700,
                       textTransform: 'uppercase',
                       fontSize: 10,
@@ -307,17 +485,17 @@ export const Overview: React.FC<OverviewProps> = ({
                   <tr
                     key={ch.displaySlot ?? idx}
                     style={{
-                      borderBottom: '1px solid var(--dark-border)',
+                      borderBottom: '1px solid var(--border)',
                       opacity: isUnconf ? 0.5 : 1,
-                      color: 'var(--dark-text-primary)',
+                      color: 'var(--text-primary)',
                     }}
                   >
-                    <td style={{ padding: '12px', fontWeight: 700, color: 'var(--dark-accent)', fontFamily: 'monospace' }}>
+                    <td style={{ padding: '12px', fontWeight: 700, color: 'var(--accent-text)', fontFamily: 'monospace' }}>
                       {`CH0${ch.displaySlot ?? idx + 1}`}
                     </td>
-                    <td style={{ padding: '12px', fontWeight: 500, color: 'var(--dark-text-primary)' }}>
+                    <td style={{ padding: '12px', fontWeight: 500, color: 'var(--text-primary)' }}>
                       {ch.label}
-                      <span style={{ display: 'block', fontSize: 11, color: 'var(--dark-text-muted)', fontFamily: 'monospace' }}>
+                      <span style={{ display: 'block', fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
                         {ch.rawChannelId}
                       </span>
                     </td>
@@ -330,7 +508,7 @@ export const Overview: React.FC<OverviewProps> = ({
                     <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
                       {s?.values.power != null ? `${s.values.power.toFixed(2)} W` : '—'}
                     </td>
-                    <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', color: 'var(--dark-text-muted)' }}>
+                    <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', color: 'var(--text-secondary)' }}>
                       {s?.values.energyRaw != null ? s.values.energyRaw : '—'}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }}>

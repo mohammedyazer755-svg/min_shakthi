@@ -8,6 +8,8 @@ import type {
   AlertAcknowledgement,
   ChannelMappingItem,
   UserPreferences,
+  IncidentRecord,
+  IncidentAcknowledgement,
 } from '@minsakthi/contracts';
 import {
   TEST_USERS,
@@ -137,6 +139,7 @@ export interface ITelemetryRepository {
   getCheckpoint(consumerId: string): Promise<{ offset: number; eventId: string | null } | null>;
 
   // Device & Mapping (Optimistic Locking R15)
+  listDevices(siteId?: string): Promise<DbDevice[]>;
   getDevice(siteId: string, deviceId: string): Promise<DbDevice | null>;
   getDeviceChannels(siteId: string, deviceId: string): Promise<DbChannel[]>;
   updateDeviceMapping(
@@ -172,6 +175,28 @@ export interface ITelemetryRepository {
     displayName?: string,
     note?: string
   ): Promise<AlertRecord>;
+
+  // Power Event Investigator (Phase 6)
+  getIncidents(
+    siteId: string,
+    options?: {
+      deviceId?: string;
+      state?: 'evaluating' | 'resolved' | 'acknowledged';
+      type?: 'electrical_breach' | 'device_interruption' | 'transport_outage';
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<{ incidents: IncidentRecord[]; total: number }>;
+  getIncidentById(siteId: string, incidentId: string): Promise<IncidentRecord | null>;
+  saveIncident(incident: IncidentRecord): Promise<void>;
+  acknowledgeIncident(
+    siteId: string,
+    incidentId: string,
+    userId: string,
+    displayName?: string,
+    note?: string
+  ): Promise<IncidentRecord>;
+  getActiveIncidents(siteId: string, deviceId?: string): Promise<IncidentRecord[]>;
 }
 
 export class MemoryTelemetryRepository implements ITelemetryRepository {
@@ -192,6 +217,7 @@ export class MemoryTelemetryRepository implements ITelemetryRepository {
   private alertRulesMap = new Map<string, AlertRule>();
   private alertsMap = new Map<string, AlertRecord>();
   private acknowledgementsMap = new Map<string, AlertAcknowledgement[]>(); // alertId -> AlertAcknowledgement[]
+  private incidentsMap = new Map<string, IncidentRecord>();
 
   constructor() {
     this.seedDefaults();
@@ -496,6 +522,14 @@ export class MemoryTelemetryRepository implements ITelemetryRepository {
   }
 
   // Phase 5 Implementations
+  public async listDevices(siteId?: string): Promise<DbDevice[]> {
+    const all = Array.from(this.devices.values());
+    if (siteId) {
+      return all.filter((d) => d.siteId === siteId && d.enabled).map((d) => ({ ...d }));
+    }
+    return all.filter((d) => d.enabled).map((d) => ({ ...d }));
+  }
+
   public async getDevice(siteId: string, deviceId: string): Promise<DbDevice | null> {
     const dev = this.devices.get(deviceId);
     if (!dev || dev.siteId !== siteId) return null;
@@ -710,6 +744,108 @@ export class MemoryTelemetryRepository implements ITelemetryRepository {
       rule: this.alertRulesMap.get(alert.ruleId),
       acknowledgements: acks,
     };
+  }
+
+  public async getIncidents(
+    siteId: string,
+    options?: {
+      deviceId?: string;
+      state?: 'evaluating' | 'resolved' | 'acknowledged';
+      type?: 'electrical_breach' | 'device_interruption' | 'transport_outage';
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<{ incidents: IncidentRecord[]; total: number }> {
+    let list = Array.from(this.incidentsMap.values()).filter((inc) => inc.siteId === siteId);
+
+    if (options?.deviceId) {
+      list = list.filter((inc) => inc.deviceId === options.deviceId);
+    }
+    if (options?.state) {
+      list = list.filter((inc) => inc.state === options.state);
+    }
+    if (options?.type) {
+      list = list.filter((inc) => inc.type === options.type);
+    }
+
+    list.sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
+
+    const total = list.length;
+    const offset = options?.offset ?? 0;
+    const limit = options?.limit ?? 50;
+    const paginated = list.slice(offset, offset + limit);
+
+    return { incidents: paginated, total };
+  }
+
+  public async getIncidentById(siteId: string, incidentId: string): Promise<IncidentRecord | null> {
+    const inc = this.incidentsMap.get(incidentId);
+    if (!inc || inc.siteId !== siteId) return null;
+    return { ...inc };
+  }
+
+  public async saveIncident(incident: IncidentRecord): Promise<void> {
+    const existing = this.incidentsMap.get(incident.id);
+    const updated: IncidentRecord = {
+      ...incident,
+      acknowledgements: existing?.acknowledgements ?? incident.acknowledgements,
+      state: incident.state === 'evaluating' && existing?.state === 'acknowledged'
+        ? 'acknowledged'
+        : incident.state,
+      updatedAt: new Date().toISOString(),
+    };
+    this.incidentsMap.set(incident.id, updated);
+  }
+
+  public async acknowledgeIncident(
+    siteId: string,
+    incidentId: string,
+    userId: string,
+    displayName?: string,
+    note?: string
+  ): Promise<IncidentRecord> {
+    const inc = this.incidentsMap.get(incidentId);
+    if (!inc || inc.siteId !== siteId) {
+      throw new Error('INCIDENT_NOT_FOUND');
+    }
+
+    const acks = [...inc.acknowledgements];
+    const existingIdx = acks.findIndex((a) => a.userId === userId);
+
+    const ack: IncidentAcknowledgement = {
+      id: crypto.randomUUID(),
+      incidentId,
+      userId,
+      userDisplayName: displayName,
+      ackAt: new Date().toISOString(),
+      note: note || null,
+    };
+
+    if (existingIdx >= 0) {
+      acks[existingIdx] = ack;
+    } else {
+      acks.push(ack);
+    }
+
+    const updated: IncidentRecord = {
+      ...inc,
+      state: 'acknowledged',
+      acknowledgements: acks,
+      updatedAt: new Date().toISOString(),
+    };
+    this.incidentsMap.set(incidentId, updated);
+    return updated;
+  }
+
+  public async getActiveIncidents(siteId: string, deviceId?: string): Promise<IncidentRecord[]> {
+    let list = Array.from(this.incidentsMap.values()).filter(
+      (inc) => inc.siteId === siteId && inc.state === 'evaluating'
+    );
+    if (deviceId) {
+      list = list.filter((inc) => inc.deviceId === deviceId);
+    }
+    list.sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
+    return list;
   }
 }
 

@@ -5,7 +5,7 @@
  */
 
 :root {
-  /* Color Tokens */
+  /* Exact Design Tokens required by Design System & Contrast Suite */
   --color-canvas: #F7F6F2;
   --color-surface: #FFFFFF;
   --color-text-primary: #202321;
@@ -58,19 +58,125 @@
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
 
-  /* Motion */
+  /* Motion Specification (Phase 4) */
   --transition-duration: 150ms;
   --transition-timing: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --motion-duration-fast: 140ms;       /* 120–160ms: hover, focus, press, series emphasis */
+  --motion-duration-normal: 200ms;     /* 180–240ms: page navigation, modal, drawer, tabs */
+  --motion-duration-auth: 320ms;       /* 280–360ms: auth handoff / landing-to-workspace reveal */
+  --motion-duration-feedback: 180ms;   /* 150–200ms: save, error, alert acknowledgement feedback */
+
+  --motion-ease-standard: cubic-bezier(0.2, 0.0, 0, 1.0); /* smooth deceleration */
+  --motion-ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
+
+  --motion-scale-press: 0.99;
+  --motion-translate-lift: -2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --transition-duration: 0ms;
+    --transition-duration: 0.01ms;
+    --motion-duration-fast: 0.01ms;
+    --motion-duration-normal: 0.01ms;
+    --motion-duration-auth: 0.01ms;
+    --motion-duration-feedback: 0.01ms;
+    --motion-scale-press: 1;
+    --motion-translate-lift: 0px;
   }
 }
 
+[data-motion="reduce"] {
+  --transition-duration: 0.01ms;
+  --motion-duration-fast: 0.01ms;
+  --motion-duration-normal: 0.01ms;
+  --motion-duration-auth: 0.01ms;
+  --motion-duration-feedback: 0.01ms;
+  --motion-scale-press: 1;
+  --motion-translate-lift: 0px;
+}
+
 /* =====================================================
-   DARK PREMIUM TOKENS — appended, never overwrite above
+   SEMANTIC THEME TOKENS — SCOPED BY [data-theme]
+   ===================================================== */
+
+/* Default / Authenticated Workspace: Calm Warm-Ivory & White */
+:root, [data-theme="light"] {
+  --canvas: #F7F6F2;
+  --surface: #FFFFFF;
+  --surface-inset: #F0F1EC;
+  --surface-glass: rgba(255, 255, 255, 0.90);
+  --text-primary: #202321;
+  --text-secondary: #5D625D;
+  --text-dim: #777B72;
+  --border: #DDDCD5;
+  --border-strong: #777B72;
+  --accent: #A38445;
+  --accent-text: #725719;
+  --accent-dim: rgba(163, 132, 69, 0.12);
+  --status-ok: #176344;
+  --status-ok-bg: rgba(23, 99, 68, 0.1);
+  --status-ok-border: rgba(23, 99, 68, 0.25);
+  --status-warn: #805300;
+  --status-warn-bg: rgba(128, 83, 0, 0.1);
+  --status-warn-border: rgba(128, 83, 0, 0.25);
+  --status-critical: #A52E2E;
+  --status-critical-bg: rgba(165, 46, 46, 0.1);
+  --status-critical-border: rgba(165, 46, 46, 0.25);
+  --status-unknown: #5D625D;
+  --status-unknown-bg: rgba(93, 98, 93, 0.12);
+  --status-unknown-border: rgba(93, 98, 93, 0.25);
+  --focus-ring: #A38445;
+  --button-primary: #202321;
+  --button-text: #FFFFFF;
+  --danger-bg: rgba(165, 46, 46, 0.08);
+  --danger-border: rgba(165, 46, 46, 0.25);
+  --header-bg: #FFFFFF;
+  --header-border: #DDDCD5;
+  --shadow-card: 0 1px 3px rgba(32, 35, 33, 0.05), 0 1px 2px rgba(32, 35, 33, 0.03);
+  --metric-glow: none;
+}
+
+/* Public Landing / Cinema Dark Entrance */
+[data-theme="dark"] {
+  --canvas: #050507;
+  --surface: #0d0d10;
+  --surface-inset: #141418;
+  --surface-glass: rgba(14, 14, 18, 0.85);
+  --text-primary: #f0f0f5;
+  --text-secondary: #8a8a96;
+  --text-dim: #55555f;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.22);
+  --accent: #c8a96e;
+  --accent-text: #c8a96e;
+  --accent-dim: rgba(200, 169, 110, 0.18);
+  --status-ok: #22d47c;
+  --status-ok-bg: rgba(34, 212, 124, 0.1);
+  --status-ok-border: rgba(34, 212, 124, 0.25);
+  --status-warn: #f59e0b;
+  --status-warn-bg: rgba(245, 158, 11, 0.1);
+  --status-warn-border: rgba(245, 158, 11, 0.25);
+  --status-critical: #f56565;
+  --status-critical-bg: rgba(245, 101, 101, 0.1);
+  --status-critical-border: rgba(245, 101, 101, 0.25);
+  --status-unknown: #8a8a96;
+  --status-unknown-bg: rgba(138, 138, 150, 0.15);
+  --status-unknown-border: rgba(255, 255, 255, 0.08);
+  --focus-ring: #c8a96e;
+  --button-primary: #c8a96e;
+  --button-text: #000000;
+  --danger-bg: rgba(245, 101, 101, 0.15);
+  --danger-border: rgba(245, 101, 101, 0.3);
+  --header-bg: rgba(5, 5, 7, 0.92);
+  --header-border: rgba(255, 255, 255, 0.08);
+  --shadow-card: 0 16px 40px rgba(0, 0, 0, 0.6);
+  --metric-glow: 0 0 20px rgba(200, 169, 110, 0.4);
+}
+
+/* =====================================================
+   LEGACY DARK TOKENS — preserved for unmigrated secondary views
    ===================================================== */
 :root {
   --dark-canvas: #050507;

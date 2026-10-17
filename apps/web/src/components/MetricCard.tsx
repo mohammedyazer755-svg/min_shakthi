@@ -23,10 +23,11 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     <div
       className={`relative overflow-hidden ${className}`}
       style={{
-        background: 'var(--dark-surface)',
-        border: '1px solid var(--dark-border)',
-        borderTop: '2px solid var(--dark-accent)',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderTop: '2px solid var(--accent)',
         borderRadius: '12px',
+        boxShadow: 'var(--shadow-card)',
         padding: '20px 24px',
       }}
     >
@@ -35,9 +36,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           className="absolute top-2 right-2 text-[10px] font-semibold tracking-wider px-1.5 py-0.5 rounded"
           aria-label="Test Only Data Marker"
           style={{
-            color: 'var(--dark-accent)',
-            background: 'var(--dark-accent-dim)',
-            border: '1px solid rgba(200,169,110,0.25)',
+            color: 'var(--accent-text)',
+            background: 'var(--accent-dim)',
+            border: '1px solid var(--accent)',
           }}
         >
           TEST ONLY
@@ -45,7 +46,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       )}
       <div
         className="text-[10px] font-bold uppercase tracking-[0.15em] mb-2"
-        style={{ color: 'var(--dark-text-muted)' }}
+        style={{ color: 'var(--text-secondary)' }}
       >
         {label}
       </div>
@@ -54,7 +55,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           className="font-extrabold tabular-nums tracking-tight metric-glow"
           style={{
             fontSize: '1.75rem',
-            color: 'var(--dark-text-primary)',
+            color: 'var(--text-primary)',
           }}
           aria-label={`${label}: ${displayValue} ${unit ?? ''}`}
         >
@@ -63,7 +64,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         {unit && (
           <span
             className="text-sm font-semibold select-none"
-            style={{ color: 'var(--dark-text-muted)' }}
+            style={{ color: 'var(--text-secondary)' }}
           >
             {unit}
           </span>
@@ -72,7 +73,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       {subtext && (
         <div
           className="mt-1 text-[11px]"
-          style={{ color: 'var(--dark-text-dim)' }}
+          style={{ color: 'var(--text-dim)' }}
         >
           {subtext}
         </div>

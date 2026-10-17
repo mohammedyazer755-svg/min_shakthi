@@ -19,6 +19,25 @@ export function createDevicesRouter(
   router.use(requireAuth(authService));
   router.use(requireSiteAccess());
 
+  // GET /api/v1/sites/:siteId/devices (List configured site devices)
+  router.get('/sites/:siteId/devices', async (req, res) => {
+    const siteId = req.params['siteId'] as string;
+    try {
+      const devices = await repo.listDevices(siteId);
+      res.status(200).json({
+        siteId,
+        devices: devices.map((d) => ({
+          rawDeviceId: d.rawDeviceId,
+          enabled: d.enabled,
+          configVersion: d.configVersion,
+          expectedIntervalMs: d.expectedIntervalMs,
+        })),
+      });
+    } catch (err) {
+      res.status(500).json({ error: 'DEVICES_QUERY_ERROR', message: (err as Error).message });
+    }
+  });
+
   // GET /api/v1/sites/:siteId/devices/:deviceId (Diagnostics & config)
   router.get('/sites/:siteId/devices/:deviceId', async (req, res) => {
     const siteId = req.params['siteId'] as string;

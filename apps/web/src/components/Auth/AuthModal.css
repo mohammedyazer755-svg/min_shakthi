@@ -422,7 +422,11 @@
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.16s var(--motion-ease-out, cubic-bezier(0, 0, 0.2, 1)),
+              background-color 0.16s var(--motion-ease-out, cubic-bezier(0, 0, 0.2, 1)),
+              border-color 0.16s var(--motion-ease-out, cubic-bezier(0, 0, 0.2, 1)),
+              color 0.16s var(--motion-ease-out, cubic-bezier(0, 0, 0.2, 1)),
+              box-shadow 0.16s var(--motion-ease-out, cubic-bezier(0, 0, 0.2, 1));
 }
 
 .auth-role-btn:hover {
@@ -463,4 +467,29 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
+}
+
+/* Reduced Motion Enforcement for AuthModal */
+@media (prefers-reduced-motion: reduce) {
+  .auth-glass-backdrop,
+  .auth-glass-card,
+  .auth-ambient-shadow {
+    animation: none !important;
+    transform: none !important;
+  }
+  .auth-role-btn:hover,
+  .auth-role-btn:active {
+    transform: none !important;
+  }
+}
+
+[data-motion="reduce"] .auth-glass-backdrop,
+[data-motion="reduce"] .auth-glass-card,
+[data-motion="reduce"] .auth-ambient-shadow {
+  animation: none !important;
+  transform: none !important;
+}
+[data-motion="reduce"] .auth-role-btn:hover,
+[data-motion="reduce"] .auth-role-btn:active {
+  transform: none !important;
 }

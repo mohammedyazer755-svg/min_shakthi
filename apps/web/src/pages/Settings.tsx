@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../components';
 import { useAuth } from '../auth/AuthContext';
+import { useReducedMotion, type AnimationPreference } from '../motion';
+import { API_BASE } from '../api';
 import {
   Settings as SettingsIcon,
   User,
@@ -20,18 +22,19 @@ interface AuditLogEntry {
   at: string;
 }
 
-const darkSurface: React.CSSProperties = {
-  background: 'var(--dark-surface)',
-  border: '1px solid var(--dark-border)',
+const lightSurface: React.CSSProperties = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
   borderRadius: 12,
+  boxShadow: 'var(--shadow-card)',
 };
 
-const darkInput: React.CSSProperties = {
+const lightInput: React.CSSProperties = {
   padding: '6px 10px',
-  background: 'var(--dark-canvas, #050507)',
-  border: '1px solid var(--dark-border-strong)',
+  background: 'var(--canvas)',
+  border: '1px solid var(--border-strong)',
   borderRadius: 6,
-  color: 'var(--dark-text-primary)',
+  color: 'var(--text-primary)',
   fontSize: 12,
   fontWeight: 500,
   outline: 'none',
@@ -39,7 +42,7 @@ const darkInput: React.CSSProperties = {
 
 const thStyle: React.CSSProperties = {
   padding: '10px 12px',
-  color: 'var(--dark-text-muted)',
+  color: 'var(--text-secondary)',
   fontWeight: 700,
   textTransform: 'uppercase',
   fontSize: 10,
@@ -48,6 +51,7 @@ const thStyle: React.CSSProperties = {
 
 export const Settings: React.FC = () => {
   const { user, accessToken, logout } = useAuth();
+  const { animationPreference, setPreference, isReducedMotion } = useReducedMotion();
   const [timezone, setTimezone] = useState<string>('Asia/Kolkata');
   const [preferredDevice, setPreferredDevice] = useState<string>('prototype1');
   const [savingPrefs, setSavingPrefs] = useState<boolean>(false);
@@ -74,7 +78,7 @@ export const Settings: React.FC = () => {
 
     // Load preferences
     try {
-      const res = await fetch('/api/v1/users/me/preferences', {
+      const res = await fetch(`${API_BASE}/api/v1/users/me/preferences`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (res.ok) {
@@ -89,7 +93,7 @@ export const Settings: React.FC = () => {
     // Load rules
     setLoadingRules(true);
     try {
-      const res = await fetch(`/api/v1/sites/${user.siteId}/alerts/rules`, {
+      const res = await fetch(`${API_BASE}/api/v1/sites/${user.siteId}/alerts/rules`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (res.ok) {
@@ -105,7 +109,7 @@ export const Settings: React.FC = () => {
     // Load audit logs if admin
     if (user.role === 'admin') {
       try {
-        const res = await fetch(`/api/v1/users/sites/${user.siteId}/audit-logs?limit=10`, {
+        const res = await fetch(`${API_BASE}/api/v1/users/sites/${user.siteId}/audit-logs?limit=10`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         if (res.ok) {
@@ -126,7 +130,7 @@ export const Settings: React.FC = () => {
     if (!accessToken || !user) return;
     setSavingPrefs(true);
     try {
-      const res = await fetch('/api/v1/users/me/preferences', {
+      const res = await fetch(`${API_BASE}/api/v1/users/me/preferences`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -152,7 +156,7 @@ export const Settings: React.FC = () => {
     if (!accessToken || !user || user.role !== 'admin') return;
 
     try {
-      const res = await fetch(`/api/v1/sites/${user.siteId}/alerts/rules`, {
+      const res = await fetch(`${API_BASE}/api/v1/sites/${user.siteId}/alerts/rules`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -185,7 +189,7 @@ export const Settings: React.FC = () => {
     if (!accessToken || !user || user.role !== 'admin') return;
 
     try {
-      const res = await fetch(`/api/v1/sites/${user.siteId}/alerts/rules/${ruleId}`, {
+      const res = await fetch(`${API_BASE}/api/v1/sites/${user.siteId}/alerts/rules/${ruleId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${accessToken}` },
       });
@@ -204,7 +208,7 @@ export const Settings: React.FC = () => {
       {/* Header */}
       <div
         style={{
-          ...darkSurface,
+          ...lightSurface,
           padding: '16px 20px',
           display: 'flex',
           flexWrap: 'wrap',
@@ -214,10 +218,10 @@ export const Settings: React.FC = () => {
         }}
       >
         <div>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--dark-text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
             Account Preferences &amp; Platform Configuration
           </h2>
-          <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
             Manage user display preferences, security sessions, and administrative threshold rules.
           </p>
         </div>
@@ -228,9 +232,9 @@ export const Settings: React.FC = () => {
           onClick={logout}
           className="inline-flex items-center gap-1.5"
           style={{
-            color: '#f87171',
-            borderColor: 'rgba(245,101,101,0.3)',
-            background: 'rgba(245,101,101,0.08)',
+            color: 'var(--status-critical, #A52E2E)',
+            borderColor: 'rgba(165,46,46,0.3)',
+            background: 'rgba(165,46,46,0.06)',
           }}
         >
           <LogOut className="w-3.5 h-3.5" />
@@ -242,23 +246,23 @@ export const Settings: React.FC = () => {
         {/* Left Column: Account Profile & Preferences */}
         <div className="space-y-6">
           {/* Profile Card */}
-          <div style={{ ...darkSurface, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--dark-border)', paddingBottom: 12 }}>
-              <User style={{ width: 16, height: 16, color: 'var(--dark-accent)' }} />
-              <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-text-primary)', margin: 0 }}>User Profile</h3>
+          <div style={{ ...lightSurface, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
+              <User style={{ width: 16, height: 16, color: 'var(--accent)' }} />
+              <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>User Profile</h3>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, fontSize: 12 }}>
               <div>
-                <span style={{ color: 'var(--dark-text-muted)', display: 'block', fontSize: 11, marginBottom: 2 }}>Display Name</span>
-                <span style={{ fontWeight: 600, color: 'var(--dark-text-primary)' }}>{user?.displayName}</span>
+                <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: 11, marginBottom: 2 }}>Display Name</span>
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{user?.displayName}</span>
               </div>
               <div>
-                <span style={{ color: 'var(--dark-text-muted)', display: 'block', fontSize: 11, marginBottom: 2 }}>Email</span>
-                <span style={{ fontFamily: 'monospace', color: 'var(--dark-text-primary)' }}>{user?.email}</span>
+                <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: 11, marginBottom: 2 }}>Email</span>
+                <span style={{ fontFamily: 'monospace', color: 'var(--text-primary)' }}>{user?.email}</span>
               </div>
               <div>
-                <span style={{ color: 'var(--dark-text-muted)', display: 'block', fontSize: 11, marginBottom: 4 }}>Assigned Role</span>
+                <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: 11, marginBottom: 4 }}>Assigned Role</span>
                 <span
                   style={{
                     display: 'inline-block',
@@ -268,38 +272,38 @@ export const Settings: React.FC = () => {
                     fontWeight: 800,
                     textTransform: 'uppercase',
                     letterSpacing: '0.1em',
-                    background: 'var(--dark-accent-dim)',
-                    color: 'var(--dark-accent)',
-                    border: '1px solid rgba(200,169,110,0.3)',
+                    background: 'var(--accent-dim, rgba(163,132,69,0.12))',
+                    color: 'var(--accent-text)',
+                    border: '1px solid rgba(163,132,69,0.3)',
                   }}
                 >
                   {user?.role}
                 </span>
               </div>
               <div>
-                <span style={{ color: 'var(--dark-text-muted)', display: 'block', fontSize: 11, marginBottom: 2 }}>Site Membership</span>
-                <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--dark-text-muted)', wordBreak: 'break-all' }}>{user?.siteId}</span>
+                <span style={{ color: 'var(--text-secondary)', display: 'block', fontSize: 11, marginBottom: 2 }}>Site Membership</span>
+                <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text-secondary)', wordBreak: 'break-all' }}>{user?.siteId}</span>
               </div>
             </div>
           </div>
 
           {/* Preferences Card */}
-          <div style={{ ...darkSurface, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--dark-border)', paddingBottom: 12 }}>
-              <SettingsIcon style={{ width: 16, height: 16, color: 'var(--dark-accent)' }} />
-              <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-text-primary)', margin: 0 }}>Display Preferences</h3>
+          <div style={{ ...lightSurface, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid var(--border)', paddingBottom: 12 }}>
+              <SettingsIcon style={{ width: 16, height: 16, color: 'var(--accent)' }} />
+              <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>Display Preferences</h3>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontSize: 12 }}>
               <div>
-                <label htmlFor="settings-timezone-select" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 6, fontSize: 11 }}>
+                <label htmlFor="settings-timezone-select" style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: 6, fontSize: 11 }}>
                   Civil Timezone
                 </label>
                 <select
                   id="settings-timezone-select"
                   value={timezone}
                   onChange={(e) => setTimezone(e.target.value)}
-                  style={{ ...darkInput, width: '100%' }}
+                  style={{ ...lightInput, width: '100%' }}
                 >
                   <option value="Asia/Kolkata">Asia/Kolkata (IST · UTC+05:30)</option>
                   <option value="UTC">UTC (Universal Coordinated Time)</option>
@@ -308,27 +312,50 @@ export const Settings: React.FC = () => {
               </div>
 
               <div>
-                <label htmlFor="settings-device-select" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 6, fontSize: 11 }}>
+                <label htmlFor="settings-device-select" style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: 6, fontSize: 11 }}>
                   Default Device
                 </label>
                 <select
                   id="settings-device-select"
                   value={preferredDevice}
                   onChange={(e) => setPreferredDevice(e.target.value)}
-                  style={{ ...darkInput, width: '100%', fontFamily: 'monospace' }}
+                  style={{ ...lightInput, width: '100%', fontFamily: 'monospace' }}
                 >
                   <option value="prototype1">prototype1</option>
                   <option value="prototype2">prototype2</option>
                 </select>
               </div>
 
-              <div style={{ paddingTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                {prefsSaved && (
-                  <span style={{ fontSize: 12, color: 'var(--dark-status-ok)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <CheckCircle2 style={{ width: 14, height: 14 }} />
-                    <span>Saved</span>
-                  </span>
-                )}
+              <div>
+                <label htmlFor="settings-motion-select" style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: 6, fontSize: 11 }}>
+                  Animation Preference
+                </label>
+                <select
+                  id="settings-motion-select"
+                  value={animationPreference}
+                  onChange={(e) => setPreference(e.target.value as AnimationPreference)}
+                  style={{ ...lightInput, width: '100%' }}
+                >
+                  <option value="system">System Default (Respects OS)</option>
+                  <option value="reduce">Reduced Motion</option>
+                  <option value="full">Full Motion</option>
+                </select>
+                <div style={{ fontSize: 10, color: 'var(--text-dim)', marginTop: 4 }}>
+                  {isReducedMotion
+                    ? '⚡ Reduced motion active (OS or user preference)'
+                    : 'Fluid transitions active (OS reduced-motion request always takes precedence)'}
+                </div>
+              </div>
+
+              <div style={{ paddingTop: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 36 }}>
+                <div style={{ minWidth: 80 }}>
+                  {prefsSaved && (
+                    <span className="motion-feedback" style={{ fontSize: 12, color: 'var(--status-ok, #176344)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <CheckCircle2 style={{ width: 14, height: 14 }} />
+                      <span>Saved</span>
+                    </span>
+                  )}
+                </div>
                 <Button
                   variant="primary"
                   size="sm"
@@ -347,13 +374,13 @@ export const Settings: React.FC = () => {
         {/* Right Columns: Alert Rules Management & Audit Log */}
         <div className="lg:col-span-2 space-y-6">
           {/* Rules Management Card */}
-          <div style={{ ...darkSurface, overflow: 'hidden' }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--dark-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ ...lightSurface, overflow: 'hidden' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-text-primary)', margin: 0 }}>
+                <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
                   Threshold Alert Rules
                 </h3>
-                <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
                   Durable alert criteria with debounce delays and hysteresis deadbands.
                 </p>
               </div>
@@ -373,16 +400,16 @@ export const Settings: React.FC = () => {
 
             {/* Add Rule Form */}
             {showAddRule && (
-              <div style={{ padding: 16, background: 'var(--dark-canvas, #050507)', borderBottom: '1px solid var(--dark-border)', display: 'flex', flexDirection: 'column', gap: 12, fontSize: 12 }}>
-                <h4 style={{ fontWeight: 700, color: 'var(--dark-text-primary)', margin: 0 }}>Create New Threshold Rule</h4>
+              <div style={{ padding: 16, background: 'var(--canvas)', borderBottom: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 12, fontSize: 12 }}>
+                <h4 style={{ fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>Create New Threshold Rule</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   <div>
-                    <label htmlFor="settings-metric-select" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 4, fontSize: 11 }}>Metric</label>
+                    <label htmlFor="settings-metric-select" style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: 4, fontSize: 11 }}>Metric</label>
                     <select
                       id="settings-metric-select"
                       value={newMetric}
                       onChange={(e) => setNewMetric(e.target.value as 'voltage' | 'current' | 'power' | 'frequency')}
-                      style={{ ...darkInput, width: '100%' }}
+                      style={{ ...lightInput, width: '100%' }}
                     >
                       <option value="voltage">Voltage (V)</option>
                       <option value="current">Current (A)</option>
@@ -392,12 +419,12 @@ export const Settings: React.FC = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="settings-operator-select" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 4, fontSize: 11 }}>Operator</label>
+                    <label htmlFor="settings-operator-select" style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: 4, fontSize: 11 }}>Operator</label>
                     <select
                       id="settings-operator-select"
                       value={newOperator}
                       onChange={(e) => setNewOperator(e.target.value as 'gt' | 'lt' | 'gte' | 'lte')}
-                      style={{ ...darkInput, width: '100%' }}
+                      style={{ ...lightInput, width: '100%' }}
                     >
                       <option value="gt">&gt; Greater Than</option>
                       <option value="gte">&gt;= Greater/Equal</option>
@@ -407,47 +434,47 @@ export const Settings: React.FC = () => {
                   </div>
 
                   <div>
-                    <label htmlFor="settings-threshold-input" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 4, fontSize: 11 }}>Threshold Value</label>
+                    <label htmlFor="settings-threshold-input" style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: 4, fontSize: 11 }}>Threshold Value</label>
                     <input
                       id="settings-threshold-input"
                       type="number"
                       step="any"
                       value={newThreshold}
                       onChange={(e) => setNewThreshold(Number(e.target.value))}
-                      style={{ ...darkInput, width: '100%', fontFamily: 'monospace' }}
+                      style={{ ...lightInput, width: '100%', fontFamily: 'monospace' }}
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="settings-hysteresis-input" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 4, fontSize: 11 }}>Hysteresis</label>
+                    <label htmlFor="settings-hysteresis-input" style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: 4, fontSize: 11 }}>Hysteresis</label>
                     <input
                       id="settings-hysteresis-input"
                       type="number"
                       step="any"
                       value={newHysteresis}
                       onChange={(e) => setNewHysteresis(Number(e.target.value))}
-                      style={{ ...darkInput, width: '100%', fontFamily: 'monospace' }}
+                      style={{ ...lightInput, width: '100%', fontFamily: 'monospace' }}
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="settings-debounce-input" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 4, fontSize: 11 }}>Debounce (ms)</label>
+                    <label htmlFor="settings-debounce-input" style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: 4, fontSize: 11 }}>Debounce (ms)</label>
                     <input
                       id="settings-debounce-input"
                       type="number"
                       value={newDebounceMs}
                       onChange={(e) => setNewDebounceMs(Number(e.target.value))}
-                      style={{ ...darkInput, width: '100%', fontFamily: 'monospace' }}
+                      style={{ ...lightInput, width: '100%', fontFamily: 'monospace' }}
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="settings-severity-select" style={{ display: 'block', color: 'var(--dark-text-muted)', marginBottom: 4, fontSize: 11 }}>Severity</label>
+                    <label htmlFor="settings-severity-select" style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: 4, fontSize: 11 }}>Severity</label>
                     <select
                       id="settings-severity-select"
                       value={newSeverity}
                       onChange={(e) => setNewSeverity(e.target.value as 'critical' | 'warning' | 'info')}
-                      style={{ ...darkInput, width: '100%' }}
+                      style={{ ...lightInput, width: '100%' }}
                     >
                       <option value="critical">Critical</option>
                       <option value="warning">Warning</option>
@@ -471,7 +498,7 @@ export const Settings: React.FC = () => {
             <div className="overflow-x-auto">
               <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: 12 }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--dark-border-strong)', background: 'transparent' }}>
+                  <tr style={{ borderBottom: '1px solid var(--border-strong)', background: 'var(--surface-raised, #F0F1EC)' }}>
                     <th style={thStyle}>Metric</th>
                     <th style={thStyle}>Condition</th>
                     <th style={thStyle}>Hysteresis</th>
@@ -483,23 +510,23 @@ export const Settings: React.FC = () => {
                 <tbody>
                   {rules.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ padding: '32px 12px', textAlign: 'center', color: 'var(--dark-text-muted)' }}>
+                      <td colSpan={6} style={{ padding: '32px 12px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                         {loadingRules ? 'Loading rules...' : 'No alert rules configured.'}
                       </td>
                     </tr>
                   ) : (
                     rules.map((r) => (
-                      <tr key={r.id} style={{ borderBottom: '1px solid var(--dark-border)', fontFamily: 'monospace', color: 'var(--dark-text-primary)' }}>
-                        <td style={{ padding: '12px', fontWeight: 700, color: 'var(--dark-text-primary)', textTransform: 'uppercase' }}>
+                      <tr key={r.id} style={{ borderBottom: '1px solid var(--border)', fontFamily: 'monospace', color: 'var(--text-primary)' }}>
+                        <td style={{ padding: '12px', fontWeight: 700, color: 'var(--text-primary)', textTransform: 'uppercase' }}>
                           {r.metric}
                         </td>
                         <td style={{ padding: '12px' }}>
                           {`${r.operator} ${r.threshold}`}
                         </td>
-                        <td style={{ padding: '12px', color: 'var(--dark-text-muted)' }}>
+                        <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>
                           {`±${r.hysteresis}`}
                         </td>
-                        <td style={{ padding: '12px', color: 'var(--dark-text-muted)' }}>
+                        <td style={{ padding: '12px', color: 'var(--text-secondary)' }}>
                           {`${r.debounceMs}ms`}
                         </td>
                         <td style={{ padding: '12px', fontFamily: 'sans-serif' }}>
@@ -511,8 +538,8 @@ export const Settings: React.FC = () => {
                               fontSize: 10,
                               fontWeight: 800,
                               textTransform: 'uppercase',
-                              background: r.severity === 'critical' ? 'rgba(245,101,101,0.15)' : 'rgba(245,158,11,0.15)',
-                              color: r.severity === 'critical' ? '#f87171' : '#fbbf24',
+                              background: r.severity === 'critical' ? 'rgba(165,46,46,0.12)' : 'rgba(128,83,0,0.12)',
+                              color: r.severity === 'critical' ? 'var(--status-critical, #A52E2E)' : 'var(--status-warn, #805300)',
                             }}
                           >
                             {r.severity}
@@ -523,7 +550,7 @@ export const Settings: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => handleDeleteRule(r.id)}
-                              style={{ color: 'var(--dark-text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
+                              style={{ color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}
                               title="Delete Rule"
                             >
                               <Trash2 style={{ width: 14, height: 14 }} />
@@ -540,23 +567,23 @@ export const Settings: React.FC = () => {
 
           {/* Audit Log Card (Admin Only) */}
           {isAdmin && (
-            <div style={{ ...darkSurface, overflow: 'hidden' }}>
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--dark-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ ...lightSurface, overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
-                  <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-text-primary)', margin: 0 }}>
+                  <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
                     Administrative Configuration Audit Trail
                   </h3>
-                  <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
                     Immutable history of mapping revisions, rule changes, and alert acknowledgements.
                   </p>
                 </div>
-                <Shield style={{ width: 16, height: 16, color: 'var(--dark-accent)' }} />
+                <Shield style={{ width: 16, height: 16, color: 'var(--accent)' }} />
               </div>
 
               <div className="overflow-x-auto">
                 <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: 12 }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--dark-border-strong)', background: 'transparent' }}>
+                    <tr style={{ borderBottom: '1px solid var(--border-strong)', background: 'var(--surface-raised, #F0F1EC)' }}>
                       <th style={thStyle}>Timestamp</th>
                       <th style={thStyle}>Action</th>
                       <th style={thStyle}>Target</th>
@@ -565,20 +592,20 @@ export const Settings: React.FC = () => {
                   <tbody style={{ fontFamily: 'monospace' }}>
                     {auditLogs.length === 0 ? (
                       <tr>
-                        <td colSpan={3} style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--dark-text-muted)' }}>
+                        <td colSpan={3} style={{ padding: '24px 12px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                           No administrative actions recorded in current session.
                         </td>
                       </tr>
                     ) : (
                       auditLogs.map((l) => (
-                        <tr key={l.id} style={{ borderBottom: '1px solid var(--dark-border)', color: 'var(--dark-text-primary)' }}>
-                          <td style={{ padding: '10px 12px', color: 'var(--dark-text-muted)' }}>
+                        <tr key={l.id} style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-primary)' }}>
+                          <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>
                             {new Date(l.at).toLocaleString()}
                           </td>
                           <td style={{ padding: '10px 12px', fontWeight: 600 }}>
                             {l.action}
                           </td>
-                          <td style={{ padding: '10px 12px', color: 'var(--dark-accent)' }}>
+                          <td style={{ padding: '10px 12px', color: 'var(--accent-text)' }}>
                             {l.target}
                           </td>
                         </tr>

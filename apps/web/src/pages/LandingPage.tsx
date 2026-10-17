@@ -1,8 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { ArrowRight, Activity, ChevronRight } from 'lucide-react';
+import { ArrowRight, Activity, ShieldCheck, Zap, BarChart3, ChevronRight } from 'lucide-react';
 import { ElectricBrandMark } from '../components/ElectricBrandMark';
 import { LightRays } from '../components/LightRays/LightRays';
 import { AuthModal } from '../components/Auth/AuthModal';
+import { HeroScene } from '../components/HeroScene';
 import './LandingPage.css';
 
 export interface LandingPageProps {
@@ -19,44 +20,42 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(initialAuthOpen);
   const [prefillEmail, setPrefillEmail] = useState('admin@minsakthi.local');
 
-  // Public visitors have no authenticated device stream. Never invent live readings.
-  const metrics = { voltage:'—',frequency:'—',power:'—',current:'—' };
-
   const handleCloseAuth = useCallback(() => {
     setIsAuthModalOpen(false);
   }, []);
 
-  const handleOpenAuth = (roleEmail = 'admin@minsakthi.local') => {
-    setPrefillEmail(roleEmail);
+  const handleOpenAuth = (email = 'admin@minsakthi.local') => {
+    setPrefillEmail(email);
     setIsAuthModalOpen(true);
-    if (onSignIn) onSignIn(roleEmail);
+    if (onSignIn) onSignIn(email);
   };
 
   const channels = [
-    ...Array.from({length:5},(_,index) => ({ slot:`CH0${index+1}`,name:`Channel ${index+1}`,
-      status:'Sign in to view',voltage:'— V',current:'— A' })),
+    { slot: 'CH01', name: 'Main Phase A', status: 'Sign in to view', voltage: '— V', current: '— A' },
+    { slot: 'CH02', name: 'Chiller Compressors', status: 'Sign in to view', voltage: '— V', current: '— A' },
+    { slot: 'CH03', name: 'Server Rack Feed A', status: 'Sign in to view', voltage: '— V', current: '— A' },
+    { slot: 'CH04', name: 'HVAC Air Handlers', status: 'Sign in to view', voltage: '— V', current: '— A' },
+    { slot: 'CH05', name: 'Emergency Backup Inverter', status: 'Sign in to view', voltage: '— V', current: '— A' },
   ];
 
-  const pipelineSteps = [
+  const benefits = [
     {
-      num: '01 / EDGE INGESTION',
-      title: 'ESP32 Firmware',
-      desc: 'Raw multi-channel electrical sampling calibrated on-chip, framed with CRC32 integrity.',
+      icon: Zap,
+      badge: '01 / PRECISION',
+      title: 'Sub-Second Edge Precision',
+      desc: '5-channel electrical tracking with CRC32 integrity framing and cadence-aware freshness. Discards retained broker silence without false online claims.',
     },
     {
-      num: '02 / TELEMETRY BROKER',
-      title: 'Telemetry Broker',
-      desc: 'High-throughput broker publishing to dedicated swiftpower topic with zero packet mutation.',
+      icon: BarChart3,
+      badge: '02 / REPORTING',
+      title: 'Auditable Civil Reporting',
+      desc: 'Deterministic energy aggregation bounded in civil timezones (Asia/Kolkata). Continuous gap and counter reset tracking with zero unverified billing claims.',
     },
     {
-      num: '03 / ALWAYS-ON BACKEND',
-      title: 'Durable Ingestion Engine',
-      desc: 'Fsync disk spooling, PostgreSQL cold store, and monotonic sequence reconciliation.',
-    },
-    {
-      num: '04 / CLIENT STREAMING',
-      title: 'Authenticated Socket.IO',
-      desc: 'Sub-second real-time streaming directly into the mission-control monitoring cockpit.',
+      icon: ShieldCheck,
+      badge: '03 / RELIABILITY',
+      title: 'Resilient Mission Control',
+      desc: 'Persistent disk-buffered spooling with SQLite/Postgres reconciliation, multi-tenant site isolation, and real-time socket diagnostics.',
     },
   ];
 
@@ -66,13 +65,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <div className="landing-ambient-layer" aria-hidden="true">
         <LightRays
           raysOrigin="top-center"
-          raysSpeed={0.7}
-          lightSpread={0.48}
-          rayLength={2.6}
+          raysSpeed={0.5}
+          lightSpread={0.5}
+          rayLength={2.4}
           pulsating={false}
           fadeDistance={1.15}
           followMouse={true}
-          mouseInfluence={0.08}
+          mouseInfluence={0.06}
           distortion={0}
           className="landing-rays-canvas"
         />
@@ -90,22 +89,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </a>
 
           <nav className="landing-nav-links hidden md:flex" aria-label="Main Navigation">
-            <a href="#live-stream" className="landing-nav-link">Live Telemetry</a>
-            <a href="#channels" className="landing-nav-link">Channels</a>
-            <a href="#architecture" className="landing-nav-link">Architecture</a>
-            <a href="#specs" className="landing-nav-link">System Specs</a>
+            <a href="#benefits" className="landing-nav-link">Platform Capabilities</a>
+            <a href="#preview" className="landing-nav-link">Workspace Preview</a>
           </nav>
 
           <div className="landing-nav-actions">
             <div className="landing-status-badge hidden sm:inline-flex">
-              <span className="landing-live-dot" aria-hidden="true" />
-              <span>Secure monitoring</span>
+              <span className="landing-live-dot" aria-hidden="true" style={{ background: '#c8a96e', boxShadow: '0 0 10px rgba(200, 169, 110, 0.5)' }} />
+              <span>System Ready</span>
             </div>
 
             <button
               type="button"
               onClick={() => handleOpenAuth()}
-              className="landing-signin-btn"
+              className="landing-signin-btn motion-interactive motion-btn-press"
             >
               Sign In
             </button>
@@ -117,14 +114,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <div className="landing-hairline">
         <div className="landing-hairline-inner">
           <span>ENERGY INTELLIGENCE WORKSPACE</span>
-          <span className="hidden sm:inline">FOR INDUSTRIAL & COMMERCIAL GRIDS</span>
+          <span className="hidden sm:inline">FOR INDUSTRIAL &amp; COMMERCIAL GRIDS</span>
         </div>
       </div>
 
-      {/* ── Hero Section ── */}
+      {/* ── Hero Section with Dimensional 3D Assembly ── */}
       <section className="landing-hero" id="overview">
-        <div className="landing-hero-grid">
-          {/* Left: Editorial Headline & Brief */}
+        <div className="landing-hero-grid items-center">
+          {/* Left: Editorial Headline & Actions */}
           <div className="landing-hero-left">
             <div className="landing-hero-badge">
               <Activity className="w-3.5 h-3.5" aria-hidden="true" />
@@ -138,128 +135,96 @@ export const LandingPage: React.FC<LandingPageProps> = ({
 
             <p className="landing-hero-description">
               Industrial-grade electrical monitoring engineered for mission-critical facilities.
-              Continuous high-frequency ESP32 edge telemetry, durable local spooling,
-              and tamper-evident civil reporting.
-            </p>
-          </div>
-
-          {/* Right: Editorial 01 / OVERVIEW Card */}
-          <div className="landing-index-card">
-            <div className="landing-card-header">
-              <span className="landing-card-tag">01 / OVERVIEW</span>
-              <span className="text-[11px] font-bold text-neutral-400">ESP32 PROTO</span>
-            </div>
-
-            <h3 className="landing-card-title">Multi-Channel Edge Ingestion</h3>
-
-            <p className="landing-card-text">
-              Continuous 50 samples/second throughput across 5 physical channels.
-              Precise phase voltage, active load current, power factor, and frequency tracking with zero synthetic fabrications.
+              Continuous hardware telemetry, verified civil reporting, and high-integrity historical records.
             </p>
 
-            <div className="landing-card-actions">
+            <div className="landing-hero-cta flex flex-wrap items-center gap-4 mt-8">
               <button
                 type="button"
                 onClick={() => handleOpenAuth()}
-                className="landing-primary-btn"
+                className="landing-primary-btn motion-interactive motion-btn-press"
               >
-                <span>Live Stream</span>
+                <span>Open Dashboard</span>
                 <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </button>
 
               <a
-                href="#architecture"
-                className="landing-secondary-btn"
+                href="#preview"
+                className="landing-secondary-btn motion-interactive motion-btn-press"
               >
-                Architecture
+                Explore Preview
               </a>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ── Live Electrical Telemetry Strip (Guarantees dynamic feel) ── */}
-      <section className="landing-ticker-strip" id="live-stream">
-        <div className="landing-ticker-box">
-          <div className="landing-ticker-status">
-            <span className="landing-live-dot" aria-hidden="true" />
-            <div>
-              <div className="text-xs font-bold tracking-wider text-emerald-400 uppercase">
-                Sign in for live readings
-              </div>
-              <div className="text-[10px] text-neutral-400">
-                Device status available after sign-in
-              </div>
-            </div>
-          </div>
-
-          <div className="landing-ticker-metrics">
-            <div className="landing-metric-item">
-              <span className="landing-metric-label">Phase Voltage</span>
-              <span className="landing-metric-value">
-                {metrics.voltage} <span className="landing-metric-unit">V</span>
-              </span>
-            </div>
-
-            <div className="landing-metric-item">
-              <span className="landing-metric-label">Phase Current</span>
-              <span className="landing-metric-value">
-                {metrics.current} <span className="landing-metric-unit">A</span>
-              </span>
-            </div>
-
-            <div className="landing-metric-item">
-              <span className="landing-metric-label">Active Power</span>
-              <span className="landing-metric-value">
-                {metrics.power} <span className="landing-metric-unit">W</span>
-              </span>
-            </div>
-
-            <div className="landing-metric-item">
-              <span className="landing-metric-label">Grid Frequency</span>
-              <span className="landing-metric-value">
-                {metrics.frequency} <span className="landing-metric-unit">Hz</span>
-              </span>
-            </div>
-          </div>
-
-          {/* Flowing animated SVG electrical sparkline */}
-          <div className="landing-wave-container" aria-hidden="true">
-            <svg viewBox="0 0 140 36" fill="none" className="landing-wave-svg">
-              <path
-                d="M 0 18 Q 17.5 4, 35 18 T 70 18 T 105 18 T 140 18"
-                stroke="#C8A96E"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                className="landing-wave-path"
-              />
-            </svg>
+          {/* Right: Composed 3D Energy Meter Scene with Ambient Integration */}
+          <div className="landing-hero-scene-wrap flex items-center justify-center p-4">
+            <HeroScene size={380} className="max-w-[380px] w-full" />
           </div>
         </div>
       </section>
 
-      {/* ── 5-Channel Hardware Preview ── */}
-      <section className="landing-channels-section" id="channels">
+      {/* ── Three Short Benefits ── */}
+      <section className="landing-benefits-section" id="benefits">
         <div className="landing-section-header">
           <div className="landing-section-title-wrap">
-            <span className="landing-section-tag">02 / HARDWARE MAPPINGS</span>
+            <span className="landing-section-tag">ENGINEERING PILLARS</span>
+            <h2 className="landing-section-heading">Designed for Mission-Critical Clarity</h2>
+          </div>
+        </div>
+
+        <div className="landing-benefits-grid">
+          {benefits.map((b) => {
+            const Icon = b.icon;
+            return (
+              <div key={b.title} className="landing-benefit-card motion-clickable-card">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="p-2.5 rounded-lg bg-neutral-900 border border-neutral-800 text-amber-400">
+                    <Icon className="w-5 h-5" aria-hidden="true" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 font-mono">
+                    {b.badge}
+                  </span>
+                </div>
+                <h3 className="text-base font-bold text-white mb-2">{b.title}</h3>
+                <p className="text-xs leading-relaxed text-neutral-400">{b.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── Honest Non-Operational Product Preview ── */}
+      <section className="landing-channels-section" id="preview">
+        <div className="landing-section-header">
+          <div className="landing-section-title-wrap">
+            <span className="landing-section-tag">WORKPLACE PREVIEW</span>
             <h2 className="landing-section-heading">5-Channel Composite Tracking</h2>
+            <div className="flex items-center gap-2 mt-1">
+              <span
+                className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded"
+                style={{ background: 'rgba(200, 169, 110, 0.15)', color: '#c8a96e', border: '1px solid rgba(200, 169, 110, 0.3)' }}
+              >
+                NON-OPERATIONAL WORKSPACE PREVIEW
+              </span>
+              <span className="text-xs text-neutral-400">Sign in to view real-time site telemetry</span>
+            </div>
           </div>
           <button
             type="button"
             onClick={() => handleOpenAuth()}
             className="text-xs font-bold text-amber-300 hover:text-white flex items-center gap-1 transition-colors"
           >
-            <span>View all channels</span>
+            <span>Authorize workspace access</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
 
         <div className="landing-channel-cards-grid">
-          {channels.map(ch => (
+          {channels.map((ch) => (
             <div
               key={ch.slot}
-              className="landing-channel-card"
+              className="landing-channel-card motion-clickable-card"
               onClick={() => handleOpenAuth()}
               role="button"
               tabIndex={0}
@@ -279,30 +244,37 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         </div>
       </section>
 
-      {/* ── Architecture Pipeline ── */}
-      <section className="landing-arch-section" id="architecture">
-        <div className="landing-arch-box">
-          <div className="flex flex-col gap-2">
-            <span className="landing-section-tag">03 / SYSTEM ARCHITECTURE</span>
-            <h2 className="landing-section-heading">Deterministic Hardware-to-Cloud Pipeline</h2>
-            <p className="text-sm text-neutral-400 max-w-2xl mt-1">
-              Zero browser TCP MQTT. All ingestion passes through authenticated, disk-buffered server infrastructure.
-            </p>
-          </div>
-
-          <div className="landing-arch-pipeline">
-            {pipelineSteps.map(step => (
-              <div key={step.num} className="landing-pipeline-step">
-                <span className="landing-step-num">{step.num}</span>
-                <h4 className="landing-step-title">{step.title}</h4>
-                <p className="landing-step-desc">{step.desc}</p>
-              </div>
-            ))}
-          </div>
+      {/* ── Final Call to Action ── */}
+      <section className="landing-cta-section max-w-7xl mx-auto px-6 py-16">
+        <div
+          className="p-8 sm:p-12 rounded-2xl border text-center flex flex-col items-center justify-center relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(180deg, #0d0d12 0%, #050508 100%)',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+          }}
+        >
+          <ElectricBrandMark size={40} className="mb-4" />
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+            Authorize Mission-Control Access
+          </h2>
+          <p className="text-xs sm:text-sm text-neutral-400 max-w-lg mt-3 leading-relaxed">
+            Sign in to access your site&apos;s real-time power telemetry cockpit, multi-channel diagnostics,
+            automated alert evaluations, and historical event logs.
+          </p>
+          <button
+            type="button"
+            onClick={() => handleOpenAuth()}
+            className="landing-primary-btn motion-interactive motion-btn-press mt-6"
+            style={{ padding: '12px 32px', fontSize: '14px' }}
+          >
+            <span>Open Dashboard</span>
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
+          </button>
         </div>
       </section>
 
-      {/* ── Footer ── */}
+      {/* ── Clean Footer (Zero public role shortcuts) ── */}
       <footer className="landing-footer">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -311,28 +283,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             <span>— Energy Intelligence Platform</span>
           </div>
 
-          <div className="flex items-center gap-6">
-            <button
-              type="button"
-              onClick={() => handleOpenAuth('admin@minsakthi.local')}
-              className="hover:text-white transition-colors"
-            >
-              Admin Access
-            </button>
-            <button
-              type="button"
-              onClick={() => handleOpenAuth('operator@minsakthi.local')}
-              className="hover:text-white transition-colors"
-            >
-              Operator
-            </button>
-            <button
-              type="button"
-              onClick={() => handleOpenAuth('viewer@minsakthi.local')}
-              className="hover:text-white transition-colors"
-            >
-              Viewer
-            </button>
+          <div className="text-xs text-neutral-500">
+            Sessions authenticated via secure HttpOnly tokens. All rights reserved.
           </div>
         </div>
       </footer>

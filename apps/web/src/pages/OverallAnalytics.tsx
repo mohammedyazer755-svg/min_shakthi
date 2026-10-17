@@ -8,10 +8,11 @@ export interface OverallAnalyticsProps {
   selectedDevice: string;
 }
 
-const darkSurface: React.CSSProperties = {
-  background: 'var(--dark-surface)',
-  border: '1px solid var(--dark-border)',
+const lightSurface: React.CSSProperties = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
   borderRadius: 12,
+  boxShadow: 'var(--shadow-card)',
 };
 
 const sectionLabel: React.CSSProperties = {
@@ -19,12 +20,12 @@ const sectionLabel: React.CSSProperties = {
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: '0.15em',
-  color: 'var(--dark-text-muted)',
+  color: 'var(--text-secondary)',
 };
 
 const thStyle: React.CSSProperties = {
   padding: '10px 12px',
-  color: 'var(--dark-text-muted)',
+  color: 'var(--text-secondary)',
   fontWeight: 700,
   textTransform: 'uppercase',
   fontSize: 10,
@@ -33,7 +34,7 @@ const thStyle: React.CSSProperties = {
 
 export const OverallAnalytics: React.FC<OverallAnalyticsProps> = ({
   telemetry,
-  selectedDevice,
+  selectedDevice: _selectedDevice,
 }) => {
   const { channels, powerHistory } = telemetry;
   const [timeRange, setTimeRange] = useState<TimeRange>('1h');
@@ -94,7 +95,7 @@ export const OverallAnalytics: React.FC<OverallAnalyticsProps> = ({
       {/* Analytics Header Controls */}
       <div
         style={{
-          ...darkSurface,
+          ...lightSurface,
           padding: '16px 20px',
           display: 'flex',
           flexWrap: 'wrap',
@@ -104,121 +105,123 @@ export const OverallAnalytics: React.FC<OverallAnalyticsProps> = ({
         }}
       >
         <div>
-          <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--dark-text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
             Overall Energy &amp; Load Analytics
           </h2>
-          <p style={{ fontSize: 12, color: 'var(--dark-text-muted)', marginTop: 2 }}>
-            Aggregated receipt-time telemetry for device{' '}
-            <strong style={{ fontFamily: 'monospace', color: 'var(--dark-accent)' }}>{selectedDevice}</strong>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
+            Active power history, load dispersion, and verified billing compliance notes.
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={sectionLabel}>Window:</span>
           <TimeRangePicker value={timeRange} onChange={setTimeRange} />
         </div>
       </div>
 
-      {/* Primary Trend Chart */}
-      <div style={{ ...darkSurface, padding: 16 }}>
-        <p style={{ ...sectionLabel, marginBottom: 12, color: 'var(--dark-accent)' }}>Active Load Distribution Over Time</p>
-        <MeasurementChart
-          title="Active Load Distribution Over Time"
-          series={chartSeries}
-          height={320}
-          ariaDescription={`Active power trend across all configured channels for ${selectedDevice}`}
-        />
-      </div>
-
-      {/* Billing & Units Provenance Disclosure (R12, R13 Non-negotiable requirement) */}
+      {/* Contract Notice Banner (R12, R13) */}
       <div
         style={{
+          padding: '14px 18px',
+          background: 'rgba(128, 83, 0, 0.06)',
+          border: '1px solid rgba(128, 83, 0, 0.25)',
+          borderRadius: 12,
           display: 'flex',
           alignItems: 'flex-start',
           gap: 12,
-          padding: 16,
-          background: 'rgba(245,158,11,0.06)',
-          border: '1px solid rgba(245,158,11,0.20)',
-          borderRadius: 10,
-          fontSize: 12,
-          color: 'var(--dark-text-primary)',
         }}
+        role="note"
       >
-        <AlertTriangle style={{ width: 16, height: 16, color: 'var(--dark-accent)', flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
-        <div>
-          <span style={{ fontWeight: 600, color: 'var(--dark-accent)', display: 'block', marginBottom: 4 }}>
+        <AlertTriangle style={{ width: 18, height: 18, color: 'var(--status-warn)', flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
+        <div style={{ fontSize: 12, lineHeight: 1.5 }}>
+          <strong style={{ color: 'var(--status-warn)', display: 'block', marginBottom: 2 }}>
             Contract Notice: Verified Billing Calculation Suppressed
+          </strong>
+          <span style={{ color: 'var(--text-secondary)' }}>
+            ESP32 raw legacy packets supply cumulative energy as uncalibrated tokens (energyRaw). Metrology units and hardware
+            calibration remain unverified against revenue-grade reference meters. Energy tariff multipliers are withheld to maintain data integrity.
           </span>
-          <p style={{ color: 'var(--dark-text-muted)', lineHeight: 1.6, margin: 0 }}>
-            Per MIN-SAKTHI specification, ESP32 raw legacy packets supply cumulative energy as uncalibrated tokens without verified hardware units (Wh vs. kWh). In accordance with engineering truth, monetary billing estimates and synthetic carbon counters remain disabled until counter reboot/wrap calibration is verified by company engineers.
-          </p>
         </div>
       </div>
 
-      {/* Channel Contribution Table */}
-      <div style={{ ...darkSurface, padding: '20px 24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--dark-text-primary)', margin: 0 }}>
+      {/* Multi-Channel Trend Chart */}
+      <div style={{ ...lightSurface, padding: 16 }}>
+        <p style={{ ...sectionLabel, marginBottom: 8, color: 'var(--accent-text)' }}>
+          Multi-Channel Active Power Trend ({timeRange})
+        </p>
+        <MeasurementChart
+          title={`Active Power Trend (${timeRange})`}
+          series={chartSeries}
+          height={320}
+          ariaDescription={`Multi-channel power trends over a ${timeRange} window with visible gaps`}
+        />
+      </div>
+
+      {/* Channel Dispersion Table */}
+      <div style={{ ...lightSurface, padding: '20px 24px' }}>
+        <div style={{ marginBottom: 16 }}>
+          <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
             Channel Load Contribution &amp; Dispersion
           </h3>
-          <span style={{ fontSize: 12, color: 'var(--dark-text-muted)' }}>
-            Min/max preserved across observed samples
-          </span>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
+            Current load sharing across active monitored channels.
+          </p>
         </div>
 
         <div className="overflow-x-auto">
           <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--dark-border-strong)' }}>
+              <tr style={{ borderBottom: '1px solid var(--border-strong)', background: 'transparent' }}>
                 <th style={thStyle}>Slot</th>
-                <th style={thStyle}>Load Description</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Current Load</th>
+                <th style={thStyle}>Load Label</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Active Power</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Min Power</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Max Power</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Share of Total</th>
-                <th style={{ ...thStyle, textAlign: 'right' }}>Samples Recorded</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Load Share</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Samples In Memory</th>
               </tr>
             </thead>
             <tbody>
-              {channelStats.map((st) => (
-                <tr key={st.channelId} style={{ borderBottom: '1px solid var(--dark-border)', color: 'var(--dark-text-primary)' }}>
-                  <td style={{ padding: '12px', fontWeight: 700, color: 'var(--dark-accent)', fontFamily: 'monospace' }}>
-                    CH0{st.displaySlot}
-                  </td>
-                  <td style={{ padding: '12px', fontWeight: 500, color: 'var(--dark-text-primary)' }}>
-                    {st.label}
-                    <span style={{ display: 'block', fontSize: 11, color: 'var(--dark-text-muted)', fontFamily: 'monospace' }}>
-                      {st.channelId}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
-                    {st.currentPower !== null ? `${st.currentPower.toFixed(2)} W` : '—'}
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', color: 'var(--dark-text-muted)' }}>
-                    {st.minPower !== null ? `${st.minPower.toFixed(2)} W` : '—'}
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', color: 'var(--dark-text-muted)' }}>
-                    {st.maxPower !== null ? `${st.maxPower.toFixed(2)} W` : '—'}
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }}>
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        padding: '2px 8px',
-                        borderRadius: 4,
-                        background: 'rgba(200,169,110,0.12)',
-                        color: 'var(--dark-accent)',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {st.pct !== null ? `${st.pct}%` : '—'}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', color: 'var(--dark-text-muted)' }}>
-                    {st.sampleCount} pts
+              {channelStats.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ padding: '32px 12px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                    No reporting channels configured.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                channelStats.map((ch, idx) => (
+                  <tr
+                    key={ch.channelId}
+                    style={{
+                      borderBottom: '1px solid var(--border)',
+                      color: 'var(--text-primary)',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    <td style={{ padding: '12px', fontWeight: 700, color: 'var(--accent-text)' }}>
+                      {`CH0${ch.displaySlot ?? idx + 1}`}
+                    </td>
+                    <td style={{ padding: '12px', fontWeight: 500, fontFamily: 'inherit', color: 'var(--text-primary)' }}>
+                      {ch.label}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
+                      {ch.currentPower !== null ? `${ch.currentPower.toFixed(2)} W` : '—'}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-secondary)' }}>
+                      {ch.minPower !== null ? `${ch.minPower.toFixed(2)} W` : '—'}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-secondary)' }}>
+                      {ch.maxPower !== null ? `${ch.maxPower.toFixed(2)} W` : '—'}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--accent-text)', fontWeight: 600 }}>
+                      {ch.pct !== null ? `${ch.pct}%` : '—'}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-secondary)' }}>
+                      {ch.sampleCount}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -226,3 +229,5 @@ export const OverallAnalytics: React.FC<OverallAnalyticsProps> = ({
     </div>
   );
 };
+
+export default OverallAnalytics;

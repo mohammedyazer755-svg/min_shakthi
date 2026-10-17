@@ -18,7 +18,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         <label
           htmlFor={inputId}
           className="block text-[10px] font-bold uppercase tracking-widest mb-1.5"
-          style={{ color: 'var(--dark-text-muted)' }}
+          style={{ color: 'var(--text-secondary)' }}
         >
           {label}
         </label>
@@ -29,33 +29,33 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           aria-invalid={Boolean(error)}
           aria-describedby={error ? errorId : helperText ? helperId : undefined}
           className={`w-full min-h-[44px] px-3.5 py-2 text-sm font-medium rounded-lg transition-all
-            placeholder:text-[rgba(138,138,150,0.5)]
+            placeholder:text-[var(--text-dim)]
             disabled:opacity-50 disabled:cursor-not-allowed
             focus:outline-none
             ${className}`}
           style={{
-            background: 'var(--dark-canvas)',
-            border: `1px solid ${error ? 'var(--dark-status-critical)' : 'var(--dark-border-strong)'}`,
-            color: 'var(--dark-text-primary)',
+            background: 'var(--surface)',
+            border: `1px solid ${error ? 'var(--status-critical)' : 'var(--border-strong)'}`,
+            color: 'var(--text-primary)',
             ...style,
           }}
           onFocus={(e) => {
-            if (!error) e.currentTarget.style.borderColor = 'var(--dark-accent)';
+            if (!error) e.currentTarget.style.borderColor = 'var(--focus-ring)';
             rest.onFocus?.(e);
           }}
           onBlur={(e) => {
-            if (!error) e.currentTarget.style.borderColor = 'var(--dark-border-strong)';
+            if (!error) e.currentTarget.style.borderColor = 'var(--border-strong)';
             rest.onBlur?.(e);
           }}
           {...rest}
         />
         {error && (
-          <p id={errorId} className="mt-1.5 text-xs font-medium" style={{ color: 'var(--dark-status-critical)' }}>
+          <p id={errorId} className="mt-1.5 text-xs font-medium" style={{ color: 'var(--status-critical)' }}>
             {error}
           </p>
         )}
         {!error && helperText && (
-          <p id={helperId} className="mt-1.5 text-xs" style={{ color: 'var(--dark-text-muted)' }}>
+          <p id={helperId} className="mt-1.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
             {helperText}
           </p>
         )}
