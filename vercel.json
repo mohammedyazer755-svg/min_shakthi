@@ -1,58 +1,62 @@
 {
-  "services": {
-    "web": {
-      "root": ".",
-      "framework": "vite",
-      "buildCommand": "npm run build:web",
-      "outputDirectory": "apps/web/dist",
-      "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-    },
-    "api": {
-      "root": "apps/server",
-      "framework": "express",
-      "entrypoint": "cloud-entry.cjs",
-      "buildCommand": "cd ../.. && npm run build:server && npm run build:cloud --workspace=@minsakthi/server"
-    }
-  },
-  "daemons": {
-    "mqtt": {
-      "root": ".",
-      "entrypoint": "Dockerfile",
-      "instances": { "iad1": 1 },
-      "resources": { "requests": { "memory": "1Gi" } },
-      "terminationGracePeriodSeconds": 20
-    }
-  },
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": { "service": "api" } },
-    { "source": "/health/(.*)", "destination": { "service": "api" } },
-    { "source": "/socket.io/(.*)", "destination": { "service": "api" } },
-    {
-      "source": "/(.*)",
-      "destination": { "service": "web" }
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        }
-      ]
-    }
-  ]
+    "daemons":  {
+                    "mqtt":  {
+                                 "root":  ".",
+                                 "entrypoint":  "Dockerfile",
+                                 "instances":  {
+                                                   "iad1":  1
+                                               },
+                                 "resources":  {
+                                                   "requests":  {
+                                                                    "memory":  "1Gi"
+                                                                }
+                                               },
+                                 "terminationGracePeriodSeconds":  20
+                             }
+                },
+    "rewrites":  [
+                     {
+                         "destination":  "/api/cloud",
+                         "source":  "/api/(.*)"
+                     },
+                     {
+                         "destination":  "/api/cloud",
+                         "source":  "/health/(.*)"
+                     },
+                     {
+                         "destination":  "/api/cloud",
+                         "source":  "/socket.io/(.*)"
+                     },
+                     {
+                         "destination":  "/index.html",
+                         "source":  "/(.*)"
+                     }
+                 ],
+    "headers":  [
+                    {
+                        "source":  "/(.*)",
+                        "headers":  [
+                                        {
+                                            "key":  "X-Content-Type-Options",
+                                            "value":  "nosniff"
+                                        },
+                                        {
+                                            "key":  "X-Frame-Options",
+                                            "value":  "DENY"
+                                        },
+                                        {
+                                            "key":  "X-XSS-Protection",
+                                            "value":  "1; mode=block"
+                                        },
+                                        {
+                                            "key":  "Referrer-Policy",
+                                            "value":  "strict-origin-when-cross-origin"
+                                        }
+                                    ]
+                    }
+                ],
+    "framework":  "vite",
+    "buildCommand":  "npm run build \u0026\u0026 npm run build:cloud --workspace=@minsakthi/server",
+    "outputDirectory":  "apps/web/dist",
+    "installCommand":  "npm ci"
 }
