@@ -25,10 +25,10 @@ function EnergyDiagram({ selected }: { selected: number }) {
   return <svg className="energy-diagram" viewBox="0 0 680 560" role="img" aria-labelledby={titleId}>
     <title id={titleId}>Five physical channel inputs connected to one energy workspace. Illustrative architecture.</title>
     <defs>
-      <radialGradient id={`${titleId}-wash`}><stop stopColor="#809fd4" stopOpacity=".1"/><stop offset="1" stopColor="#809fd4" stopOpacity="0"/></radialGradient>
+      <radialGradient id={`${titleId}-wash`}><stop stopColor="#AAAAAA" stopOpacity=".1"/><stop offset="1" stopColor="#AAAAAA" stopOpacity="0"/></radialGradient>
     </defs>
     <circle cx="350" cy="280" r="240" fill={`url(#${titleId}-wash)`}/>
-    <g fill="none" stroke="#303a49" strokeWidth="1">
+    <g fill="none" stroke="#303030" strokeWidth="1">
       <circle cx="350" cy="280" r="178" strokeDasharray="2 9"/>
       <circle cx="350" cy="280" r="126"/>
       <path d="M350 56V78M350 482V504M126 280H148M552 280H574"/>
@@ -42,15 +42,15 @@ function EnergyDiagram({ selected }: { selected: number }) {
       <text x="52" y={104 + index * 90} textAnchor="middle" className="diagram-number">{String(index + 1).padStart(2, '0')}</text>
       <text x="94" y={85 + index * 90} className="diagram-label">{channelSlots[index]}</text>
     </g>)}
-    <path d="M430 280H602" fill="none" stroke="#71839e" strokeWidth="1.5"/>
-    <circle cx="608" cy="280" r="5" fill="#b9d2ff"/>
+    <path d="M430 280H602" fill="none" stroke="#777777" strokeWidth="1.5"/>
+    <circle cx="608" cy="280" r="5" fill="#EFEFEF"/>
     <text x="548" y="253" className="diagram-label" textAnchor="middle">WORKSPACE</text>
     <text x="548" y="309" className="diagram-label" textAnchor="middle">ONE CLEAR PICTURE</text>
-    <circle cx="350" cy="280" r="86" fill="#18202c" stroke="#7089b3"/>
-    <circle cx="350" cy="280" r="76" fill="none" stroke="#33435c"/>
+    <circle cx="350" cy="280" r="86" fill="#171717" stroke="#858585"/>
+    <circle cx="350" cy="280" r="76" fill="none" stroke="#3B3B3B"/>
     <text x="350" y="292" textAnchor="middle" className="diagram-core-number">05</text>
     <text x="350" y="318" textAnchor="middle" className="diagram-core-label">CHANNEL INPUTS</text>
-    <path d="M338 223L350 204L347 218H362L350 237L353 223Z" fill="#b9d2ff"/>
+    <path d="M338 223L350 204L347 218H362L350 237L353 223Z" fill="#EFEFEF"/>
     <text x="350" y="530" textAnchor="middle" className="diagram-label">ELECTRICAL SIGNAL → USEFUL INSIGHT</text>
   </svg>;
 }

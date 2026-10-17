@@ -1,5 +1,12 @@
 # MIN-SAKTHI V2 Progress and Handover Log
 
+## Restore the black public website - 17 October 2026
+
+- Discarded the unfinished workspace-wide redesign after the user's request to revert. Restored those working files to the last published revision while preserving unrelated documentation and screenshot edits.
+- Restored a fully black public homepage, including the hero, benefits, preview, final action and footer. Replaced blue highlights with neutral white/silver. Kept the current layout, input illustration, authentication and light authenticated workspace.
+- Web build, lint and 38 relevant automated checks passed. Automatic approval review blocked launching Edge for screenshot checks; release verification uses the deployed stylesheet directly.
+
+
 ## Midnight blue homepage palette - 17 October 2026
 
 - Replaced green/lime surfaces, typography, diagram routes, selected inputs, controls and preview details with charcoal midnight blue, restrained light blue accents and neutral warm white. Kept the current editorial layout and interactions.
