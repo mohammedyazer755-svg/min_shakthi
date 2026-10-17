@@ -21,6 +21,33 @@ export interface MeasurementChartProps {
   className?: string;
   ariaDescription?: string;
   framed?: boolean;
+  curveType?: 'natural' | 'linear';
+}
+
+function buildCurvePath(points: Array<{ x: number; y: number }>, curveType: 'natural' | 'linear' = 'natural'): string {
+  if (points.length === 0) return '';
+  if (points.length === 1) return `M ${points[0]!.x.toFixed(1)} ${points[0]!.y.toFixed(1)}`;
+  if (points.length === 2 || curveType === 'linear') {
+    return `M ${points[0]!.x.toFixed(1)} ${points[0]!.y.toFixed(1)} ` +
+      points.slice(1).map((p) => `L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+  }
+
+  // Smooth Catmull-Rom to Cubic Bézier spline (sine-like continuous waveform)
+  let d = `M ${points[0]!.x.toFixed(1)} ${points[0]!.y.toFixed(1)}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = i > 0 ? points[i - 1]! : points[i]!;
+    const p1 = points[i]!;
+    const p2 = points[i + 1]!;
+    const p3 = i + 2 < points.length ? points[i + 2]! : p2;
+
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+  return d;
 }
 
 export const MeasurementChart: React.FC<MeasurementChartProps> = ({
@@ -31,6 +58,7 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
   className = '',
   ariaDescription,
   framed = true,
+  curveType = 'natural',
 }) => {
   const chartId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -129,39 +157,31 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
   const paths = useMemo(() => {
     return processedSeries.map((s) => {
       const segments: string[] = [];
-      let currentSegment: string[] = [];
+      let currentPoints: Array<{ x: number; y: number }> = [];
       let lastTime: number | null = null;
 
       for (let i = 0; i < s.data.length; i++) {
         const p = s.data[i]!;
         const t = new Date(p.timestamp).getTime();
-        const isGap = p.value === null || (lastTime !== null && t - lastTime > 30000);
+        const isGap = p.value === null || (lastTime !== null && t - lastTime > 60000);
 
         if (isGap) {
-          if (currentSegment.length > 0) {
-            segments.push(currentSegment.join(' '));
-            currentSegment = [];
+          if (currentPoints.length > 0) {
+            segments.push(buildCurvePath(currentPoints, curveType));
+            currentPoints = [];
           }
           if (p.value !== null) {
-            const x = getX(t);
-            const y = getY(p.value);
-            currentSegment.push(`M ${x.toFixed(1)} ${y.toFixed(1)}`);
+            currentPoints.push({ x: getX(t), y: getY(p.value) });
           }
         } else {
-          const x = getX(t);
-          const y = getY(p.value!);
-          if (currentSegment.length === 0) {
-            currentSegment.push(`M ${x.toFixed(1)} ${y.toFixed(1)}`);
-          } else {
-            currentSegment.push(`L ${x.toFixed(1)} ${y.toFixed(1)}`);
-          }
+          currentPoints.push({ x: getX(t), y: getY(p.value!) });
         }
 
         lastTime = t;
       }
 
-      if (currentSegment.length > 0) {
-        segments.push(currentSegment.join(' '));
+      if (currentPoints.length > 0) {
+        segments.push(buildCurvePath(currentPoints, curveType));
       }
 
       return {
@@ -175,13 +195,13 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
           if (!Number.isFinite(time)) return [];
           const previous = s.data[index - 1];
           const next = s.data[index + 1];
-          const connectsPrevious = previous?.value != null && time - new Date(previous.timestamp).getTime() <= 30000;
-          const connectsNext = next?.value != null && new Date(next.timestamp).getTime() - time <= 30000;
+          const connectsPrevious = previous?.value != null && time - new Date(previous.timestamp).getTime() <= 60000;
+          const connectsNext = next?.value != null && new Date(next.timestamp).getTime() - time <= 60000;
           return connectsPrevious || connectsNext ? [] : [{ x: getX(time), y: getY(point.value) }];
         }),
       };
     });
-  }, [processedSeries, minTime, timeRange, minVal, valRange, plotWidth, plotHeight]);
+  }, [processedSeries, minTime, timeRange, minVal, valRange, plotWidth, plotHeight, curveType]);
 
   const gridTicks = useMemo(() => {
     const ticks = [];

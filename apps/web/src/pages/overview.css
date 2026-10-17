@@ -10,7 +10,13 @@
 .overview-device-state strong { color: var(--text-primary); font-weight: 600; }
 .overview-device-state div > span { margin-top: 5px; color: var(--text-secondary); font-size: 11px; }
 .overview-status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-.overview-metrics { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 18px; }
+.overview-metrics { display: grid; grid-template-columns: 1.2fr 1.15fr 1fr 1fr; gap: 18px; }
+@media (max-width: 1100px) {
+  .overview-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .overview-metrics { grid-template-columns: 1fr; }
+}
 .overview-power-panel, .overview-stat-panel { position: relative; padding: 24px; min-width: 0; border-radius: 18px; overflow: hidden; }
 .overview-power-panel { color: #fff; background: radial-gradient(ellipse at 95% 0%, #35383a 0, transparent 65%), #161819; box-shadow: 0 8px 24px #16181915; border: 1px solid #303334; }
 .overview-card-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 11px; font-weight: 600; letter-spacing: .015em; }
@@ -69,19 +75,22 @@
 .overview-text-action { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 42px; margin-top: 8px; color: var(--text-primary); background: transparent; border: 0; cursor: pointer; font-size: 11px; font-weight: 600; }
 .overview-text-action:hover { text-decoration: underline; text-underline-offset: 4px; }
 /* Soft mineral tints give supporting cards their own identity. */
-.overview-stat-panel:nth-child(2) { background: linear-gradient(135deg, #eaf2fc 0%, #f9fbfe 75%); border-color: #d4e1ef; }
-.overview-stat-panel:nth-child(3) { background: linear-gradient(135deg, #f0ecf9 0%, #fcfbfe 75%); border-color: #e1d9ef; }
-.overview-stat-panel:nth-child(2) .overview-card-top > svg { color: #3f6088; }
-.overview-stat-panel:nth-child(3) .overview-card-top > svg { color: #72598b; }
-.overview-stat-panel:nth-child(2) .overview-slot-indicators > span { background: #d8e3f1; }
-.overview-stat-panel:nth-child(2) .overview-slot-indicators > span[data-reporting="true"] { background: #3f6088; }
+.overview-cost-panel { background: linear-gradient(135deg, #fefbf4 0%, #fffdfa 75%); border-color: #f7e6ca; }
+.overview-cost-panel .overview-stat-value { color: #8f6810; }
+.overview-metrics > article:nth-child(3) { background: linear-gradient(135deg, #eaf2fc 0%, #f9fbfe 75%); border-color: #d4e1ef; }
+.overview-metrics > article:nth-child(4) { background: linear-gradient(135deg, #f0ecf9 0%, #fcfbfe 75%); border-color: #e1d9ef; }
+.overview-metrics > article:nth-child(3) .overview-card-top > svg { color: #3f6088; }
+.overview-metrics > article:nth-child(4) .overview-card-top > svg { color: #72598b; }
+.overview-metrics > article:nth-child(3) .overview-slot-indicators > span { background: #d8e3f1; }
+.overview-metrics > article:nth-child(3) .overview-slot-indicators > span[data-reporting="true"] { background: #3f6088; }
 .overview-power-panel { background: radial-gradient(ellipse at 100% 0%, #344757 0, transparent 65%), #16191c; }
 .overview-metrics > article {
   animation: overview-card-arrive 420ms var(--motion-ease-out) backwards;
   transition: transform var(--motion-duration-normal) var(--motion-ease-out), box-shadow var(--motion-duration-normal), border-color var(--motion-duration-normal);
 }
-.overview-metrics > article:nth-child(2) { animation-delay: 55ms; }
-.overview-metrics > article:nth-child(3) { animation-delay: 110ms; }
+.overview-metrics > article:nth-child(2) { animation-delay: 45ms; }
+.overview-metrics > article:nth-child(3) { animation-delay: 90ms; }
+.overview-metrics > article:nth-child(4) { animation-delay: 135ms; }
 .overview-stat-panel .overview-card-top > svg, .overview-power-panel .overview-icon-tile {
   transition: transform var(--motion-duration-normal) var(--motion-ease-out);
 }

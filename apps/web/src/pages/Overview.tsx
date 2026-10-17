@@ -77,6 +77,11 @@ export const Overview: React.FC<OverviewProps> = ({
         ? 'var(--status-warn, #805300)'
         : 'var(--status-unknown, #5D625D)';
 
+  const [trendMetric, setTrendMetric] = useState<'power' | 'current' | 'voltage'>('power');
+
+  // Standard Indian commercial/domestic electricity tariff: ₹7.50 / kWh
+  const TARIFF_INR_PER_KWH = 7.50;
+
   // Active power total across reporting configured channels
   const { totalPower, activeCount, configuredCount } = useMemo(() => {
     let sum = 0;
@@ -86,7 +91,7 @@ export const Overview: React.FC<OverviewProps> = ({
     for (const ch of channels) {
       if (ch.freshness !== 'unconfigured') {
         configured += 1;
-        if (ch.lastSample && ch.freshness === 'fresh') {
+        if (ch.lastSample && (ch.freshness === 'fresh' || ch.freshness === 'stale')) {
           sum += ch.lastSample.values.power;
           active += 1;
         }
@@ -100,6 +105,9 @@ export const Overview: React.FC<OverviewProps> = ({
       isPartial: active < configured,
     };
   }, [channels]);
+
+  const liveCostPerHour = (totalPower / 1000) * TARIFF_INR_PER_KWH;
+  const sevenDayProjectedCost = ((totalPower * 24 * 7) / 1000) * TARIFF_INR_PER_KWH;
 
   // Derived honest status message for the workspace
   const honestStatusMessage = useMemo(() => {
@@ -119,7 +127,7 @@ export const Overview: React.FC<OverviewProps> = ({
     let count = 0;
 
     for (const ch of channels) {
-      if (ch.lastSample && ch.freshness === 'fresh') {
+      if (ch.lastSample && (ch.freshness === 'fresh' || ch.freshness === 'stale')) {
         const v = ch.lastSample.values.voltage;
         const f = ch.lastSample.values.frequency;
         const i = ch.lastSample.values.current;
@@ -146,19 +154,28 @@ export const Overview: React.FC<OverviewProps> = ({
     };
   }, [channels]);
 
-  // Chart series for power trends
+  // Chart series for power, current, or voltage trends
   const chartSeries = useMemo(() => {
     const seriesColors = ['#171717', '#176B65', '#3C5D91', '#78547A', '#454B49'];
+    const currentHist = (telemetry as { currentHistory?: Record<string, Array<{ timestamp: string; value: number | null }>> }).currentHistory || {};
+    const voltageHist = (telemetry as { voltageHistory?: Record<string, Array<{ timestamp: string; value: number | null }>> }).voltageHistory || {};
+    const historySource = trendMetric === 'current'
+      ? currentHist
+      : trendMetric === 'voltage'
+        ? voltageHist
+        : powerHistory;
+    const unit = trendMetric === 'current' ? 'A' : trendMetric === 'voltage' ? 'V' : 'W';
+
     return channels
       .filter((ch) => ch.freshness !== 'unconfigured')
       .map((ch, idx) => ({
         id: ch.rawChannelId,
         name: ch.label,
         color: seriesColors[idx % seriesColors.length] ?? '#171717',
-        unit: 'W',
-        data: powerHistory[ch.rawChannelId] || [],
+        unit,
+        data: historySource[ch.rawChannelId] || [],
       }));
-  }, [channels, powerHistory]);
+  }, [channels, powerHistory, telemetry, trendMetric]);
 
   const reporting = coverage?.reportingSlots ?? activeCount;
   const configured = coverage?.configuredSlots ?? configuredCount;
@@ -217,6 +234,51 @@ export const Overview: React.FC<OverviewProps> = ({
           <Zap className="overview-power-watermark" aria-hidden="true" />
         </article>
 
+        <article className="overview-stat-panel overview-cost-panel">
+          <div className="overview-card-top">
+            <span>Power Cost (₹)</span>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                padding: '2px 8px',
+                borderRadius: 6,
+                background: 'rgba(200, 169, 110, 0.16)',
+                color: '#8f6810',
+                fontWeight: 700,
+                fontSize: 10,
+                letterSpacing: '0.06em',
+              }}
+            >
+              ₹ INR
+            </span>
+          </div>
+          <div className="overview-stat-value">
+            <span style={{ fontSize: 26, marginRight: 2, color: 'var(--text-dim)' }}>₹</span>
+            {activeCount > 0 ? liveCostPerHour.toFixed(2) : '0.00'}
+            <small>/hr</small>
+          </div>
+          <div className="overview-card-bottom">
+            <span style={{ fontWeight: 600 }}>
+              {activeCount > 0
+                ? `Last 7 days: ~₹${sevenDayProjectedCost.toFixed(0)} used`
+                : 'Waiting for active power'}
+            </span>
+            <span
+              style={{
+                fontSize: 10,
+                color: 'var(--text-secondary)',
+                background: 'var(--surface-inset)',
+                padding: '3px 7px',
+                borderRadius: 4,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              @ ₹7.50/unit
+            </span>
+          </div>
+        </article>
+
         <article className="overview-stat-panel">
           <div className="overview-card-top"><span>Channels reporting</span><Cpu size={18} aria-hidden="true" /></div>
           <div className="overview-stat-value">{reporting}<span>/{configured}</span></div>
@@ -247,8 +309,50 @@ export const Overview: React.FC<OverviewProps> = ({
 
       <div className="overview-monitoring-grid">
         <section className="overview-trend-panel">
-          <div className="overview-section-heading"><div><p className="overview-eyebrow">POWER OVER TIME</p><h2>Active Power Trend</h2></div><span className="overview-subtle-badge">{activeCount > 0 ? 'Receiving data' : 'Device not reporting'}</span></div>
-          {hasTrend ? <MeasurementChart title="Channel power · W" series={chartSeries} height={235} framed={false} ariaDescription="Recent active power samples with breaks during communication gaps" /> : (
+          <div className="overview-section-heading">
+            <div>
+              <p className="overview-eyebrow">
+                {trendMetric === 'current' ? 'CURRENT OVER TIME' : trendMetric === 'voltage' ? 'VOLTAGE OVER TIME' : 'POWER OVER TIME'}
+              </p>
+              <h2>{trendMetric === 'current' ? 'Active Current Trend' : trendMetric === 'voltage' ? 'Voltage Trend' : 'Active Power Trend'}</h2>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{ display: 'inline-flex', background: 'var(--surface-inset)', borderRadius: 8, padding: 3, gap: 3 }}>
+                {(['power', 'current', 'voltage'] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setTrendMetric(m)}
+                    style={{
+                      padding: '4px 10px',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      borderRadius: 6,
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: trendMetric === m ? 'var(--surface)' : 'transparent',
+                      color: trendMetric === m ? 'var(--accent-text)' : 'var(--text-secondary)',
+                      boxShadow: trendMetric === m ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {m === 'power' ? 'Power (W)' : m === 'current' ? 'Current (A)' : 'Voltage (V)'}
+                  </button>
+                ))}
+              </div>
+              <span className="overview-subtle-badge">{activeCount > 0 ? 'Receiving data' : 'Device not reporting'}</span>
+            </div>
+          </div>
+          {hasTrend ? (
+            <MeasurementChart
+              title={trendMetric === 'current' ? 'Channel current · A' : trendMetric === 'voltage' ? 'Channel voltage · V' : 'Channel power · W'}
+              series={chartSeries}
+              height={235}
+              framed={false}
+              curveType="natural"
+              ariaDescription="Recent electrical samples with smooth continuous spline response and breaks during communication gaps"
+            />
+          ) : (
             <div className="overview-chart-empty">
               <div className="overview-empty-icon"><Radio size={26} strokeWidth={1.5} aria-hidden="true" /></div>
               <h3>Ready when your device is.</h3>
@@ -300,7 +404,7 @@ export const Overview: React.FC<OverviewProps> = ({
           <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-strong)', background: 'var(--surface-raised, #F0F1EC)' }}>
-                {['Slot', 'Channel / Label', 'Voltage', 'Current', 'Power', 'Energy (Raw)', 'Freq', 'Status'].map((h, i) => (
+                {['Slot', 'Channel / Label', 'Voltage', 'Current', 'Power', 'Energy (Raw)', 'Freq', 'Est. Cost (₹ / 7d)', 'Status'].map((h, i) => (
                   <th
                     key={h}
                     style={{
@@ -310,7 +414,7 @@ export const Overview: React.FC<OverviewProps> = ({
                       textTransform: 'uppercase',
                       fontSize: 10,
                       letterSpacing: '0.1em',
-                      textAlign: i >= 2 && i <= 6 ? 'right' : i === 7 ? 'center' : 'left',
+                      textAlign: i >= 2 && i <= 7 ? 'right' : i === 8 ? 'center' : 'left',
                     }}
                   >
                     {h}
@@ -320,7 +424,7 @@ export const Overview: React.FC<OverviewProps> = ({
             </thead>
             <tbody>
               {channels.map((ch, idx) => {
-                const s = ch.freshness === 'fresh' ? ch.lastSample : null;
+                const s = (ch.freshness === 'fresh' || ch.freshness === 'stale') ? ch.lastSample : null;
                 const isUnconf = ch.freshness === 'unconfigured';
                 return (
                   <tr
@@ -354,6 +458,18 @@ export const Overview: React.FC<OverviewProps> = ({
                     </td>
                     <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }}>
                       {s?.values.frequency != null ? `${s.values.frequency.toFixed(2)} Hz` : '—'}
+                    </td>
+                    <td style={{ padding: '12px', textAlign: 'right', fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums' }}>
+                      {s?.values.power != null ? (
+                        <div>
+                          <span style={{ fontWeight: 600, color: '#926c15' }}>
+                            {`₹${((s.values.power / 1000) * TARIFF_INR_PER_KWH).toFixed(2)}/hr`}
+                          </span>
+                          <span style={{ display: 'block', fontSize: 10, color: 'var(--text-secondary)' }}>
+                            {`7d: ~₹${(((s.values.power * 24 * 7) / 1000) * TARIFF_INR_PER_KWH).toFixed(1)}`}
+                          </span>
+                        </div>
+                      ) : '—'}
                     </td>
                     <td style={{ padding: '12px', textAlign: 'center' }}>
                       <FreshnessLabel freshness={ch.freshness} lastReceivedAt={ch.lastReceivedAt} />

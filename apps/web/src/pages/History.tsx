@@ -364,6 +364,7 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
                 <th style={{ ...thStyle, textAlign: 'right' }}>Voltage</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Current</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Power</th>
+                <th style={{ ...thStyle, textAlign: 'right', color: '#926c15' }}>Cost (₹)</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Energy (Raw)</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Freq</th>
                 <th style={{ ...thStyle, textAlign: 'center' }}>Status</th>
@@ -372,7 +373,7 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
             <tbody>
               {samples.length === 0 ? (
                 <tr>
-                  <td colSpan={9} style={{ padding: '48px 12px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  <td colSpan={10} style={{ padding: '48px 12px', textAlign: 'center', color: 'var(--text-secondary)' }}>
                     {loading ? 'Executing historical query...' : 'No historical telemetry records match query filters.'}
                   </td>
                 </tr>
@@ -427,6 +428,9 @@ export const History: React.FC<HistoryProps> = ({ telemetry, selectedDevice }) =
                       </td>
                       <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>
                         {`${pkt.values.power.toFixed(2)} W`}
+                      </td>
+                      <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: '#926c15' }}>
+                        {`₹${((pkt.values.power * 7.5) / 1000).toFixed(2)}/hr`}
                       </td>
                       <td style={{ padding: '10px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--text-secondary)' }}>
                         {pkt.values.energyRaw}

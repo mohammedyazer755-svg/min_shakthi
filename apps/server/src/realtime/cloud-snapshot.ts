@@ -8,7 +8,7 @@ export async function cloudSnapshot(repo: PostgresTelemetryRepository,requestId:
   ]);
   if (!device || !device.enabled) throw new Error('DEVICE_NOT_FOUND');
   const now = Date.now();
-  const active = !!worker && now-new Date(worker.at).getTime()<6000;
+  const active = !!worker && now-new Date(worker.at).getTime()<10000;
   const channels: SnapshotChannel[] = [];
   for (let slot=1;slot<=5;slot++) {
     const mapping = mappings.find((m) => m.displaySlot === slot && m.enabled);

@@ -56,6 +56,10 @@ export function useLiveTelemetry(deviceId: string) {
   const [livePackets, setLivePackets] = useState<TelemetryPayload[]>([]);
   // History buffer (capped at 600 points/channel - R18)
   const [powerHistory, setPowerHistory] = useState<ChannelHistoryMap>({});
+  const [currentHistory, setCurrentHistory] = useState<ChannelHistoryMap>({});
+  const [voltageHistory, setVoltageHistory] = useState<ChannelHistoryMap>({});
+  const lastChannelReceivedAtRef = useRef<Record<string, number>>({});
+  const [observedIntervalMs, setObservedIntervalMs] = useState<number | null>(null);
 
   // View pause control (R18, Live Screen spec)
   const [isViewPaused, setIsViewPaused] = useState(false);
@@ -112,12 +116,16 @@ export function useLiveTelemetry(deviceId: string) {
   const health = snapshot?.deviceId === deviceId && connectionState === 'connected' && nowMs - lastSnapshotAt.current < 6000 ? receivedHealth : null;
   const transportAvailable = !!health && health.process === 'healthy' && health.database === 'healthy'
     && health.broker === 'connected' && health.brokerSubscribed;
+  const effectiveIntervalMs = observedIntervalMs
+    ? Math.max(snapshot?.expectedIntervalMs ?? 5000, observedIntervalMs)
+    : snapshot?.expectedIntervalMs;
+
   const channels = useMemo(() => (snapshot?.deviceId === deviceId ? receivedChannels : []).map((ch) => ({ ...ch,
     freshness:readingFreshness({ receivedAt:ch.lastReceivedAt,retained:ch.lastSample?.retained,
       suspectDuplicate:ch.lastSample?.quality.includes('SUSPECT_DUPLICATE'),
-      configured:ch.freshness !== 'unconfigured',expectedIntervalMs:snapshot?.expectedIntervalMs,
+      configured:ch.freshness !== 'unconfigured',expectedIntervalMs:effectiveIntervalMs,
       nowMs:nowMs + serverClockOffset.current,transportAvailable }),
-  })),[receivedChannels,snapshot?.expectedIntervalMs,snapshot?.deviceId,deviceId,nowMs,transportAvailable]);
+  })),[receivedChannels,effectiveIntervalMs,snapshot?.deviceId,deviceId,nowMs,transportAvailable]);
   const coverage: SystemCoverage = useMemo(() => {
     const configuredSlots = channels.filter((ch) => ch.freshness !== 'unconfigured').length;
     const reportingSlots = channels.filter((ch) => ch.freshness === 'fresh').length;
@@ -130,6 +138,10 @@ export function useLiveTelemetry(deviceId: string) {
     // Reset device-scoped buffers when deviceId changes (T07)
     setLivePackets([]);
     setPowerHistory({});
+    setCurrentHistory({});
+    setVoltageHistory({});
+    setObservedIntervalMs(null);
+    lastChannelReceivedAtRef.current = {};
     setSnapshot(null);
     setChannels([]);
     setHealth(null);
@@ -187,20 +199,43 @@ export function useLiveTelemetry(deviceId: string) {
 
       // Preload initial history points from snapshot samples
       const initialHist: ChannelHistoryMap = {};
+      const initialCurrentHist: ChannelHistoryMap = {};
+      const initialVoltageHist: ChannelHistoryMap = {};
       for (const ch of snap.channels) {
         if (ch.lastSample) {
           initialHist[ch.rawChannelId] = [
             { timestamp: ch.lastSample.receivedAt, value: ch.lastSample.values.power },
           ];
+          initialCurrentHist[ch.rawChannelId] = [
+            { timestamp: ch.lastSample.receivedAt, value: ch.lastSample.values.current },
+          ];
+          initialVoltageHist[ch.rawChannelId] = [
+            { timestamp: ch.lastSample.receivedAt, value: ch.lastSample.values.voltage },
+          ];
         }
       }
       setPowerHistory((previous) => ({ ...initialHist,...previous }));
+      setCurrentHistory((previous) => ({ ...initialCurrentHist,...previous }));
+      setVoltageHistory((previous) => ({ ...initialVoltageHist,...previous }));
     };
 
     const onTelemetryUpdate = (update: TelemetryPayload) => {
       const clientReceivedAtMs = performance.now();
       if (update.deviceId !== currentDeviceIdRef.current) {
         return;
+      }
+
+      // Track observed cadence between consecutive packets on this channel
+      const curAt = Date.parse(update.receivedAt);
+      const lastAt = lastChannelReceivedAtRef.current[update.channelId];
+      if (lastAt && Number.isFinite(curAt) && curAt > lastAt) {
+        const delta = curAt - lastAt;
+        if (delta >= 1000 && delta <= 60000) {
+          setObservedIntervalMs((prev) => (prev ? Math.round(prev * 0.25 + delta * 0.75) : delta));
+        }
+      }
+      if (Number.isFinite(curAt)) {
+        lastChannelReceivedAtRef.current[update.channelId] = curAt;
       }
 
       // 1. Update live channels matrix
@@ -218,10 +253,26 @@ export function useLiveTelemetry(deviceId: string) {
         });
       });
 
-      // 2. Append to power history (cap at 600 points - R18)
+      // 2. Append to power, current, and voltage history (cap at 600 points - R18)
       setPowerHistory((prev) => {
         const cur = prev[update.channelId] || [];
         const next = [...cur, { timestamp: update.receivedAt, value: update.values.power }].slice(-600);
+        return {
+          ...prev,
+          [update.channelId]: next,
+        };
+      });
+      setCurrentHistory((prev) => {
+        const cur = prev[update.channelId] || [];
+        const next = [...cur, { timestamp: update.receivedAt, value: update.values.current }].slice(-600);
+        return {
+          ...prev,
+          [update.channelId]: next,
+        };
+      });
+      setVoltageHistory((prev) => {
+        const cur = prev[update.channelId] || [];
+        const next = [...cur, { timestamp: update.receivedAt, value: update.values.voltage }].slice(-600);
         return {
           ...prev,
           [update.channelId]: next,
@@ -273,6 +324,8 @@ export function useLiveTelemetry(deviceId: string) {
     lastDisplayLatencyMs,
     livePackets,
     powerHistory,
+    currentHistory,
+    voltageHistory,
     isViewPaused,
     pausedCatchupCount,
     pauseView,
