@@ -142,12 +142,13 @@ function createMockTelemetryState(deviceId = 'prototype1') {
 
 describe('Phase 3 Clean Light Workspace Suite', () => {
   describe('1. Overview Content Budget & Truthful Presentation', () => {
-    it('renders the 3 primary cards: Power now, Channels reporting, Alerts needing attention', () => {
+    it('renders power, estimated cost, reporting channels, and alerts', () => {
       const telemetry = createMockTelemetryState();
       const html = renderToString(React.createElement(Overview, { telemetry, selectedDevice: 'prototype1' }));
 
       // Primary Cards
       expect(html).toContain('Power now');
+      expect(html).toContain('Estimated cost rate');
       expect(html).toContain('33.2');
       expect(html).toContain('Channels reporting');
       expect(html).toContain('2/2');
@@ -159,12 +160,12 @@ describe('Phase 3 Clean Light Workspace Suite', () => {
       const telemetry = createMockTelemetryState();
       const html = renderToString(React.createElement(Overview, { telemetry, selectedDevice: 'prototype1' }));
 
-      expect(html).toContain('Secondary Electrical Measurements');
-      expect(html).toContain('Supply Voltage');
+      expect(html).toContain('Electrical snapshot');
+      expect(html).toContain('Supply voltage');
       expect(html).toContain('239.7 – 240.1 V');
-      expect(html).toContain('Active Current');
+      expect(html).toContain('Active current');
       expect(html).toContain('0.14 A');
-      expect(html).toContain('Grid Frequency');
+      expect(html).toContain('Grid frequency');
       expect(html).toContain('49.98 – 50.01 Hz');
     });
 
@@ -183,7 +184,7 @@ describe('Phase 3 Clean Light Workspace Suite', () => {
       expect(html).not.toContain('239.67 V');
       expect(html).not.toContain('0.14 A');
       // Status & Trend preserved
-      expect(html).toContain('Connection interrupted');
+      expect(html).toContain('Offline');
       expect(html).toContain('0/2 reporting');
       expect(html).toContain('Active Power Trend');
     });
@@ -205,11 +206,42 @@ describe('Phase 3 Clean Light Workspace Suite', () => {
       }));
       telemetry.coverage = { configuredSlots: 2, reportingSlots: 0, partial: true };
       const html = renderToString(React.createElement(Overview, { telemetry, selectedDevice: 'prototype1' }));
-      expect(html).toContain('Ready when your device is.');
-      expect(html).toContain('Power readings will appear here as soon as the ESP sends data.');
+      expect(html).toContain('A clear picture starts with a reading.');
+      expect(html).toContain('Your chart will build automatically when fresh measurements arrive from your device.');
       expect(html).toContain('No fresh readings');
       expect(html).not.toContain('<svg role="img"');
       expect(html).not.toContain('33.2 W');
+    });
+
+    it('never claims to receive readings with no configured channels', () => {
+      const telemetry = createMockTelemetryState();
+      telemetry.channels = [];
+      telemetry.powerHistory = {};
+      telemetry.coverage = { configuredSlots: 0, reportingSlots: 0, partial: false };
+      const html = renderToString(React.createElement(Overview, { telemetry, selectedDevice: 'prototype1' }));
+      expect(html).toContain('Waiting for channel setup');
+      expect(html).not.toContain('Receiving readings');
+      expect(html).not.toContain('Full reporting');
+      expect(html).toContain('Checking channel configuration');
+      expect(html.match(/class="overview-channel-row"/g)).toHaveLength(5);
+    });
+
+    it('preserves a checking status before telemetry arrives', () => {
+      const telemetry = { ...createMockTelemetryState(), channels: [], powerHistory: {},
+        streamStatus: { label: 'Checking', tone: 'unknown' } as const };
+      const html = renderToString(React.createElement(Overview, { telemetry, selectedDevice: 'prototype1' }));
+      expect(html).toContain('<strong>Checking</strong>');
+      expect(html).not.toContain('Receiving readings');
+      expect(html).toContain('Checking configuration');
+      expect(html).not.toContain('No configured channels');
+    });
+
+    it('keeps connection interruptions visible before channel configuration loads', () => {
+      const telemetry = { ...createMockTelemetryState(), channels: [], powerHistory: {},
+        streamStatus: { label: 'Connection interrupted', tone: 'warning' } as const };
+      const html = renderToString(React.createElement(Overview, { telemetry, selectedDevice: 'prototype1' }));
+      expect(html).toContain('<strong>Connection interrupted</strong>');
+      expect(html).not.toContain('Receiving readings');
     });
   });
 

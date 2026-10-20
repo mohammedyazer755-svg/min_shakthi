@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Activity, Cpu, ChevronDown, ChevronUp, Bell, Zap, ZapOff, ArrowUpRight, Radio, ArrowRight } from 'lucide-react';
+import { Activity, Cpu, ChevronDown, ChevronUp, Bell, Zap, ZapOff, ArrowUpRight, Radio, ArrowRight, Check, Clock3 } from 'lucide-react';
 import type { useLiveTelemetry } from '../live/useLiveTelemetry';
 import { FreshnessLabel, MeasurementChart } from '../components';
 import { useOptionalAuth } from '../auth/AuthContext';
@@ -63,7 +63,6 @@ export const Overview: React.FC<OverviewProps> = ({
     channels,
     coverage,
     powerHistory,
-    lastDisplayLatencyMs,
     streamStatus,
   } = telemetry;
 
@@ -77,9 +76,9 @@ export const Overview: React.FC<OverviewProps> = ({
         ? 'var(--status-warn, #805300)'
         : 'var(--status-unknown, #5D625D)';
 
-  const [trendMetric, setTrendMetric] = useState<'power' | 'current' | 'voltage' | 'sine'>('power');
+  const [trendMetric, setTrendMetric] = useState<'power' | 'current' | 'voltage'>('power');
 
-  // Standard Indian commercial/domestic electricity tariff: ₹7.50 / kWh
+  // Illustrative rate for cost estimates, not a verified electricity tariff.
   const TARIFF_INR_PER_KWH = 7.50;
 
   // Active power total across reporting configured channels
@@ -91,7 +90,7 @@ export const Overview: React.FC<OverviewProps> = ({
     for (const ch of channels) {
       if (ch.freshness !== 'unconfigured') {
         configured += 1;
-        if (ch.lastSample && (ch.freshness === 'fresh' || ch.freshness === 'stale')) {
+        if (ch.lastSample && ch.freshness === 'fresh') {
           sum += ch.lastSample.values.power;
           active += 1;
         }
@@ -107,15 +106,16 @@ export const Overview: React.FC<OverviewProps> = ({
   }, [channels]);
 
   const liveCostPerHour = (totalPower / 1000) * TARIFF_INR_PER_KWH;
-  const sevenDayProjectedCost = ((totalPower * 24 * 7) / 1000) * TARIFF_INR_PER_KWH;
+
 
   // Derived honest status message for the workspace
   const honestStatusMessage = useMemo(() => {
-    if (streamStatus.tone === 'critical') return 'Connection interrupted';
-    if (configuredCount > 0 && activeCount === 0) return 'Waiting for readings';
+    if (streamStatus.tone !== 'positive') return streamStatus.label;
+    if (configuredCount === 0) return 'Waiting for channel setup';
+    if (activeCount === 0) return 'Waiting for readings';
     if (activeCount < configuredCount) return 'Some channels unavailable';
     return 'Receiving readings';
-  }, [streamStatus.tone, configuredCount, activeCount]);
+  }, [streamStatus.tone, streamStatus.label, configuredCount, activeCount]);
 
   // Voltage and Frequency ranges across reporting channels
   const { voltageRange, freqRange, totalCurrent } = useMemo(() => {
@@ -127,7 +127,7 @@ export const Overview: React.FC<OverviewProps> = ({
     let count = 0;
 
     for (const ch of channels) {
-      if (ch.lastSample && (ch.freshness === 'fresh' || ch.freshness === 'stale')) {
+      if (ch.lastSample && ch.freshness === 'fresh') {
         const v = ch.lastSample.values.voltage;
         const f = ch.lastSample.values.frequency;
         const i = ch.lastSample.values.current;
@@ -156,15 +156,15 @@ export const Overview: React.FC<OverviewProps> = ({
 
   // Chart series for power, current, or voltage trends
   const chartSeries = useMemo(() => {
-    const seriesColors = ['#171717', '#176B65', '#3C5D91', '#78547A', '#454B49'];
+    const seriesColors = ['#344757', '#3f6088', '#8f6810', '#72598b', '#507b87'];
     const currentHist = (telemetry as { currentHistory?: Record<string, Array<{ timestamp: string; value: number | null }>> }).currentHistory || {};
     const voltageHist = (telemetry as { voltageHistory?: Record<string, Array<{ timestamp: string; value: number | null }>> }).voltageHistory || {};
-    const historySource = (trendMetric === 'current' || trendMetric === 'sine')
+    const historySource = trendMetric === 'current'
       ? currentHist
       : trendMetric === 'voltage'
         ? voltageHist
         : powerHistory;
-    const unit = trendMetric === 'current' ? 'A' : trendMetric === 'voltage' ? 'V' : trendMetric === 'sine' ? 'A' : 'W';
+    const unit = trendMetric === 'current' ? 'A' : trendMetric === 'voltage' ? 'V' : 'W';
 
     return channels
       .filter((ch) => ch.freshness !== 'unconfigured')
@@ -180,18 +180,27 @@ export const Overview: React.FC<OverviewProps> = ({
   const reporting = coverage?.reportingSlots ?? activeCount;
   const configured = coverage?.configuredSlots ?? configuredCount;
   const hasTrend = chartSeries.some(series => series.data.some(point => point.value !== null));
+  const hasSnapshot = telemetry.snapshot !== null || channels.length > 0;
+  const canManage = user?.role === 'admin';
+  const channelSlots = Array.from({ length: 5 }, (_, index) => ({
+    slot: index + 1,
+    channel: channels.find(channel => channel.displaySlot === index + 1),
+  }));
 
   return (
     <div className="overview-dashboard">
       <header className="overview-heading">
         <div>
-          <p className="overview-eyebrow">YOUR ENERGY, AT A GLANCE</p>
-          <h1>Workspace overview<span>.</span></h1>
-          <p className="overview-description">A clear view of your power and connected channels.</p>
+          <p className="overview-eyebrow"><span /> ENERGY WORKSPACE <span className="overview-heading-divider">/</span> OVERVIEW</p>
+          <h1>Your energy, in focus<span>.</span></h1>
+          <p className="overview-description">One place for your power, your channels, and what needs attention.</p>
         </div>
-        <div className="overview-device-state">
-          <span className="overview-status-dot" style={{ background: dotColor }} />
-          <div><strong>{honestStatusMessage}</strong><span>{selectedDevice} · {`ESP: ${streamStatus.label}`}</span></div>
+        <div className="overview-heading-actions">
+          <div className="overview-device-state" role="status">
+            <span className="overview-status-dot" style={{ background: dotColor }} />
+            <div><strong>{honestStatusMessage}</strong><span>{selectedDevice}</span></div>
+          </div>
+          <button type="button" className="overview-history-action" onClick={() => onNavigate?.('/insights/history')}><Clock3 size={15} aria-hidden="true" /> View history<ArrowUpRight size={14} aria-hidden="true" /></button>
         </div>
       </header>
 
@@ -228,7 +237,7 @@ export const Overview: React.FC<OverviewProps> = ({
           <div className="overview-card-top"><span>Power now</span><span className="overview-icon-tile"><Zap size={19} aria-hidden="true" /></span></div>
           <div className="overview-power-value"><span>{activeCount > 0 ? totalPower.toFixed(1) : '—'}</span><small>W</small></div>
           <div className="overview-power-footer">
-            <span>{activeCount > 0 ? `${totalPower.toFixed(1)} W monitored` : 'No current readings'}</span>
+            <span>{activeCount > 0 ? `Across ${activeCount} reporting ${activeCount === 1 ? 'channel' : 'channels'}` : 'Waiting for fresh measurements'}</span>
             <span className="overview-power-tag">{activeCount > 0 ? 'Live measurement' : 'Awaiting device'}</span>
           </div>
           <Zap className="overview-power-watermark" aria-hidden="true" />
@@ -236,54 +245,27 @@ export const Overview: React.FC<OverviewProps> = ({
 
         <article className="overview-stat-panel overview-cost-panel">
           <div className="overview-card-top">
-            <span>Power Cost (₹)</span>
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                padding: '2px 8px',
-                borderRadius: 6,
-                background: 'rgba(200, 169, 110, 0.16)',
-                color: '#8f6810',
-                fontWeight: 700,
-                fontSize: 10,
-                letterSpacing: '0.06em',
-              }}
-            >
-              ₹ INR
-            </span>
+            <span>Estimated cost rate</span>
+            <span className="overview-currency-badge">₹ INR</span>
           </div>
           <div className="overview-stat-value">
             <span style={{ fontSize: 26, marginRight: 2, color: 'var(--text-dim)' }}>₹</span>
-            {activeCount > 0 ? liveCostPerHour.toFixed(2) : '0.00'}
+            {activeCount > 0 ? liveCostPerHour.toFixed(2) : '—'}
             <small>/hr</small>
           </div>
-          <div className="overview-card-bottom" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6, flexWrap: 'wrap' }}>
-            <span style={{ fontWeight: 600 }}>
+          <div className="overview-card-bottom overview-cost-footer">
+            <span>
               {activeCount > 0
-                ? `Last 7 days: ~₹${sevenDayProjectedCost.toFixed(0)} used`
+                ? 'At an illustrative rate of 7.50 INR/kWh'
                 : 'Waiting for active power'}
             </span>
             <button
               type="button"
               onClick={() => onNavigate?.('/energy')}
               aria-label="View detailed energy usage and history"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                fontSize: 11,
-                fontWeight: 700,
-                color: 'var(--accent-text)',
-                background: 'rgba(200, 169, 110, 0.18)',
-                border: '1px solid rgba(200, 169, 110, 0.35)',
-                padding: '3px 8px',
-                borderRadius: 6,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-              }}
+              className="overview-usage-action"
             >
-              <span>Energy Page</span>
+              <span>Usage details</span>
               <ArrowRight size={12} aria-hidden="true" />
             </button>
           </div>
@@ -291,11 +273,11 @@ export const Overview: React.FC<OverviewProps> = ({
 
         <article className="overview-stat-panel">
           <div className="overview-card-top"><span>Channels reporting</span><Cpu size={18} aria-hidden="true" /></div>
-          <div className="overview-stat-value">{reporting}<span>/{configured}</span></div>
+          <div className="overview-stat-value">{hasSnapshot ? reporting : '—'}{hasSnapshot && <span>/{configured}</span>}</div>
           <div className="overview-slot-indicators" aria-hidden="true">
-            {channels.map((ch, index) => <span key={ch.rawChannelId || index} data-reporting={ch.freshness === 'fresh'} />)}
+            {channelSlots.map(({ slot, channel }) => <span key={slot} data-reporting={channel?.freshness === 'fresh'} />)}
           </div>
-          <div className="overview-card-bottom"><span>{`${reporting}/${configured} reporting`} · {reporting < configured ? 'Partial coverage' : configured > 0 ? 'Full reporting' : 'No configured channels'}</span><button type="button" onClick={() => onNavigate?.('/channels')} aria-label="View channels"><ArrowUpRight size={18} /></button></div>
+          <div className="overview-card-bottom"><span>{!hasSnapshot ? 'Checking channel configuration' : configured === 0 ? 'No configured channels' : `${reporting}/${configured} reporting · ${reporting < configured ? 'Partial coverage' : 'Full reporting'}`}</span><button type="button" onClick={() => onNavigate?.('/channels')} aria-label="View channels"><ArrowUpRight size={18} /></button></div>
         </article>
 
         <article className="overview-stat-panel">
@@ -305,57 +287,32 @@ export const Overview: React.FC<OverviewProps> = ({
         </article>
       </section>
 
-      <section className="overview-measurements">
-        <button type="button" className="overview-measurements-toggle" onClick={() => setMeasurementsExpanded(v => !v)} aria-expanded={measurementsExpanded} aria-controls="overview-measurements-detail">
-          <span><Activity size={16} aria-hidden="true" />Secondary Electrical Measurements</span>
-          {measurementsExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </button>
-        {measurementsExpanded && <div id="overview-measurements-detail" className="overview-measurements-grid">
-          {[['Supply Voltage', voltageRange, 'Across reporting channels'], ['Active Current', totalCurrent, 'Combined load'], ['Grid Frequency', freqRange, 'Monitored line frequency']].map(([label, value, note]) => (
-            <div key={label}><span>{label}</span><strong>{value}</strong><small>{note}</small></div>
-          ))}
-        </div>}
-      </section>
-
       <div className="overview-monitoring-grid">
         <section className="overview-trend-panel">
           <div className="overview-section-heading">
             <div>
               <p className="overview-eyebrow">
-                {trendMetric === 'current' ? 'CURRENT OVER TIME' : trendMetric === 'voltage' ? 'VOLTAGE OVER TIME' : trendMetric === 'sine' ? '50HZ AC SINE WAVE' : 'POWER OVER TIME'}
+                {trendMetric === 'current' ? 'CURRENT OVER TIME' : trendMetric === 'voltage' ? 'VOLTAGE OVER TIME' : 'POWER OVER TIME'}
               </p>
-              <h2>{trendMetric === 'current' ? 'Active Current Trend' : trendMetric === 'voltage' ? 'Voltage Trend' : trendMetric === 'sine' ? '50Hz AC Sine Waveform' : 'Active Power Trend'}</h2>
+              <h2>{trendMetric === 'current' ? 'Active Current Trend' : trendMetric === 'voltage' ? 'Voltage Trend' : 'Active Power Trend'}</h2>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <div style={{ display: 'inline-flex', background: 'var(--surface-inset)', borderRadius: 8, padding: 3, gap: 3 }}>
+              <div className="overview-chart-tabs" role="group" aria-label="Trend measurement">
                 {[
                   { id: 'power', label: 'Power (W)' },
                   { id: 'current', label: 'Current (A)' },
                   { id: 'voltage', label: 'Voltage (V)' },
-                  { id: 'sine', label: '⚡ 50Hz Sine' },
                 ].map((item) => (
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => setTrendMetric(item.id as any)}
-                    style={{
-                      padding: '4px 10px',
-                      fontSize: 11,
-                      fontWeight: 700,
-                      borderRadius: 6,
-                      border: 'none',
-                      cursor: 'pointer',
-                      background: trendMetric === item.id ? 'var(--surface)' : 'transparent',
-                      color: trendMetric === item.id ? 'var(--accent-text)' : 'var(--text-secondary)',
-                      boxShadow: trendMetric === item.id ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-                      transition: 'all 0.15s ease',
-                    }}
+                    aria-pressed={trendMetric === item.id}
+                    onClick={() => setTrendMetric(item.id as 'power' | 'current' | 'voltage')}
                   >
                     {item.label}
                   </button>
                 ))}
               </div>
-              <span className="overview-subtle-badge">{activeCount > 0 ? 'Receiving data' : 'Device not reporting'}</span>
             </div>
           </div>
           {hasTrend ? (
@@ -365,52 +322,62 @@ export const Overview: React.FC<OverviewProps> = ({
                   ? 'Channel current · A'
                   : trendMetric === 'voltage'
                     ? 'Channel voltage · V'
-                    : trendMetric === 'sine'
-                      ? 'Live 50Hz AC Sine Waveform · Continuous Oscilloscope'
-                      : 'Channel power · W'
+                    : 'Channel power · W'
               }
               series={chartSeries}
-              height={235}
+              height={265}
               framed={false}
-              curveType="natural"
-              enableOscilloscope={trendMetric === 'sine'}
               timeWindowSeconds={120}
-              ariaDescription="Recent electrical samples with smooth continuous spline response and breaks during communication gaps"
+              gapThresholdMs={(telemetry.snapshot?.expectedIntervalMs ?? 5000) * 3}
+              ariaDescription="Recorded electrical measurements with visible breaks during communication gaps"
             />
           ) : (
             <div className="overview-chart-empty">
-              <div className="overview-empty-icon"><Radio size={26} strokeWidth={1.5} aria-hidden="true" /></div>
-              <h3>Ready when your device is.</h3>
-              <p>Power readings will appear here as soon as the ESP sends data.</p>
-              <span>Missing readings stay blank. A measured zero stays zero.</span>
+              <div className="overview-empty-icon"><Radio size={25} strokeWidth={1.5} aria-hidden="true" /></div>
+              <span className="overview-empty-kicker">YOUR MONITORING STARTS HERE</span>
+              <h3>{activeCount > 0 ? 'Building your trend.' : 'A clear picture starts with a reading.'}</h3>
+              <p>{activeCount > 0 ? 'Fresh measurements are arriving. This trend fills in as samples are collected.' : hasSnapshot && configuredCount === 0 ? 'Configure your device channels to start monitoring voltage, current, and power.' : 'Your chart will build automatically when fresh measurements arrive from your device.'}</p>
+              <ol className="overview-readiness" aria-label="Monitoring readiness">
+                {[['Device selected', Boolean(selectedDevice)], ['Channels configured', configuredCount > 0], ['Fresh readings', activeCount > 0]].map(([label, ready], index) => (
+                  <li key={String(label)} data-ready={Boolean(ready)}><span>{ready ? <Check size={12} aria-hidden="true" /> : String(index + 1).padStart(2, '0')}</span>{label}</li>
+                ))}
+              </ol>
+              {onNavigate && <button type="button" className="overview-empty-action" onClick={() => onNavigate(canManage && hasSnapshot && configuredCount === 0 ? '/manage/devices' : '/channels')}>{canManage && hasSnapshot && configuredCount === 0 ? 'Configure channels' : 'View channel status'}<ArrowRight size={14} aria-hidden="true" /></button>}
             </div>
           )}
-          <footer className="overview-trend-footer"><span className="overview-status-dot" style={{ background: dotColor }} /><span>{activeCount > 0 ? 'Live readings · communication gaps remain visible' : 'Waiting for fresh telemetry'}</span>{lastDisplayLatencyMs !== null && <span className="overview-latency">Display ACK: {`${lastDisplayLatencyMs}ms`}</span>}</footer>
+          <footer className="overview-trend-footer"><span className="overview-status-dot" style={{ background: dotColor }} /><span>{activeCount > 0 ? 'Fresh measurements · gaps remain visible' : honestStatusMessage}</span><span className="overview-chart-window">Latest 2 minutes</span></footer>
         </section>
 
         <aside className="overview-channel-panel">
-          <div className="overview-section-heading"><div><p className="overview-eyebrow">CONNECTED HARDWARE</p><h2>Your channels</h2></div><Cpu size={19} aria-hidden="true" /></div>
+          <div className="overview-section-heading"><div><p className="overview-eyebrow">FIVE CHANNELS. ONE VIEW.</p><h2>Channel activity</h2></div><span className="overview-channel-count">{hasSnapshot ? `${reporting} / ${configured}` : '— / 5'}</span></div>
           <div className="overview-channel-list">
-            {channels.map((ch, index) => <div className="overview-channel-row" key={ch.rawChannelId || index}>
-              <span className="overview-channel-number">{String(ch.displaySlot ?? index + 1).padStart(2, '0')}</span>
-              <div><strong>{ch.label}</strong><span>{ch.freshness === 'fresh' ? 'Reporting' : ch.freshness === 'unconfigured' ? 'Not configured' : 'No fresh readings'}</span></div>
-              <span className="overview-channel-reading">{ch.freshness === 'fresh' && ch.lastSample ? `${ch.lastSample.values.power.toFixed(1)} W` : '—'}</span>
+            {channelSlots.map(({ slot, channel: ch }) => <div className="overview-channel-row" key={slot} data-reporting={ch?.freshness === 'fresh'}>
+              <span className="overview-channel-number">{String(slot).padStart(2, '0')}</span>
+              <div><strong>{ch?.label ?? `Channel ${String(slot).padStart(2, '0')}`}</strong><span><i />{!hasSnapshot ? 'Checking configuration' : !ch || ch.freshness === 'unconfigured' ? 'Not configured' : ch.freshness === 'fresh' ? 'Reporting' : 'No fresh readings'}</span></div>
+              <span className="overview-channel-reading">{ch?.freshness === 'fresh' && ch.lastSample ? <>{ch.lastSample.values.power.toFixed(1)} <small>W</small></> : '—'}</span>
             </div>)}
           </div>
+          <div className="overview-channel-note"><Cpu size={15} aria-hidden="true" /><span>{hasSnapshot ? `${configured} of 5 slots configured` : 'Channel details appear after device sync'}</span></div>
           <button className="overview-text-action" type="button" onClick={() => onNavigate?.('/channels')}>View all channels<ArrowRight size={16} aria-hidden="true" /></button>
         </aside>
       </div>
 
+      <section className="overview-measurements">
+        <button type="button" className="overview-measurements-toggle" onClick={() => setMeasurementsExpanded(v => !v)} aria-expanded={measurementsExpanded} aria-controls="overview-measurements-detail">
+          <span><Activity size={16} aria-hidden="true" />Electrical snapshot</span>
+          {measurementsExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </button>
+        {measurementsExpanded && <div id="overview-measurements-detail" className="overview-measurements-grid">
+          {[['Supply voltage', voltageRange, 'Across reporting channels'], ['Active current', totalCurrent, 'Combined load'], ['Grid frequency', freqRange, 'Monitored line frequency']].map(([label, value, note]) => (
+            <div key={label}><span>{label}</span><strong>{value}</strong><small>{note}</small></div>
+          ))}
+        </div>}
+      </section>
+
       {/* Compact Configured-Channel Content Table */}
-      <div
-        style={{
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
-          borderRadius: 12,
-          boxShadow: 'var(--shadow-card)',
-          padding: '20px 24px',
-        }}
-      >
+      <details className="overview-channel-details">
+        <summary><span><Cpu size={16} aria-hidden="true" />Detailed channel readings</span><span>CH01–CH05 <ChevronDown size={15} aria-hidden="true" /></span></summary>
+        <div className="overview-details-content">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
             <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
@@ -429,7 +396,7 @@ export const Overview: React.FC<OverviewProps> = ({
           <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-strong)', background: 'var(--surface-raised, #F0F1EC)' }}>
-                {['Slot', 'Channel / Label', 'Voltage', 'Current', 'Power', 'Energy (Raw)', 'Freq', 'Est. Cost (₹ / 7d)', 'Status'].map((h, i) => (
+                {['Slot', 'Channel / Label', 'Voltage', 'Current', 'Power', 'Energy (Raw)', 'Freq', 'Est. rate (₹/hr)', 'Status'].map((h, i) => (
                   <th
                     key={h}
                     style={{
@@ -448,8 +415,9 @@ export const Overview: React.FC<OverviewProps> = ({
               </tr>
             </thead>
             <tbody>
+              {channels.length === 0 && <tr><td colSpan={9} className="overview-table-empty">Channel measurements will appear after your device configuration is received.</td></tr>}
               {channels.map((ch, idx) => {
-                const s = (ch.freshness === 'fresh' || ch.freshness === 'stale') ? ch.lastSample : null;
+                const s = ch.freshness === 'fresh' ? ch.lastSample : null;
                 const isUnconf = ch.freshness === 'unconfigured';
                 return (
                   <tr
@@ -491,7 +459,7 @@ export const Overview: React.FC<OverviewProps> = ({
                             {`₹${((s.values.power / 1000) * TARIFF_INR_PER_KWH).toFixed(2)}/hr`}
                           </span>
                           <span style={{ display: 'block', fontSize: 10, color: 'var(--text-secondary)' }}>
-                            {`7d: ~₹${(((s.values.power * 24 * 7) / 1000) * TARIFF_INR_PER_KWH).toFixed(1)}`}
+                            At ₹7.50/kWh
                           </span>
                         </div>
                       ) : '—'}
@@ -505,7 +473,8 @@ export const Overview: React.FC<OverviewProps> = ({
             </tbody>
           </table>
         </div>
-      </div>
+        </div>
+      </details>
     </div>
   );
 };

@@ -1,10 +1,9 @@
-import React, { useId, useMemo, useRef, useState, useEffect, useCallback } from 'react';
+import React, { useId, useMemo, useRef, useState, useEffect } from 'react';
 
 export interface ChartDataPoint {
-  timestamp: string; // ISO string
-  value: number | null; // null represents missing / gap
+  timestamp: string;
+  value: number | null;
 }
-
 export interface ChartSeries {
   id: string;
   name: string;
@@ -12,7 +11,6 @@ export interface ChartSeries {
   unit: string;
   data: ChartDataPoint[];
 }
-
 export interface MeasurementChartProps {
   title: string;
   series: ChartSeries[];
@@ -21,694 +19,380 @@ export interface MeasurementChartProps {
   className?: string;
   ariaDescription?: string;
   framed?: boolean;
-  curveType?: 'natural' | 'linear';
-  enableOscilloscope?: boolean;
   timeWindowSeconds?: number;
-}
-
-function buildCurvePath(points: Array<{ x: number; y: number }>, curveType: 'natural' | 'linear' = 'natural'): string {
-  if (points.length === 0) return '';
-  if (points.length === 1) return `M ${points[0]!.x.toFixed(1)} ${points[0]!.y.toFixed(1)}`;
-  if (points.length === 2 || curveType === 'linear') {
-    return `M ${points[0]!.x.toFixed(1)} ${points[0]!.y.toFixed(1)} ` +
-      points.slice(1).map((p) => `L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
-  }
-
-  // Smooth Catmull-Rom to Cubic Bézier spline (sine-like continuous waveform)
-  let d = `M ${points[0]!.x.toFixed(1)} ${points[0]!.y.toFixed(1)}`;
-  for (let i = 0; i < points.length - 1; i++) {
-    const p0 = i > 0 ? points[i - 1]! : points[i]!;
-    const p1 = points[i]!;
-    const p2 = points[i + 1]!;
-    const p3 = i + 2 < points.length ? points[i + 2]! : p2;
-
-    const cp1x = p1.x + (p2.x - p0.x) / 6;
-    const cp1y = p1.y + (p2.y - p0.y) / 6;
-    const cp2x = p2.x - (p3.x - p1.x) / 6;
-    const cp2y = p2.y - (p3.y - p1.y) / 6;
-
-    d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
-  }
-  return d;
-}
-
-function buildAreaPath(points: Array<{ x: number; y: number }>, bottomY: number, curveType: 'natural' | 'linear' = 'natural'): string {
-  if (points.length === 0) return '';
-  const curve = buildCurvePath(points, curveType);
-  const first = points[0]!;
-  const last = points[points.length - 1]!;
-  return `${curve} L ${last.x.toFixed(1)} ${bottomY.toFixed(1)} L ${first.x.toFixed(1)} ${bottomY.toFixed(1)} Z`;
+  gapThresholdMs?: number;
 }
 
 export const MeasurementChart: React.FC<MeasurementChartProps> = ({
   title,
   series,
-  height = 280,
+  height = 300,
   maxPoints = 600,
   className = '',
   ariaDescription,
   framed = true,
-  curveType = 'natural',
-  enableOscilloscope = false,
   timeWindowSeconds,
+  gapThresholdMs = 15000,
 }) => {
-  const chartId = useId();
+  const chartId = useId().replace(/:/g, '');
   const containerRef = useRef<HTMLDivElement>(null);
-  const [measuredWidth, setMeasuredWidth] = useState<number>(800);
-  const [hoverState, setHoverState] = useState<{
-    x: number;
-    y: number;
-    t: number;
-    values: Array<{ id: string; name: string; color: string; value: number | null; unit: string }>;
-  } | null>(null);
-
-  // Hidden series toggles
-  const [hiddenSeriesIds, setHiddenSeriesIds] = useState<Set<string>>(new Set());
-
-  // Oscilloscope AC 50Hz animation state
-  const [oscActive, setOscActive] = useState<boolean>(enableOscilloscope);
-  const [sinePhase, setSinePhase] = useState<number>(0);
-  const animFrameRef = useRef<number | null>(null);
-
+  const [width, setWidth] = useState(800);
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const [cursor, setCursor] = useState<number | null>(null);
   useEffect(() => {
-    if (!oscActive) return;
-    let lastT = performance.now();
-    const loop = (now: number) => {
-      const delta = (now - lastT) / 1000;
-      lastT = now;
-      // 50Hz line frequency cycle: delta * 50 * 2PI
-      setSinePhase((prev) => (prev + delta * 2 * Math.PI * 4) % (2 * Math.PI));
-      animFrameRef.current = requestAnimationFrame(loop);
+    const element = containerRef.current;
+    if (!element) return;
+    const update = () => {
+      if (element.clientWidth) setWidth(element.clientWidth);
     };
-    animFrameRef.current = requestAnimationFrame(loop);
-    return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
-  }, [oscActive]);
-
-  // ResizeObserver for reliable width measurement across 360px - 1920px
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const updateSize = () => {
-      if (containerRef.current) {
-        const w = containerRef.current.clientWidth;
-        if (w > 0) setMeasuredWidth(w);
-      }
-    };
-    updateSize();
-    if (typeof ResizeObserver !== 'undefined') {
-      const observer = new ResizeObserver(() => updateSize());
-      observer.observe(containerRef.current);
-      return () => observer.disconnect();
+    update();
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', update);
+      return () => window.removeEventListener('resize', update);
     }
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => observer.disconnect();
   }, []);
 
-  const responsiveHeight = measuredWidth < 480 ? Math.min(height, 220) : height;
-
-  // Process and downsample series
-  const processedSeries = useMemo(() => {
-    return series.map((s) => {
-      let data = s.data;
-      if (data.length > maxPoints) {
-        const step = Math.ceil(data.length / maxPoints);
-        data = data.filter((_, idx) => idx % step === 0);
-      }
-      return {
+  const processed = useMemo(
+    () =>
+      series.map((s) => ({
         ...s,
-        data,
-      };
+        data: s.data
+          .filter((p) => Number.isFinite(Date.parse(p.timestamp)))
+          .map((p) => ({
+            ...p,
+            value: p.value !== null && Number.isFinite(p.value) ? p.value : null,
+          }))
+          .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
+          .slice(-maxPoints),
+      })),
+    [series, maxPoints]
+  );
+  const timestamps = [
+    ...new Set(processed.flatMap((s) => s.data.map((p) => Date.parse(p.timestamp)))),
+  ].sort((a, b) => a - b);
+  const last = timestamps.at(-1) ?? Date.now();
+  let first = timeWindowSeconds ? last - timeWindowSeconds * 1000 : (timestamps[0] ?? last - 30000);
+  let end = last;
+  if (first === end) {
+    first -= 15000;
+    end += 15000;
+  }
+  const visible = processed.filter((s) => !hidden.has(s.id));
+  const values = visible.flatMap((s) =>
+    s.data.filter((p) => Date.parse(p.timestamp) >= first && p.value !== null).map((p) => p.value!)
+  );
+  const hasData = processed.some((s) => s.data.some((p) => p.value !== null));
+  const minimum = Math.min(0, ...values) * 1.08;
+  const maximum = Math.max(0.01, ...values) * 1.12;
+  const svgWidth = Math.max(300, width),
+    svgHeight = width < 480 ? Math.min(height, 240) : height;
+  const left = svgWidth < 480 ? 44 : 56,
+    right = 20,
+    top = 22,
+    bottom = svgHeight - 32;
+  const x = (t: number) =>
+    left + ((t - first) / Math.max(1, end - first)) * (svgWidth - left - right);
+  const y = (v: number) => bottom - ((v - minimum) / (maximum - minimum)) * (bottom - top);
+  const timeLabel = (t: number) =>
+    new Date(t).toLocaleTimeString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      hour: '2-digit',
+      minute: '2-digit',
+      ...(end - first <= 300000 ? { second: '2-digit' } : {}),
     });
-  }, [series, maxPoints]);
-
-  // Compute global bounds
-  const { minVal, maxVal, minTime, maxTime, hasData } = useMemo(() => {
-    let minV = Number.POSITIVE_INFINITY;
-    let maxV = Number.NEGATIVE_INFINITY;
-    let minT = Number.POSITIVE_INFINITY;
-    let maxT = Number.NEGATIVE_INFINITY;
-    let count = 0;
-
-    for (const s of processedSeries) {
-      for (const p of s.data) {
-        const t = new Date(p.timestamp).getTime();
-        if (!Number.isNaN(t)) {
-          if (t < minT) minT = t;
-          if (t > maxT) maxT = t;
-        }
-        if (p.value !== null && !Number.isNaN(p.value)) {
-          if (p.value < minV) minV = p.value;
-          if (p.value > maxV) maxV = p.value;
-          count += 1;
-        }
+  const format = (v: number) =>
+    Math.abs(v) >= 1000
+      ? `${(v / 1000).toFixed(1)}k`
+      : Math.abs(v) < 1
+        ? v.toFixed(2)
+        : v.toFixed(1);
+  const paths = visible.map((s) => {
+    const segments: ChartDataPoint[][] = [];
+    let segment: ChartDataPoint[] = [];
+    let previous: number | null = null;
+    for (const p of s.data) {
+      const t = Date.parse(p.timestamp);
+      if (t < first || t > end) continue;
+      if (p.value === null || (previous !== null && t - previous > gapThresholdMs)) {
+        if (segment.length) segments.push(segment);
+        segment = [];
       }
+      if (p.value !== null) segment.push(p);
+      previous = t;
     }
-
-    if (count === 0 || minT === Number.POSITIVE_INFINITY) {
-      return { minVal: 0, maxVal: 100, minTime: Date.now() - 3600000, maxTime: Date.now(), hasData: false, validCount: 0 };
-    }
-
-    minV = minV > 0 ? 0 : minV * 1.05;
-    maxV = maxV === 0 ? 10 : maxV * 1.08;
-
-    // Preserve exact isolated single-point geometry tested in Phase 3 unit tests
-    if (minT === maxT) {
-      minT -= 15000;
-      maxT += 15000;
-    } else if (timeWindowSeconds && timeWindowSeconds > 0) {
-      minT = Math.max(minT, maxT - timeWindowSeconds * 1000);
-    }
-
-    return { minVal: minV, maxVal: maxV, minTime: minT, maxTime: maxT, hasData: true, validCount: count };
-  }, [processedSeries, timeWindowSeconds]);
-
-  const svgWidth = Math.max(300, measuredWidth);
-  const svgHeight = responsiveHeight;
-  const padding = {
-    top: 20,
-    right: 20,
-    bottom: 32,
-    left: svgWidth < 480 ? 44 : 56,
+    if (segment.length) segments.push(segment);
+    return { ...s, segments };
+  });
+  const pointAt = (s: ChartSeries, t: number) => {
+    const point = s.data.reduce<ChartDataPoint | undefined>(
+      (best, p) =>
+        !best || Math.abs(Date.parse(p.timestamp) - t) < Math.abs(Date.parse(best.timestamp) - t)
+          ? p
+          : best,
+      undefined
+    );
+    return point && Math.abs(Date.parse(point.timestamp) - t) <= gapThresholdMs / 2
+      ? point
+      : undefined;
   };
-  const plotWidth = Math.max(10, svgWidth - padding.left - padding.right);
-  const plotHeight = Math.max(10, svgHeight - padding.top - padding.bottom);
-  const bottomAxisY = padding.top + plotHeight;
-
-  const timeRange = Math.max(1, maxTime - minTime);
-  const valRange = Math.max(0.001, maxVal - minVal);
-
-  const getX = useCallback((tMs: number) => {
-    return padding.left + ((tMs - minTime) / timeRange) * plotWidth;
-  }, [minTime, timeRange, plotWidth, padding.left]);
-
-  const getY = useCallback((v: number) => {
-    return padding.top + plotHeight - ((v - minVal) / valRange) * plotHeight;
-  }, [minVal, valRange, plotHeight, padding.top]);
-
-  // Build SVG Path segments with edge-to-edge spanning & gap protection
-  const paths = useMemo(() => {
-    return processedSeries.map((s) => {
-      if (hiddenSeriesIds.has(s.id)) {
-        return { id: s.id, color: s.color, name: s.name, d: '', areaD: '', isolatedPoints: [], latestPoint: null };
-      }
-
-      const segments: string[] = [];
-      const areaSegments: string[] = [];
-      let currentPoints: Array<{ x: number; y: number }> = [];
-      let lastTime: number | null = null;
-      let latestPt: { x: number; y: number; val: number } | null = null;
-
-      // Filter to visible window
-      const validPoints = s.data.filter((p) => {
-        const t = new Date(p.timestamp).getTime();
-        return Number.isFinite(t) && t >= minTime - 30000;
-      });
-
-      for (let i = 0; i < validPoints.length; i++) {
-        const p = validPoints[i]!;
-        const t = new Date(p.timestamp).getTime();
-        const isGap = p.value === null || (lastTime !== null && t - lastTime > 60000);
-
-        if (isGap) {
-          if (currentPoints.length > 0) {
-            segments.push(buildCurvePath(currentPoints, curveType));
-            areaSegments.push(buildAreaPath(currentPoints, bottomAxisY, curveType));
-            currentPoints = [];
-          }
-          if (p.value !== null) {
-            const pt = { x: getX(t), y: getY(p.value) };
-            currentPoints.push(pt);
-            latestPt = { ...pt, val: p.value };
-          }
-        } else {
-          const pt = { x: getX(t), y: getY(p.value!) };
-          currentPoints.push(pt);
-          latestPt = { ...pt, val: p.value! };
-        }
-
-        lastTime = t;
-      }
-
-      // If active and multiple points, extend latest point horizontally to right edge if recent
-      if (currentPoints.length > 1 && latestPt && lastTime !== null && maxTime - lastTime < 30000) {
-        const rightEdgeX = padding.left + plotWidth;
-        if (latestPt.x < rightEdgeX) {
-          currentPoints.push({ x: rightEdgeX, y: latestPt.y });
-        }
-      }
-
-      if (currentPoints.length > 0) {
-        segments.push(buildCurvePath(currentPoints, curveType));
-        areaSegments.push(buildAreaPath(currentPoints, bottomAxisY, curveType));
-      }
-
-      return {
-        id: s.id,
-        color: s.color,
-        name: s.name,
-        d: segments.join(' '),
-        areaD: areaSegments.join(' '),
-        latestPoint: latestPt,
-        isolatedPoints: s.data.flatMap((point, index) => {
-          if (point.value === null || !Number.isFinite(point.value)) return [];
-          const time = new Date(point.timestamp).getTime();
-          if (!Number.isFinite(time)) return [];
-          const previous = s.data[index - 1];
-          const next = s.data[index + 1];
-          const connectsPrevious = previous?.value != null && time - new Date(previous.timestamp).getTime() <= 60000;
-          const connectsNext = next?.value != null && new Date(next.timestamp).getTime() - time <= 60000;
-          return connectsPrevious || connectsNext ? [] : [{ x: getX(time), y: getY(point.value) }];
-        }),
-      };
-    });
-  }, [processedSeries, minTime, maxTime, getX, getY, curveType, bottomAxisY, hiddenSeriesIds, padding.left, plotWidth]);
-
-  // Synthetic continuous 50Hz AC Sine Wave path when in oscilloscope mode
-  const oscilloscopePaths = useMemo(() => {
-    if (!oscActive) return [];
-    return processedSeries.map((s, sIdx) => {
-      if (hiddenSeriesIds.has(s.id)) return { id: s.id, color: s.color, name: s.name, d: '' };
-      const latestVal = s.data.slice(-1)[0]?.value ?? 0;
-      const rms = Math.max(0.1, Number.isFinite(latestVal) ? latestVal : 1);
-      const peak = rms * 1.414; // Peak AC amplitude
-      const centerY = padding.top + plotHeight * 0.5;
-      const amplitudePx = Math.min(plotHeight * 0.42, (peak / Math.max(1, maxVal)) * plotHeight * 0.42 + 15);
-      const phaseOffset = sIdx * (Math.PI / 3); // 3-phase / multi-channel distribution
-      const cycles = 5; // Show 5 AC cycles across plot width
-      const pts: Array<{ x: number; y: number }> = [];
-      const step = 4;
-      for (let x = padding.left; x <= padding.left + plotWidth; x += step) {
-        const norm = (x - padding.left) / plotWidth;
-        const angle = norm * cycles * 2 * Math.PI + sinePhase + phaseOffset;
-        const y = centerY - Math.sin(angle) * amplitudePx;
-        pts.push({ x, y });
-      }
-      return {
-        id: s.id,
-        color: s.color,
-        name: s.name,
-        d: buildCurvePath(pts, 'natural'),
-      };
-    });
-  }, [oscActive, processedSeries, hiddenSeriesIds, padding.left, padding.top, plotWidth, plotHeight, maxVal, sinePhase]);
-
-  // Grid Ticks
-  const gridTicks = useMemo(() => {
-    const ticks = [];
-    const count = 4;
-    for (let i = 0; i <= count; i++) {
-      const val = minVal + (valRange * i) / count;
-      const y = getY(val);
-      ticks.push({ val, y });
-    }
-    return ticks;
-  }, [minVal, valRange, getY]);
-
-  // Time Ticks
-  const timeTicks = useMemo(() => {
-    const ticks = [];
-    const count = svgWidth < 480 ? 3 : 5;
-    for (let i = 0; i <= count; i++) {
-      const t = minTime + (timeRange * i) / count;
-      const x = getX(t);
-      const label = new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      ticks.push({ t, x, label });
-    }
-    return ticks;
-  }, [minTime, timeRange, getX, svgWidth]);
-
-  // Interactive Hover Handler
-  const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement> | React.TouchEvent<SVGSVGElement>) => {
-    if (!containerRef.current || !hasData) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const clientX = 'touches' in e ? (e.touches[0]?.clientX ?? 0) : e.clientX;
-    const clientY = 'touches' in e ? (e.touches[0]?.clientY ?? 0) : e.clientY;
-    const relX = clientX - rect.left;
-    const relY = clientY - rect.top;
-
-    if (relX < padding.left || relX > padding.left + plotWidth) {
-      setHoverState(null);
-      return;
-    }
-
-    const normT = (relX - padding.left) / plotWidth;
-    const targetT = minTime + normT * timeRange;
-
-    // Find closest value for each series
-    const values = processedSeries.map((s) => {
-      if (s.data.length === 0) return { id: s.id, name: s.name, color: s.color, value: null, unit: s.unit };
-      let closestDist = Number.POSITIVE_INFINITY;
-      let closestVal: number | null = null;
-      for (const p of s.data) {
-        const ptTime = new Date(p.timestamp).getTime();
-        const dist = Math.abs(ptTime - targetT);
-        if (dist < closestDist && dist <= 45000) {
-          closestDist = dist;
-          closestVal = p.value;
-        }
-      }
-      return {
-        id: s.id,
-        name: s.name,
-        color: s.color,
-        value: closestVal,
-        unit: s.unit,
-      };
-    });
-
-    setHoverState({
-      x: relX,
-      y: relY,
-      t: targetT,
-      values,
-    });
-  }, [containerRef, hasData, padding.left, plotWidth, minTime, timeRange, processedSeries]);
-
-  const handleMouseLeave = () => setHoverState(null);
-
-  const toggleSeries = (id: string) => {
-    setHiddenSeriesIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const cursorTime = cursor === null ? null : Math.max(first, Math.min(end, cursor));
+  const tableTimes = timestamps.filter((t) => t >= first).slice(-10);
 
   return (
     <div
-      className={`relative ${framed ? 'rounded-xl p-4 md:p-6' : ''} ${className}`}
-      style={{
-        background: 'var(--surface)',
-        border: framed ? '1px solid var(--border)' : undefined,
-        boxShadow: framed ? 'var(--shadow-card)' : undefined,
-      }}
+      ref={containerRef}
+      className={`measurement-chart ${framed ? 'measurement-chart-framed' : ''} ${className}`}
     >
-      {/* Header, Oscilloscope Mode Switch & Legend */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-            {title}
-          </h3>
-          {hasData && (
+      <div className="measurement-chart-heading">
+        <h3>{title}</h3>
+        <span>Recorded samples · IST</span>
+      </div>
+      <div className="chart-series-controls" aria-label="Chart channels">
+        {processed.map((s) => {
+          const point = cursorTime === null ? s.data.at(-1) : pointAt(s, cursorTime);
+          return (
             <button
               type="button"
-              onClick={() => setOscActive((v) => !v)}
-              className="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase transition-all"
-              style={{
-                background: oscActive ? 'rgba(200, 169, 110, 0.22)' : 'var(--surface-inset)',
-                color: oscActive ? 'var(--accent-text)' : 'var(--text-secondary)',
-                border: oscActive ? '1px solid var(--accent)' : '1px solid var(--border)',
-              }}
-              title="Toggle continuous 50Hz AC Sine Wave oscilloscope mode"
+              key={s.id}
+              aria-pressed={!hidden.has(s.id)}
+              style={{ '--series-color': s.color } as React.CSSProperties}
+              onClick={() =>
+                setHidden((old) => {
+                  const next = new Set(old);
+                  if (next.has(s.id)) next.delete(s.id);
+                  else next.add(s.id);
+                  return next;
+                })
+              }
             >
-              {oscActive ? '⚡ AC 50Hz Sine Mode' : 'Waveform Mode'}
+              <span className="chart-series-dot" />
+              <span>{s.name}</span>
+              <strong>{point?.value != null ? `${format(point.value)} ${s.unit}` : '—'}</strong>
             </button>
-          )}
-        </div>
-
-        {/* Legend with click-to-toggle */}
-        <div className="flex flex-wrap items-center gap-3 text-xs">
-          {processedSeries.map((s) => {
-            const isHidden = hiddenSeriesIds.has(s.id);
-            return (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => toggleSeries(s.id)}
-                className="flex items-center gap-1.5 transition-opacity hover:opacity-100"
-                style={{
-                  opacity: isHidden ? 0.35 : 1,
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '2px 4px',
-                }}
-                title={isHidden ? `Show ${s.name}` : `Hide ${s.name}`}
-              >
-                <span className="w-2.5 h-2.5 rounded-xs" style={{ backgroundColor: s.color }} />
-                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-                  {s.name}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+          );
+        })}
       </div>
-
       {!hasData ? (
-        <div
-          className="flex flex-col items-center justify-center text-xs rounded-lg"
-          style={{
-            height: `${svgHeight}px`,
-            border: '1px dashed var(--border)',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          <span>Awaiting historical telemetry samples...</span>
-          <span className="mt-1" style={{ color: 'var(--text-dim)' }}>
-            Gaps and intervals will render when data arrives.
-          </span>
+        <div className="chart-empty" style={{ height: svgHeight }}>
+          <strong>Awaiting historical telemetry samples...</strong>
+          <span>Gaps and intervals will render when data arrives.</span>
         </div>
       ) : (
         <div
-          ref={containerRef}
-          className="relative w-full overflow-hidden flex items-center justify-center"
-          style={{ height: `${svgHeight}px` }}
+          className="chart-plot"
+          tabIndex={0}
+          role="group"
+          aria-label={`${title}. Use arrow keys to inspect readings.`}
+          onKeyDown={(e) => {
+            if (!['ArrowLeft', 'ArrowRight', 'Home', 'End', 'Escape'].includes(e.key)) return;
+            e.preventDefault();
+            if (e.key === 'Escape') {
+              setCursor(null);
+              return;
+            }
+            const times = timestamps.filter((t) => t >= first);
+            const index = times.findIndex((t) => t >= (cursorTime ?? end));
+            setCursor(
+              times[
+                e.key === 'Home'
+                  ? 0
+                  : e.key === 'End'
+                    ? times.length - 1
+                    : Math.max(
+                        0,
+                        Math.min(times.length - 1, index + (e.key === 'ArrowRight' ? 1 : -1))
+                      )
+              ] ?? null
+            );
+          }}
+          onBlur={() => setCursor(null)}
+          onPointerLeave={() => setCursor(null)}
         >
           <svg
             viewBox={`0 0 ${svgWidth} ${svgHeight}`}
             width={svgWidth}
             height={svgHeight}
-            className="w-full h-full block select-none"
-            style={{ maxHeight: `${svgHeight}px` }}
             role="img"
             aria-labelledby={`${chartId}-title ${chartId}-desc`}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            onTouchMove={handleMouseMove}
-            onTouchEnd={handleMouseLeave}
+            onPointerMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const position = ((e.clientX - rect.left) * svgWidth) / rect.width;
+              setCursor(
+                position < left || position > svgWidth - right
+                  ? null
+                  : first + ((position - left) / (svgWidth - left - right)) * (end - first)
+              );
+            }}
           >
             <title id={`${chartId}-title`}>{title}</title>
             <desc id={`${chartId}-desc`}>
-              {ariaDescription || `Line chart showing ${series.map((s) => s.name).join(', ')} with gap discontinuities`}
+              {ariaDescription || 'Recorded readings with visible breaks for missing data.'}
             </desc>
-
-            {/* Gradient definitions for soft glowing area fills */}
             <defs>
-              {processedSeries.map((s) => (
-                <linearGradient
-                  key={`grad-${s.id}`}
-                  id={`area-grad-${s.id}`}
-                  x1="0"
-                  y1="0"
-                  x2="0"
-                  y2="1"
-                >
-                  <stop offset="0%" stopColor={s.color} stopOpacity="0.22" />
-                  <stop offset="70%" stopColor={s.color} stopOpacity="0.05" />
-                  <stop offset="100%" stopColor={s.color} stopOpacity="0.00" />
+              {visible.map((s) => (
+                <linearGradient key={s.id} id={`${chartId}-${s.id}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={s.color} stopOpacity=".16" />
+                  <stop offset="100%" stopColor={s.color} stopOpacity=".01" />
                 </linearGradient>
               ))}
             </defs>
-
-            {/* Grid lines */}
-            {gridTicks.map((t, idx) => (
-              <g key={idx}>
-                <line
-                  x1={padding.left}
-                  y1={t.y}
-                  x2={svgWidth - padding.right}
-                  y2={t.y}
-                  stroke="var(--border)"
-                  strokeOpacity="0.6"
-                  strokeDasharray="3 3"
-                  strokeWidth="1"
-                />
+            {[0, 1, 2, 3, 4].map((i) => {
+              const value = minimum + ((maximum - minimum) * i) / 4,
+                position = y(value);
+              return (
+                <g key={i}>
+                  <line
+                    x1={left}
+                    x2={svgWidth - right}
+                    y1={position}
+                    y2={position}
+                    stroke="var(--border)"
+                    strokeDasharray={i === 0 ? undefined : '3 5'}
+                  />
+                  <text
+                    x={left - 10}
+                    y={position + 4}
+                    textAnchor="end"
+                    fill="var(--text-secondary)"
+                    fontSize="11"
+                  >
+                    {format(value)}
+                  </text>
+                </g>
+              );
+            })}
+            {Array.from({ length: svgWidth < 480 ? 3 : 5 }).map((_, i, array) => {
+              const t = first + ((end - first) * i) / (array.length - 1);
+              return (
                 <text
-                  x={padding.left - 8}
-                  y={t.y + 4}
-                  textAnchor="end"
-                  fontSize="11"
+                  key={i}
+                  x={x(t)}
+                  y={svgHeight - 9}
+                  textAnchor={i === 0 ? 'start' : i === array.length - 1 ? 'end' : 'middle'}
                   fill="var(--text-secondary)"
-                  fontFamily="monospace"
+                  fontSize="10"
                 >
-                  {t.val >= 1000 ? `${(t.val / 1000).toFixed(1)}k` : t.val.toFixed(1)}
+                  {timeLabel(t)}
                 </text>
+              );
+            })}
+            {paths.map((s) => (
+              <g key={s.id}>
+                {s.segments.map((points, index) => {
+                  const d = points
+                    .map(
+                      (p, i) =>
+                        `${i === 0 ? 'M' : 'L'} ${x(Date.parse(p.timestamp)).toFixed(1)} ${y(p.value!).toFixed(1)}`
+                    )
+                    .join(' ');
+                  const a = points[0]!,
+                    b = points.at(-1)!;
+                  return (
+                    <g key={index}>
+                      {points.length > 1 && (
+                        <>
+                          <path
+                            d={`${d} L ${x(Date.parse(b.timestamp))} ${bottom} L ${x(Date.parse(a.timestamp))} ${bottom} Z`}
+                            fill={`url(#${chartId}-${s.id})`}
+                          />
+                          <path
+                            d={d}
+                            fill="none"
+                            stroke={s.color}
+                            strokeWidth="2.5"
+                            strokeLinejoin="round"
+                            strokeLinecap="round"
+                          />
+                        </>
+                      )}
+                      {points.length === 1 && (
+                        <circle
+                          cx={x(Date.parse(a.timestamp))}
+                          cy={y(a.value!)}
+                          r="3.5"
+                          fill={s.color}
+                        />
+                      )}
+                      {index === s.segments.length - 1 && points.length > 1 && (
+                        <circle
+                          cx={x(Date.parse(b.timestamp))}
+                          cy={y(b.value!)}
+                          r="4"
+                          fill={s.color}
+                          stroke="var(--surface)"
+                          strokeWidth="2"
+                        />
+                      )}
+                    </g>
+                  );
+                })}
               </g>
             ))}
-
-            {/* Time Axis */}
-            {timeTicks.map((t, idx) => (
-              <text
-                key={idx}
-                x={t.x}
-                y={svgHeight - 10}
-                textAnchor="middle"
-                fontSize="11"
-                fill="var(--text-secondary)"
-                fontFamily="monospace"
-              >
-                {t.label}
-              </text>
-            ))}
-
-            {/* 1. Oscilloscope AC 50Hz Waveform Render Mode */}
-            {oscActive ? (
-              oscilloscopePaths.map((p) => (
-                <path
-                  key={`osc-${p.id}`}
-                  d={p.d}
-                  fill="none"
-                  stroke={p.color}
-                  strokeWidth="2.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              ))
-            ) : (
-              <>
-                {/* 2. Soft Area Gradients Under Curves */}
-                {paths.map((p) =>
-                  p.areaD ? (
-                    <path
-                      key={`area-${p.id}`}
-                      d={p.areaD}
-                      fill={`url(#area-grad-${p.id})`}
-                      pointerEvents="none"
-                    />
-                  ) : null
-                )}
-
-                {/* 3. Series Paths */}
-                {paths.map((p) => (
-                  <path
-                    key={p.id}
-                    d={p.d}
-                    fill="none"
-                    stroke={p.color}
-                    strokeWidth="2.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                ))}
-
-                {/* 4. Live Endpoint Pulse Dot on Most Recent Sample */}
-                {paths.map((p) =>
-                  p.latestPoint ? (
-                    <g key={`head-${p.id}`} pointerEvents="none">
-                      <circle
-                        cx={p.latestPoint.x}
-                        cy={p.latestPoint.y}
-                        r="6"
-                        fill={p.color}
-                        opacity="0.3"
-                      />
-                      <circle
-                        cx={p.latestPoint.x}
-                        cy={p.latestPoint.y}
-                        r="3.5"
-                        fill={p.color}
-                      />
-                    </g>
-                  ) : null
-                )}
-
-                {/* 5. Isolated Points (Preserves exact Phase 3 unit test contract: cx=418) */}
-                {paths.flatMap((p) =>
-                  p.isolatedPoints.map((point, index) => (
-                    <circle key={`${p.id}-${index}`} cx={point.x} cy={point.y} r="3.5" fill={p.color} />
-                  ))
-                )}
-              </>
-            )}
-
-            {/* 6. Interactive Vertical Hover Crosshair */}
-            {hoverState && (
-              <g pointerEvents="none">
+            {cursorTime !== null && (
+              <g>
                 <line
-                  x1={hoverState.x}
-                  y1={padding.top}
-                  x2={hoverState.x}
-                  y2={bottomAxisY}
-                  stroke="var(--accent, #C8A96E)"
-                  strokeWidth="1.5"
+                  x1={x(cursorTime)}
+                  x2={x(cursorTime)}
+                  y1={top}
+                  y2={bottom}
+                  stroke="var(--text-dim)"
                   strokeDasharray="4 4"
-                  opacity="0.8"
                 />
-                <circle
-                  cx={hoverState.x}
-                  cy={hoverState.y}
-                  r="4"
-                  fill="var(--accent, #C8A96E)"
-                />
+                {visible.map((s) => {
+                  const p = pointAt(s, cursorTime);
+                  return p?.value != null ? (
+                    <circle
+                      key={s.id}
+                      cx={x(Date.parse(p.timestamp))}
+                      cy={y(p.value)}
+                      r="4.5"
+                      fill={s.color}
+                      stroke="var(--surface)"
+                      strokeWidth="2"
+                    />
+                  ) : null;
+                })}
               </g>
             )}
           </svg>
-
-          {/* Interactive Floating Tooltip Overlay */}
-          {hoverState && (
+          {cursorTime !== null && (
             <div
-              className="absolute z-20 pointer-events-none rounded-lg p-2.5 text-xs shadow-lg transition-transform"
-              style={{
-                left: `${Math.min(hoverState.x + 12, svgWidth - 180)}px`,
-                top: `${Math.max(10, Math.min(hoverState.y - 40, svgHeight - 110))}px`,
-                background: 'var(--surface-raised, #F7F7F5)',
-                border: '1px solid var(--border-strong)',
-                color: 'var(--text-primary)',
-                backdropFilter: 'blur(8px)',
-                minWidth: '150px',
-              }}
+              className="chart-time-tooltip"
+              style={{ left: `${Math.max(15, Math.min(85, (x(cursorTime) / svgWidth) * 100))}%` }}
             >
-              <div
-                className="font-bold border-b pb-1 mb-1.5 flex items-center justify-between font-mono"
-                style={{ borderColor: 'var(--border)' }}
-              >
-                <span>{new Date(hoverState.t).toLocaleTimeString()}</span>
-                <span className="text-[10px] text-neutral-500 uppercase">Live Trace</span>
-              </div>
-              <div className="space-y-1">
-                {hoverState.values.map((v) => (
-                  <div key={v.id} className="flex items-center justify-between gap-3 text-[11px]">
-                    <span className="flex items-center gap-1.5 truncate">
-                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: v.color }} />
-                      <span className="truncate">{v.name}</span>
-                    </span>
-                    <strong className="font-mono">
-                      {v.value !== null ? `${v.value.toFixed(2)} ${v.unit}` : '—'}
-                    </strong>
-                  </div>
-                ))}
-              </div>
+              {timeLabel(cursorTime)}
             </div>
           )}
         </div>
       )}
-
-      {/* Screen reader table summary - Preserves strict Phase 3 Unit Test assertions */}
       <div className="sr-only">
         <table>
           <caption>{`${title} data table`}</caption>
           <thead>
             <tr>
               <th scope="col">Timestamp</th>
-              {series.map((s) => (
-                <th key={s.id} scope="col">
-                  {`${s.name} (${s.unit})`}
+              {processed.map((s) => (
+                <th scope="col" key={s.id}>
+                  {s.name} ({s.unit})
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {processedSeries[0]?.data.slice(-10).map((p, idx) => (
-              <tr key={idx}>
-                <td>{new Date(p.timestamp).toLocaleString()}</td>
-                {processedSeries.map((s) => (
-                  <td key={s.id}>
-                    {s.data[idx]?.value !== null ? `${s.data[idx]?.value} ${s.unit}` : 'Missing (Gap)'}
-                  </td>
-                ))}
+            {tableTimes.map((t) => (
+              <tr key={t}>
+                <td>{new Date(t).toISOString()}</td>
+                {processed.map((s) => {
+                  const p = s.data.find((p) => Date.parse(p.timestamp) === t);
+                  return (
+                    <td key={s.id}>
+                      {p?.value != null ? `${p.value} ${s.unit}` : 'Missing (Gap)'}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
@@ -717,5 +401,4 @@ export const MeasurementChart: React.FC<MeasurementChartProps> = ({
     </div>
   );
 };
-
 export default MeasurementChart;

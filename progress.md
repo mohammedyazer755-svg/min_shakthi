@@ -763,3 +763,13 @@ npm run build
   - `npm run test:visual` -> 1 test file passed, 4/4 tests passed.
   - `npm run test:security` -> 1 test file passed, 3/3 tests passed (production broker IP strictly excluded from frontend client bundles).
   - `npm run build` -> all packages built cleanly, frontend Vite bundle compiled in 1.92s.
+
+### Interior overview completion - 20 October 2026
+
+- Scope: the existing authenticated overview requested in the user's screenshot. Preserved the current working tree and retained the shared shell, homepage, API routes, and telemetry ingestion.
+- Reworked `Overview.tsx` and `overview.css` with a compact summary row, charcoal/sage power panel, restrained brass accents, chart and channel activity directly below the cards, and an electrical snapshot underneath. Detailed channel readings remain available in a native expandable section.
+- The five hardware slots now remain visible before configuration arrives, explicitly labelled as checking configuration. The chart waiting state includes device/channel/reading readiness and a channel-status action; authenticated administrators with a confirmed empty configuration can navigate to device management.
+- Corrected the zero-channel fallthrough that claimed "Receiving readings". Unknown/warning/critical stream labels are preserved; configuration and alert counts stay unknown until evidence arrives. Existing blank stale readings, valid zero measurements, and recorded chart history are preserved.
+- Validation: `npm run build:web` passed; 32 tests passed across `phase3-workspace`, `live-status`, and `phase2-navigation`, including three new overview-status regressions. Scoped `git diff --check` passed.
+- Local Chrome review of the production build passed at widths 1440, 1920, 768, 390, and 360. Verified four summary cards, five slots, no horizontal overflow, chart metric selection, expanded detailed readings, collapsed measurements, and reduced-motion handling; zero uncaught runtime exceptions. Screenshots and the structured report are in `docs/evidence/overview-focus/`.
+- Browser evidence uses the existing unauthenticated workspace preview and intentionally shows unavailable telemetry. It does not verify authenticated backend access, database persistence, broker connectivity, or physical hardware. No deployment was performed.
